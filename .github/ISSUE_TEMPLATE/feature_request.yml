@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest an improvement for the learning game
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Proposed feature
+    validations:
+      required: true
+  - type: textarea
+    id: learning_value
+    attributes:
+      label: Learning or usability benefit
+    validations:
+      required: true

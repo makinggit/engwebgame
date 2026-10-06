@@ -1,0 +1,34 @@
+name: Validate game
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check required files
+        run: test -f index.html
+      - name: Extract and check JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script[^>]*>(.*?)</script>", html, re.S)
+          Path("game.js").write_text("\n".join(scripts), encoding="utf-8")
+          PY
+          node --check game.js
+      - name: Check core features
+        run: |
+          grep -q "Spelling Mission" index.html
+          grep -q "Fish for Letters" index.html
+          grep -q "Ghost" index.html
+          grep -q "speechSynthesis" index.html
