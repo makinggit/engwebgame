@@ -829,6 +829,8 @@ header {
                 <span class="mode-icon">👻🎯</span>Ghost Letter Zap<br /><small>Zap the right letters</small></button
             ><button class="mode-btn" data-mode="race" type="button" id="game04_racing">
                 <span class="mode-icon">🏃💨</span>Race and Chase<br /><small>Catch the word</small>
+            </button><button class="mode-btn" data-mode="race" type="button" id="game05_whack_a_mole">
+                <span class="mode-icon">🐹🔨</span>Whack-a-mole<br /><small>Moles in the hole</small>
             </button>
         </div>
     </div>
@@ -966,6 +968,14 @@ $("game04_racing").onclick = () => {
     sounds.hear();
 	//say('Level up to enter this mode.')
     window.location.assign('./game04_racing.html?level=' + level + '&stars=' + stars);
+};
+$("game05_whack_a_mole").onclick = () => {
+    sounds.hear();
+	if (level>9) {
+    	window.location.assign('./game05_whack_a_mole.html?level=' + level + '&stars=' + stars);
+	} else {
+		say('Level up to enter this mode.')
+	}
 };
 
 $("modeSelect").style.display = "grid";
