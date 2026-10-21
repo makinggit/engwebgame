@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -86,25 +86,16 @@
 	</div>
 </div>
 
-<script>const words = [
-	{ word: "notebook", emoji: "📓", clue: "You write notes and drawings in it." },
-	{ word: "yellow", emoji: "💛", clue: "It is the colour of a banana." },
-	{ word: "purple", emoji: "💜", clue: "It is a colour made by mixing red and blue." },
-	{ word: "crayon", emoji: "🖍️", clue: "You use it to draw colourful pictures." },
-	{ word: "eraser", emoji: "🧽", clue: "It rubs away pencil mistakes." },
-	{ word: "pencil", emoji: "✏️", clue: "You use it to write and draw." },
-	{ word: "school", emoji: "🏫", clue: "A place where children learn." },
-	{ word: "white", emoji: "⬜", clue: "The colour of a clean blank page." },
-	{ word: "black", emoji: "⬛", clue: "A very dark colour." },
-	{ word: "ruler", emoji: "📏", clue: "You use it to draw straight lines." },
-	{ word: "bag", emoji: "🎒", clue: "You carry school things in it." },
-	{ word: "friends", emoji: "🧑‍🤝‍🧑", clue: "We are friends." },
-	{ word: "quiet", emoji: "🤫", clue: "It is no noise, being calm." },
-	{ word: "class", emoji: "👩🏻‍🏫", clue: "Students are taught together in the same room ." },
-	{ word: "name", emoji: "📛", clue: "This is used to refer to person." },
-	{ word: "boys", emoji: "👦", clue: "They are a group of male children." },
-	{ word: "Hill", emoji: "🏔️", clue: "This is a small mountain, a raised area of land." },
-];
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script src="./assets/game-lifecycle.js"></script>
+<script>
+const { $, readProgress, getParams, goTo, sounds, say, shuffle, randomBg, updateProgress } = RoboCommon;
+const { level, stars } = readProgress();
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.WORD_LIST;
+const params = getParams();
 const modeStories = {
 	spell: "The Word Workshop Story. Momo and Bolt opened a workshop full of mixed-up letters. Put each letter in the correct order to repair the school words and make the workshop lights shine.",
 	fish: "The Poor Dock Fish Story. At the old poor dock, hungry little letter fish could not find their way to the warm water garden. Every correct letter you catch repairs the dock and helps the fish swim home.",
@@ -112,19 +103,6 @@ const modeStories = {
 	race: "The Rainbow Race Story. A speedy word sprite raced through the school playground, carrying mixed-up letters. Catch each correct letter to chase the sprite along the rainbow track and recover the colours.",
 };
 const modeLabels = { spell: "Spelling", fish: "Fish", ghost: "Ghosts", race: "Race" };
-const funnyColors = [
-	"#d8f7ff",
-	"#ffe0f0",
-	"#fff0b6",
-	"#dff8d1",
-	"#e7dcff",
-	"#ffd9b8",
-	"#c9f4ee",
-	"#dce6ff",
-	"#ffd5dc",
-	"#e8f7c8",
-];
-const $ = (id) => document.getElementById(id);
 const speech = $("speech"),
 	emoji = $("emoji"),
 	hint = $("hint"),
@@ -144,83 +122,22 @@ let current,
 	robotMode = false,
 	letterOrder = [],
 	checking = false,
-	audioCtx,
 	popupTimer,
 	wordDeck = [],
 	activeMode = "spell",
 	bonusWord = "",
 	bonusRemaining = [],
 	nextMode = "spell";
-	
-const params = new URLSearchParams(location.search);
-let level = Number(params.get("level") || 1);
-let stars = Number(params.get("stars") || 0);
+
 starsEl.textContent = stars;
 levelEl.textContent = level;
 
-function tone(f = 440, d = 0.08, t = "sine", v = 0.05) {
-	try {
-		audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-		if (audioCtx.state === "suspended") audioCtx.resume();
-		const o = audioCtx.createOscillator(),
-			g = audioCtx.createGain();
-		o.type = t;
-		o.frequency.value = f;
-		g.gain.setValueAtTime(v, audioCtx.currentTime);
-		g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
-		o.connect(g);
-		g.connect(audioCtx.destination);
-		o.start();
-		o.stop(audioCtx.currentTime + d);
-	} catch (e) {}
-}
-const sounds = {
-	click: () => tone(520, 0.06, "square"),
-	undo: () => tone(280, 0.1, "triangle"),
-	hear: () => {
-		tone(660, 0.08);
-		setTimeout(() => tone(880, 0.1), 85);
-	},
-	wrong: () => {
-		tone(190, 0.12, "sawtooth");
-		setTimeout(() => tone(160, 0.16, "sawtooth"), 120);
-	},
-	win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.13, "sine", 0.07), i * 110)),
-	level: () =>
-		[523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.17, "triangle", 0.08), i * 100)),
-};
-function say(text, stop = true) {
-	if (!("speechSynthesis" in window)) return;
-	if (stop) speechSynthesis.cancel();
-	const u = new SpeechSynthesisUtterance(text);
-	u.lang = "en-UK";
-	u.rate = 0.9;
-	u.pitch = 1.00;
-	speechSynthesis.speak(u);
-}
 function spellWord(word) {
 	return word + ". " + word.split("").join(",") + " . " + word + ". ";
-}
-function shuffle(a) {
-	const b = [...a];
-	for (let i = b.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[b[i], b[j]] = [b[j], b[i]];
-	}
-	return b;
-}
-function randomBg() {
-	document.body.style.background = funnyColors[Math.floor(Math.random() * funnyColors.length)];
 }
 function setPrompt(t, read = true) {
 	speech.textContent = t;
 	if (read) say(t);
-}
-function updateProgress() {
-	const n = stars % 3;
-	bar.style.width = (n / 3) * 100 + "%";
-	starTrack.textContent = "★".repeat(n) + "☆".repeat(3 - n);
-	progressNumber.textContent = n + " / 3 stars to Level " + (level + 1);
 }
 function closeWordPopup() {
 	clearTimeout(popupTimer);
@@ -233,7 +150,7 @@ function showWordPopup() {
 	$("wordPop").classList.add("show");
 	sounds.hear();
 	say("The word is " + current.word + ". " + current.word);
-	popupTimer = setTimeout(closeWordPopup, 8000);
+	popupTimer = timers.setTimeout(closeWordPopup, 8000);
 }
 function nextWord() {
 	if (!wordDeck.length) wordDeck = shuffle(words);
@@ -251,10 +168,6 @@ function activateMode(mode) {
 		startBonusMode(mode);
 	}
 }
-
-
-
-
 
 function showLevelUp() {
 	sounds.level();
@@ -371,8 +284,8 @@ function buildGhostMaze() {
 	});
 	area.appendChild(controls);
 	positionMaze();
-	ghostTimer = setInterval(moveGhosts, 900);
-	ghostHintTimer = setTimeout(showGhostHint, 20000);
+	ghostTimer = timers.setInterval(moveGhosts, 900);
+	ghostHintTimer = timers.setTimeout(showGhostHint, 20000);
 }
 function positionMaze() {
 	const field = document.querySelector(".ghost-maze-field"),
@@ -447,7 +360,7 @@ function resolveGhostCollision(i) {
 	if (!bonusRemaining.length) {
 		clearGhostTimers();
 		$("bonusStatus").textContent = "Amazing! You finished the word.";
-		setTimeout(() => awardWin(bonusWord), 900);
+		timers.setTimeout(() => awardWin(bonusWord), 900);
 		return;
 	}
 	const pos = [
@@ -465,7 +378,7 @@ function resolveGhostCollision(i) {
 	ghosts.push(next);
 	document.querySelector(".ghost-maze-field").appendChild(el);
 	positionMaze();
-	ghostHintTimer = setTimeout(showGhostHint, 20000);
+	ghostHintTimer = timers.setTimeout(showGhostHint, 20000);
 }
 function renderMiniWord(matchedIndex = -1) {
 	const target = $("miniWord");
@@ -482,14 +395,14 @@ function showGhostHint() {
 	if (!g) return;
 	g.el.classList.add("hint-ghost");
 	say("Hint! The correct ghost is getting bigger. Find the letter " + bonusRemaining[0] + ".");
-	ghostHintHideTimer = setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
+	ghostHintHideTimer = timers.setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
 }
 function wrongMaze() {
 	sounds.wrong();
 	$("bonusStatus").textContent = "Move Bolt onto a ghost to check its letter.";
 	document.body.classList.add("invert-flash");
 	clearTimeout(flashTimer);
-	flashTimer = setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
+	flashTimer = timers.setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
 }
 function spawnTargets() {
 	const area = $("playArea"),
@@ -536,7 +449,7 @@ function bonusClick(letter, el) {
 		}
 		if (!bonusRemaining.length) {
 			$("bonusStatus").textContent = "Amazing! You finished the word.";
-			setTimeout(() => awardWin(bonusWord), 900);
+			timers.setTimeout(() => awardWin(bonusWord), 900);
 		} else {
 			$("bonusStatus").textContent = "Correct! Find the next letter: " + bonusRemaining[0];
 			say("Correct! Find the next letter: " + bonusRemaining[0]);
@@ -560,22 +473,10 @@ $("undoBtn").onclick = () => {
 	render();
 };
 $("hearBtn").onclick = showWordPopup;
-/*
-$("newBtn").onclick = () => {
-	sounds.click();
-	chooseWord();
-};
-*/
 $("wordPop").onclick = closeWordPopup;
 $("wordPop").onkeydown = (e) => {
 	if (e.key === "Enter" || e.key === " ") closeWordPopup();
 };
-/*
-$("hearStoryBtn").onclick = () => {
-	sounds.hear();
-	say($("storyText").innerText);
-};
-*/
 $("hearLevelStoryBtn").onclick = () => {
 	sounds.hear();
 	say($("levelStory").textContent);
@@ -586,11 +487,11 @@ $("miniHearBtn").onclick = () => {
 };
 $("game_mode").onclick = () => {
 	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+	goTo('./game_mode.html', level, stars);
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+	goTo('./game_mode.html', level, stars);
 };
 
 document.addEventListener("keydown", (e) => {
@@ -693,12 +594,10 @@ function render(result = null) {
 		}
 	});
 	letters.replaceChildren();
-	// Reusable choices allow duplicate answers such as two lower-case e's.
 	const required = blankIndices.map(i => current.word[i]);
 	const cases = required.filter(ch => /[a-z]/i.test(ch)).map(ch => ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase());
 	const extras = shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?.,1A".split("")).slice(0, 5);
 	const choices = [...new Set([...required, ...cases, ...extras])];
-	// Stable ordering while filling: only shuffle when the sentence is created.
 	if (!current.choices) current.choices = shuffle(choices);
 	current.choices.forEach(ch => {
 		const button = document.createElement("button");
@@ -744,13 +643,13 @@ function awardWin(sentence) {
 	if (stars % 3 === 0) level += 1;
 	starsEl.textContent = stars;
 	levelEl.textContent = level;
-	updateProgress();
+	updateProgress(level, stars);
 	syncSentenceState();
 	message.textContent = "⭐ Great! You completed the sentence.";
 	setPrompt("Well done!");
 	say(sentence);
-	if (stars % 3 === 0) sentenceNextTimer = setTimeout(showLevelUp, 1200);
-	else sentenceNextTimer = setTimeout(chooseWord, 2200);
+	if (stars % 3 === 0) sentenceNextTimer = timers.setTimeout(showLevelUp, 1200);
+	else sentenceNextTimer = timers.setTimeout(chooseWord, 2200);
 }
 
 $("undoBtn").onclick = () => {
@@ -767,18 +666,7 @@ window.addEventListener("pagehide", () => clearTimeout(sentenceNextTimer));
 
 $("gamePage").style.display = "block";
 activateMode("spell");
-updateProgress();
+updateProgress(level, stars);
 </script>
-<script>
-function removeAfterLastLine() {
-	document.querySelectorAll("#lastline ~ *").forEach((anchor) => anchor.remove());
-	return;
-}
-setTimeout(removeAfterLastLine, 100);
-setTimeout(removeAfterLastLine, 1000);
-setTimeout(removeAfterLastLine, 3000);
-
-</script>
-<a id="lastline"></div><!--MakeLayer-->
 </body>
 </html>
