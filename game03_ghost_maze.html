@@ -7,1080 +7,176 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#bdeaff">
 <title>Robo-Monster Spelling Academy</title>
-<style>
-:root {
-    --ink: #202452;
-    --purple: #7652de;
-    --pink: #fa64ac;
-    --yellow: #ffd34f;
-    --mint: #53d8bb;
-    --sky: #65cffa;
-    --good: #31b96b;
-    --bad: #ef4d5e;
-}
-* {
-    box-sizing: border-box;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    -webkit-tap-highlight-color: transparent;
-}
-html {
-    min-height: 100%;
-    touch-action: manipulation;
-}
-body {
-    margin: 0;
-    min-height: 100vh;
-    min-height: 100dvh;
-    color: var(--ink);
-    font-family: "Trebuchet MS", Arial, sans-serif;
-    background: #d8f7ff;
-    transition: background 0.7s ease;
-    overflow-x: hidden;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-}
-body:before,
-body:after {
-    content: "";
-    position: fixed;
-    z-index: -1;
-    border-radius: 50%;
-    opacity: 0.55;
-    pointer-events: none;
-}
-body:before {
-    width: 220px;
-    height: 220px;
-    left: -70px;
-    top: 12%;
-    background: #ffcf6c;
-}
-body:after {
-    width: 250px;
-    height: 250px;
-    right: -90px;
-    bottom: 7%;
-    background: #b894ff;
-}
-.wrap {
-    width: min(970px, calc(100% - 28px));
-    margin: auto;
-    padding: 22px 0 36px;
-}
-h1 {
-    margin: 0;
-    font-size: clamp(1.8rem, 5vw, 3rem);
-    text-shadow: 3px 3px rgba(255, 255, 255, 0.8);
-}
-.panel {
-    margin-top: 20px;
-    background: rgba(255, 255, 255, 0.86);
-    border: 4px solid var(--ink);
-    border-radius: 30px;
-    padding: clamp(18px, 4vw, 36px);
-    box-shadow: 10px 10px 0 rgba(32, 36, 82, 0.28);
-    backdrop-filter: blur(4px);
-}
-.intro {
-    text-align: center;
-}
-.story-card {
-    max-width: 710px;
-    margin: 22px auto;
-    padding: 20px;
-    border: 3px dashed var(--purple);
-    border-radius: 22px;
-    background: #fff8cf;
-    font-size: clamp(1rem, 2.7vw, 1.22rem);
-    line-height: 1.55;
-    text-align: left;
-}
-.hero-row,
-.controls {
-    display: flex;
-    align-items: end;
-    justify-content: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.big-emoji {
-    font-size: 5rem;
-}
-.control {
-    border: 3px solid var(--ink);
-    border-radius: 14px;
-    min-height: 48px;
-    padding: 12px 16px;
-    background: var(--mint);
-    color: var(--ink);
-    font:
-        800 1rem "Trebuchet MS",
-        Arial,
-        sans-serif;
-    cursor: pointer;
-    touch-action: manipulation;
-    box-shadow: 4px 4px 0 var(--ink);
-    transition: 0.1s;
-}
-.control:hover,
-.control:focus {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--ink);
-    outline: none;
-}
-.control:active {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--ink);
-}
-.control.yellow {
-    background: var(--yellow);
-}
-.control.purple {
-    background: #d5c4ff;
-}
-.game {
-    display: none;
-}
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-.badges {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-.badge {
-    background: var(--yellow);
-    padding: 9px 13px;
-    border: 3px solid var(--ink);
-    border-radius: 999px;
-    font-weight: 900;
-    box-shadow: 3px 3px 0 var(--ink);
-}
-.top {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 20px;
-    align-items: center;
-    margin-top: 18px;
-}
-.speech {
-    background: #fff3a7;
-    padding: 16px 20px;
-    border: 3px solid var(--ink);
-    border-radius: 20px;
-    font-size: clamp(1rem, 2.7vw, 1.24rem);
-    font-weight: 800;
-    line-height: 1.35;
-}
-.friend {
-    position: relative;
-    width: 150px;
-    height: 128px;
-    border: 4px solid var(--ink);
-    animation: bob 1.8s ease-in-out infinite;
-}
-.monster {
-    background: var(--pink);
-    border-radius: 48% 48% 42% 42%;
-}
-.eye {
-    position: absolute;
-    top: 30px;
-    width: 36px;
-    height: 42px;
-    border: 3px solid var(--ink);
-    border-radius: 50%;
-    background: #fff;
-}
-.eye.left {
-    left: 27px;
-}
-.eye.right {
-    right: 27px;
-}
-.pupil {
-    display: block;
-    width: 13px;
-    height: 18px;
-    background: var(--ink);
-    border-radius: 50%;
-    margin: 13px auto;
-}
-.mouth {
-    position: absolute;
-    left: 43px;
-    bottom: 21px;
-    width: 58px;
-    height: 27px;
-    border: 3px solid var(--ink);
-    border-top: 0;
-    border-radius: 0 0 28px 28px;
-    background: #fff;
-}
-.antenna {
-    position: absolute;
-    width: 5px;
-    height: 28px;
-    background: var(--ink);
-    top: -26px;
-    left: 72px;
-}
-.robot {
-    display: none;
-    border-radius: 20px;
-    background: var(--sky);
-}
-.screen {
-    position: absolute;
-    left: 20px;
-    top: 28px;
-    width: 105px;
-    height: 58px;
-    border: 3px solid var(--ink);
-    border-radius: 12px;
-    background: #14213c;
-    color: var(--mint);
-    display: grid;
-    place-items: center;
-    font-size: 1.45rem;
-}
-.word-box {
-    margin: 28px auto 14px;
-    text-align: center;
-}
-.emoji {
-    font-size: 4.4rem;
-    min-height: 82px;
-}
-.hint {
-    font-size: 1.14rem;
-    font-weight: 900;
-}
-.slots {
-    min-height: 68px;
-    margin: 14px auto;
-    display: flex;
-    justify-content: center;
-    gap: 9px;
-    flex-wrap: wrap;
-}
-.slot {
-    width: 48px;
-    height: 58px;
-    border: 3px dashed var(--purple);
-    border-radius: 12px;
-    display: grid;
-
-    place-items: center;
-    background: #f4f0ff;
-
-    font-size: 2rem;
-    font-weight: 900;
-}
-.slot.good {
-    background: #d8f8e4;
-    border-style: solid;
-    border-color: var(--good);
-    color: #157840;
-}
-.slot.bad {
-    background: #ffdce0;
-    border-style: solid;
-    border-color: var(--bad);
-    color: #b5273b;
-}
-.letters {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 18px 0 24px;
-}
-.letter {
-    min-width: 58px;
-    min-height: 58px;
-    border: 3px solid var(--ink);
-    border-radius: 14px;
-    color: var(--ink);
-    background: #fff;
-    font:
-        900 1.65rem/1 "Trebuchet MS",
-        Arial,
-        sans-serif;
-    cursor: pointer;
-    touch-action: manipulation;
-    box-shadow: 4px 4px 0 var(--ink);
-}
-.letter:active {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--ink);
-}
-.letter:disabled {
-    opacity: 0.35;
-    box-shadow: 2px 2px 0 #99a;
-    cursor: default;
-}
-.message {
-    min-height: 30px;
-    margin-top: 18px;
-    text-align: center;
-    font-size: 1.2rem;
-    font-weight: 900;
-}
-.progress {
-    position: relative;
-    margin: 20px auto 0;
-    max-width: 560px;
-    height: 32px;
-    overflow: hidden;
-    border: 3px solid var(--ink);
-    border-radius: 999px;
-    background: #e7e8f6;
-}
-.bar {
-    height: 100%;
-    width: 0;
-    background: linear-gradient(90deg, var(--mint), var(--yellow), var(--pink));
-    transition: width 0.35s;
-}
-.progress-content {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    font-weight: 900;
-    text-shadow: 1px 1px #fff;
-}
-.star-track {
-    letter-spacing: 2px;
-    font-size: 1.08rem;
-}
-.word-pop,
-.levelup,
-.mode-select {
-    position: fixed;
-    inset: 0;
-    display: none;
-    place-items: center;
-    z-index: 30;
-    padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
-        max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-}
-.word-pop {
-    background: rgba(32, 36, 82, 0.34);
-    cursor: pointer;
-}
-.word-pop.show {
-    display: grid;
-}
-.word-card,
-.level-card,
-.mode-card {
-    background: #fff;
-    border: 5px solid var(--ink);
-    border-radius: 30px;
-    box-shadow: 12px 12px 0 var(--purple);
-    padding: 25px;
-    text-align: center;
-    animation: pop 0.35s ease;
-}
-.word-card .small {
-    font-weight: 900;
-    font-size: 1.1rem;
-}
-.bigword {
-    font-size: clamp(2.5rem, 12vw, 5.3rem);
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    color: var(--purple);
-    margin-top: 8px;
-}
-.close-note {
-    margin-top: 12px;
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: #525780;
-}
-.levelup,
-.mode-select {
-    background: rgba(32, 36, 82, 0.61);
-    overflow: auto;
-}
-.level-card {
-    width: min(660px, 100%);
-    background: #fff8c9;
-}
-.level-card h2 {
-    margin: 0;
-    font-size: 2.3rem;
-}
-.level-story {
-    background: #fff;
-    border: 3px dashed var(--pink);
-    border-radius: 18px;
-    padding: 15px;
-    margin: 15px 0;
-    text-align: left;
-    line-height: 1.5;
-    font-weight: 700;
-    max-height: 280px;
-    overflow: auto;
-}
-.sparkles {
-    font-size: 3rem;
-    letter-spacing: 5px;
-    animation: spin 1.5s linear infinite;
-}
-.mode-card {
-    width: min(820px, 100%);
-    background: #ecfbff;
-}
-.mode-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-    margin: 18px 0;
-}
-.mode-btn {
-    border: 4px solid var(--ink);
-    border-radius: 20px;
-    min-height: 155px;
-    padding: 16px 10px;
-    background: #fff;
-    cursor: pointer;
-    touch-action: manipulation;
-    color: var(--ink);
-    font:
-        800 1rem "Trebuchet MS",
-        Arial;
-    box-shadow: 4px 4px 0 var(--ink);
-}
-.mode-btn:active {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--ink);
-}
-.mode-icon {
-    display: block;
-    font-size: 3.2rem;
-    margin-bottom: 8px;
-}
-.bonus-screen {
-    display: none;
-}
-.bonus-screen.active {
-    display: block;
-}
-.bonus-header {
-    text-align: center;
-    margin: 18px 0;
-}
-.bonus-title {
-    font-size: clamp(1.7rem, 4vw, 2.5rem);
-    font-weight: 900;
-}
-.bonus-story {
-    max-width: 760px;
-    margin: 12px auto;
-    padding: 15px;
-    border: 3px dashed var(--purple);
-    border-radius: 18px;
-    background: #fff8cf;
-    line-height: 1.45;
-    font-weight: 800;
-}
-.play-area {
-    position: relative;
-    width: 100%;
-    height: 320px;
-    border: 4px solid var(--ink);
-    border-radius: 22px;
-    overflow: hidden;
-    background: #7cd9ff;
-    margin: 16px 0;
-    touch-action: manipulation;
-}
-.water:before {
-    content: "🌊 🌊 🌊 🌊 🌊 🌊";
-    position: absolute;
-    z-index: 1;
-    bottom: -4px;
-    left: 0;
-    width: 100%;
-    font-size: 3rem;
-    white-space: nowrap;
-}
-.dock {
-    position: absolute;
-    z-index: 1;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 42px;
-    background: #a66a3e;
-    border-top: 7px solid #6d4027;
-}
-.target {
-    position: absolute;
-    z-index: 2;
-    border: 3px solid var(--ink);
-    border-radius: 50%;
-    min-width: 52px;
-    min-height: 48px;
-    background: #fff;
-    padding: 7px 11px;
-    font-size: 1.35rem;
-    font-weight: 900;
-    cursor: pointer;
-    touch-action: manipulation;
-    box-shadow: 3px 3px 0 var(--ink);
-    user-select: none;
-}
-.target:active {
-    transform: scale(0.92);
-}
-.fish {
-    background: #ffd869;
-    animation: swim 7s ease-in-out infinite alternate;
-}
-.fish:nth-of-type(2n) {
-    animation-duration: 9s;
-    animation-direction: alternate-reverse;
-}
-.fish:nth-of-type(3n) {
-    animation-duration: 11s;
-}
-.ghost {
-    background: #f6eaff;
-    animation: float 3s ease-in-out infinite alternate;
-}
-.ghost-maze-field {
-    position: absolute;
-    inset: 0 0 94px 0;
-    background: #9be7ff;
-    display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    grid-template-rows: repeat(7, 1fr);
-    gap: 4px;
-    padding: 8px;
-}
-.maze-cell {
-    border-radius: 8px;
-    min-width: 0;
-    min-height: 0;
-}
-.maze-wall {
-    background: #5b3bb6;
-    border: 4px solid #3b2585;
-    box-shadow: inset 0 0 0 2px #876ee0;
-}
-.maze-floor {
-    background: #dffbff;
-    border: 2px solid rgba(32, 36, 82, 0.18);
-}
-.ghost-maze {
-    position: relative;
-    min-height: clamp(430px, 68vh, 720px);
-    padding-bottom: 94px;
-    background: #202452;
-    border: 5px solid var(--ink);
-    border-radius: 24px;
-    overflow: hidden;
-    touch-action: none;
-}
-
-.ghost-maze .ghost-maze-controls {
-    position: absolute;
-
-    left: 50%;
-    bottom: 8px;
-    transform: translateX(-50%);
-    z-index: 20;
-    margin: 0;
-    padding: 10px;
-    background: rgba(255, 255, 255, 0.94);
-    border-radius: 18px;
-    display: grid;
-    grid-template-columns: repeat(3, 82px);
-    gap: 10px;
-}
-
-.ghost-maze .ghost-maze-controls button {
-    width: 82px;
-    height: 74px;
-    min-width: 82px;
-    min-height: 74px;
-    font-size: 2.25rem;
-    border: 4px solid var(--ink);
-    border-radius: 18px;
-    background: #ffd34f;
-    box-shadow: 4px 4px 0 var(--ink);
-    touch-action: manipulation;
-}
-.ghost-maze .ghost-maze-controls button:active {
-    transform: translate(3px, 3px);
-    box-shadow: 1px 1px 0 var(--ink);
-}
-.ghost-maze .up {
-    grid-column: 2;
-}
-.ghost-maze .left {
-    grid-column: 1;
-}
-.ghost-maze .down {
-    grid-column: 2;
-}
-.ghost-maze .right {
-    grid-column: 3;
-}
-.ghost-box {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-    padding: 15px 8px;
-    border: 0px solid #7652de;
-    border-radius: 15px;
-    font-weight: 900;
-    font-size: 1.85rem;
-    z-index: 3;
-    white-space: nowrap;
-    transition:
-        left 0.8s linear,
-        top 0.8s linear;
-}
-.maze-player {
-    position: absolute;
-    font-size: 2.4rem;
-    z-index: 5;
-    transition:
-        left 0.18s linear,
-        top 0.18s linear;
-}
-.ghost-maze-mode .bonus-header {
-    display: none;
-}
-.invert-flash {
-    filter: invert(1);
-}
-.race-area {
-    background: linear-gradient(#aee9ff 0 48%, #7bd45d 48%);
-}
-.runner {
-    position: absolute;
-    z-index: 1;
-    bottom: 32px;
-    font-size: 3.5rem;
-    transition: left 0.45s ease;
-}
-.track {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    border-top: 5px dashed #fff;
-}
-.mini-word {
-    text-align: center;
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--purple);
-    margin: 8px;
-    word-break: break-word;
-    letter-spacing: 4px;
-}
-.mini-word .matched-letter {
-    color: #31b96b;
-}
-.bonus-status {
-    text-align: center;
-    min-height: 32px;
-    font-size: 1.15rem;
-    font-weight: 900;
-}
-@keyframes swim {
-    0% {
-        transform: translateX(0) translateY(0) rotate(-3deg);
-    }
-    50% {
-        transform: translateX(28px) translateY(-12px) rotate(3deg);
-    }
-    100% {
-        transform: translateX(-20px) translateY(8px) rotate(-2deg);
-    }
-}
-@keyframes float {
-    to {
-        transform: translateY(-18px) rotate(5deg);
-    }
-}
-.celebrate {
-    animation: celebrate 0.55s ease-in-out 2;
-}
-@keyframes bob {
-    50% {
-        transform: translateY(-8px) rotate(2deg);
-    }
-}
-@keyframes celebrate {
-    50% {
-        transform: scale(1.18) rotate(-8deg);
-    }
-}
-@keyframes pop {
-    from {
-        transform: scale(0.4) rotate(-8deg);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-@media (max-width: 650px) {
-    .wrap {
-        width: min(100% - 18px, 970px);
-        padding-top: 12px;
-    }
-    .panel {
-        border-radius: 22px;
-        padding: 18px;
-    }
-    .top {
-        grid-template-columns: 1fr;
-    }
-    .friend {
-        margin: auto;
-    }
-    .mode-grid {
-        grid-template-columns: 1fr;
-    }
-    .mode-btn {
-        min-height: 104px;
-    }
-    .slot {
-        width: 42px;
-        height: 53px;
-    }
-    .badge {
-        font-size: 0.9rem;
-    }
-    .play-area {
-        height: 290px;
-    }
-    .target {
-        min-width: 58px;
-        min-height: 54px;
-        font-size: 1.25rem;
-    }
-}
-
-@media (orientation: landscape) and (max-height: 650px) {
-    .wrap {
-        padding-top: 8px;
-    }
-    .panel {
-        margin-top: 8px;
-        padding: 16px;
-    }
-    .word-box {
-        margin: 12px auto;
-    }
-    .emoji {
-        font-size: 3.1rem;
-        min-height: 50px;
-    }
-    .play-area {
-        height: 210px;
-    }
-    .level-story {
-        max-height: 150px;
-    }
-}
-</style>
+<link rel="stylesheet" href="./assets/styles.css">
 </head>
 <body>
 <main class="wrap">
-    <section class="panel game" id="gamePage">
-        <header>
-            <h1 id="gameHeading">Spelling Mission</h1>
-            <div class="badges">
-                <div class="badge" id="game_mode">🎮 Mode</div>
-                <div class="badge">🏆 Level <span id="level">1</span></div>
-                <div class="badge">⭐ Stars <span id="stars">0</span></div>
-            </div>
-        </header>
-        <div id="spellingView">
-            <div class="top">
-                <div class="speech" id="speech">Listen first, then build the word!</div>
-                <div class="friend monster" id="monster">
-                    <i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
-                    ><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
-                </div>
-                <div class="friend robot" id="robot"><div class="screen">^_^</div></div>
-            </div>
-            <div class="word-box">
-                <div class="emoji" id="emoji">📓</div>
-                <div class="hint" id="hint"></div>
-                <div class="slots" id="slots"></div>
-            </div>
-            <div class="letters" id="letters"></div>
-            <div class="message" id="message"></div>
-            <div class="progress">
-                <div class="bar" id="bar"></div>
-                <div class="progress-content">
-                    <span class="star-track" id="starTrack">☆☆☆</span
-                    ><span id="progressNumber">0 / 3 stars to Level 2</span>
-                </div>
-            </div>
-        </div>
+	<section class="panel game" id="gamePage">
+		<header>
+			<h1 id="gameHeading">Spelling Mission</h1>
+			<div class="badges">
+				<div class="badge" id="game_mode">🎮 Mode</div>
+				<div class="badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge">⭐ Stars <span id="stars">0</span></div>
+			</div>
+		</header>
+		<div id="spellingView">
+			<div class="top">
+				<div class="speech" id="speech">Listen first, then build the word!</div>
+				<div class="friend monster" id="monster">
+					<i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
+					><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
+				</div>
+				<div class="friend robot" id="robot"><div class="screen">^_^</div></div>
+			</div>
+			<div class="word-box">
+				<div class="emoji" id="emoji">📓</div>
+				<div class="hint" id="hint"></div>
+				<div class="slots" id="slots"></div>
+			</div>
+			<div class="letters" id="letters"></div>
+			<div class="message" id="message"></div>
+			<div class="progress">
+				<div class="bar" id="bar"></div>
+				<div class="progress-content">
+					<span class="star-track" id="starTrack">☆☆☆</span
+					><span id="progressNumber">0 / 3 stars to Level 2</span>
+				</div>
+			</div>
+		</div>
 
 		<!--
-        <section class="panel intro" id="introPage">
-            <h1>🤖 Robo-Monster Spelling Academy 👾</h1>
-            <div class="hero-row">
-                <div class="big-emoji">👾</div>
-                <div class="big-emoji">📚</div>
-                <div class="big-emoji">🤖</div>
-            </div>
-            <article class="story-card" id="storyText">
-                <strong>The Lost School Colours</strong><br /><br />One sunny morning, Momo the Monster and Bolt the
-                Robot found a mysterious school bag. Inside were a notebook, crayons, pencils, an eraser, a ruler, and
-                colourful words—but their letters had jumped all over the place!<br /><br />Momo and Bolt need a clever
-                Spelling Explorer to put every word back together. Each correct word gives their academy a bright star.
-                Collect three stars to level up, unlock a new story, and help the school colours shine again. Are you
-                ready for the mission?
-            </article>
-            <div class="controls">
-                <button class="control yellow" id="hearStoryBtn" type="button">🔊 Hear the Story</button
-                ><button class="control" id="startModeBtn" type="button">Start</button>
-            </div>
-        </section>
+		<section class="panel intro" id="introPage">
+			<h1>🤖 Robo-Monster Spelling Academy 👾</h1>
+			<div class="hero-row">
+				<div class="big-emoji">👾</div>
+				<div class="big-emoji">📚</div>
+				<div class="big-emoji">🤖</div>
+			</div>
+			<article class="story-card" id="storyText">
+				<strong>The Lost School Colours</strong><br /><br />One sunny morning, Momo the Monster and Bolt the
+				Robot found a mysterious school bag. Inside were a notebook, crayons, pencils, an eraser, a ruler, and
+				colourful words—but their letters had jumped all over the place!<br /><br />Momo and Bolt need a clever
+				Spelling Explorer to put every word back together. Each correct word gives their academy a bright star.
+				Collect three stars to level up, unlock a new story, and help the school colours shine again. Are you
+				ready for the mission?
+			</article>
+			<div class="controls">
+				<button class="control yellow" id="hearStoryBtn" type="button">🔊 Hear the Story</button
+				><button class="control" id="startModeBtn" type="button">Start</button>
+			</div>
+		</section>
 		-->
 
-        <div class="message" id="message"></div>
-        <div class="progress">
-            <div class="bar" id="bar"></div>
-            <div class="progress-content">
-                <span class="star-track" id="starTrack">☆☆☆</span
-                ><span id="progressNumber">0 / 3 stars to Level 2</span>
-            </div>
-        </div>
+		<div class="message" id="message"></div>
+		<div class="progress">
+			<div class="bar" id="bar"></div>
+			<div class="progress-content">
+				<span class="star-track" id="starTrack">☆☆☆</span
+				><span id="progressNumber">0 / 3 stars to Level 2</span>
+			</div>
+		</div>
 			
-        <section class="bonus-screen" id="bonusView">
-            <div class="bonus-header">
-                <div class="bonus-title" id="bonusTitle"></div>
-                <div class="bonus-story" id="bonusStory"></div>
-            </div>
-            <div class="mini-word" id="miniWord"></div>
-            <!--<div class="bonus-status" id="bonusStatus"></div>-->
-            <div class="play-area" id="playArea"></div>
-            <div class="controls">
-                <button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Word</button>
-            </div>
-        </section>
-    </section>
+		<section class="bonus-screen" id="bonusView">
+			<div class="bonus-header">
+				<div class="bonus-title" id="bonusTitle"></div>
+				<div class="bonus-story" id="bonusStory"></div>
+			</div>
+			<div class="mini-word" id="miniWord"></div>
+			<!--<div class="bonus-status" id="bonusStatus"></div>-->
+			<div class="play-area" id="playArea"></div>
+			<div class="controls">
+				<button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Word</button>
+			</div>
+		</section>
+	</section>
 </main>
 
 <div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
-    <div class="word-card">
-        <div class="small">Listen to the word:</div>
-        <div class="bigword" id="popWord">notebook</div>
-        <div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
-    </div>
+	<div class="word-card">
+		<div class="small">Listen to the word:</div>
+		<div class="bigword" id="popWord">notebook</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
+	</div>
 </div>
 <div class="levelup" id="levelModal">
-    <div class="level-card">
-        <div class="sparkles">✨ 🏆 ✨</div>
-        <h2>Level Up!</h2>
-        <p id="levelMessage"></p>
-        <article class="level-story" id="levelStory"></article>
-        <div class="controls">
-            <button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
-            ><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
-        </div>
-    </div>
+	<div class="level-card">
+		<div class="sparkles">✨ 🏆 ✨</div>
+		<h2>Level Up!</h2>
+		<p id="levelMessage"></p>
+		<article class="level-story" id="levelStory"></article>
+		<div class="controls">
+			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
+			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
+		</div>
+	</div>
 </div>
 
 <script>const words = [
-    { word: "notebook", emoji: "📓", clue: "You write notes and drawings in it." },
-    { word: "yellow", emoji: "💛", clue: "It is the colour of a banana." },
-    { word: "purple", emoji: "💜", clue: "It is a colour made by mixing red and blue." },
-    { word: "crayon", emoji: "🖍️", clue: "You use it to draw colourful pictures." },
-    { word: "eraser", emoji: "🧽", clue: "It rubs away pencil mistakes." },
-    { word: "pencil", emoji: "✏️", clue: "You use it to write and draw." },
-    { word: "school", emoji: "🏫", clue: "A place where children learn." },
-    { word: "white", emoji: "⬜", clue: "The colour of a clean blank page." },
-    { word: "black", emoji: "⬛", clue: "A very dark colour." },
-    { word: "ruler", emoji: "📏", clue: "You use it to draw straight lines." },
-    { word: "bag", emoji: "🎒", clue: "You carry school things in it." },
-    { word: "friends", emoji: "🧑‍🤝‍🧑", clue: "We are friends." },
-    { word: "quiet", emoji: "🤫", clue: "It is no noise, being calm." },
-    { word: "class", emoji: "👩🏻‍🏫", clue: "Students are taught together in the same room ." },
-    { word: "name", emoji: "📛", clue: "This is used to refer to person." },
-    { word: "boys", emoji: "👦", clue: "They are a group of male children." },
-    { word: "Hill", emoji: "🏔️", clue: "This is a small mountain, a raised area of land." },
-];
-const levelStories = [
- "Level 2: Momo opened the bag slowly. A yellow crayon rolled out and hid under a wobbly chair. “Come back, little colour!” Momo whispered. The crayon giggled and drew a tiny sun on the floor.",
- "Level 3: The sun winked at Bolt. Suddenly, the classroom felt warm and cheerful. Children laughed, birds sang outside, and the grey walls began to glow with soft yellow light.",
- "Level 4: “We found the first clue!” said Momo. Bolt scanned the notebook with his robot eyes. Letters floated in the air: S-U-N. “Can you put them together?” asked Bolt.",
- "Level 5: When the word SUN was spelled correctly, a golden star appeared above the notebook. It spun once, twice, three times, then settled gently beside Momo’s furry ear.",
- "Level 6: “One star!” cheered Momo. “Two more to go!” Bolt printed a map from his chest screen. It showed a purple road, a white mountain, and a black night garden.",
- "Level 7: They followed the map to the Purple Rainbow Road. Bolt used his ruler to draw the straightest purple line the school had ever seen. It stretched from the door to the big window.",
- "Level 8: Momo tiptoed along the line, balancing a pencil on his nose. “Steady… steady…” he murmured. The pencil wobbled, but Momo did not fall. The road sparkled beneath his big green feet.",
- "Level 9: At the end of the road, they found three tiny stars behind a giant eraser. But the stars were shy. Every time Momo reached for them, they hid deeper in the eraser’s shadow.",
- "Level 10: “Maybe they like gentle voices,” said Bolt. Momo sat down and sang a soft little song about rainbows. One by one, the stars floated out and danced around his horns.",
- "Level 11: The stars formed a word in the air: K-I-N-D. “Kindness is a kind of magic,” said Bolt. Momo smiled. He carefully placed the stars in his notebook pocket.",
- "Level 12: Suddenly, a little pencil rolled out of the school bag and zoomed away. What is it?",
- "Level 13: The little pencil ran away quickly. It hid behind stacks of notebooks, peeking out like a shy wooden mouse.",
- "Level 14: “Come back, Pencil!” called Momo. The pencil shook its point. Bolt tapped the floor three times. “Three, two, one—spell!” he said. The pencil whizzed back to its desk.",
- "Level 15: On the desk, the pencil wrote a message: Great spellers help their friends. Momo read it carefully. “Helping friends is part of every adventure,” he said.",
- "Level 16: Bolt saved the message in his robot memory. Then they made kind cards for everyone at school: teachers, cleaners, gardeners, and the friendly lunch lady with the big smile.",
- "Level 17: An eraser hopped onto a white page and gobbled up a giant scribble. Gulp! Gulp! Then it hiccupped tiny glittery dots all over the classroom.",
- "Level 18: “Oops!” laughed Momo as glitter landed on his nose. Bolt discovered that mistakes can become something fun. A messy scribble had turned into a sparkling night sky.",
- "Level 19: The glitter dots began to move. They joined together and spelled M-O-O-N. A friendly paper moon unfolded from the notebook and floated near the ceiling.",
- "Level 20: “Hello, Moon,” said Momo. The moon smiled with a soft silver light. “I have been waiting for explorers with kind hearts,” it whispered. “Follow me to the Night Garden.”",
- "Level 21: That evening, rain tapped gently on the windows. The school became as black as the night sky. Bolt switched on his bright robot light. Momo carried a purple crayon lantern.",
- "Level 22: In the Night Garden, flowers slept under leaf blankets. A small snail wore a tiny raincoat. “Welcome,” said the snail. “The second star is near the pond, but the path is tricky.”",
- "Level 23: The path was made of stepping stones. Each stone had a letter: F, R, O, G. Bolt hopped carefully. Momo counted each step. “F… R… O… G!”",
- "Level 24: When the word FROG was complete, a green star rose from the pond. A friendly frog with spectacles bowed politely. “You solved my puzzle,” he croaked. “Please take this star.”",
- "Level 25: “Two stars!” cheered Bolt. His lights blinked happily. Momo danced a silly monster dance, and the frog laughed so hard that his spectacles slipped down his nose.",
- "Level 26: The moon guided them back inside. “One more star,” it said. “But the last star lives on the Whiteboard Snow Mountain. It only appears when friends work together.”",
- "Level 27: The next morning, the whiteboard had become a snowy mountain with a purple peak. Soft white flakes drifted from the ceiling. Momo gasped. “It’s snowing inside our school!”",
- "Level 28: Bolt built a little ski lift from pencils and rulers. Momo sat on an eraser sled. “Ready?” asked Bolt. “Ready!” shouted Momo. Down they swooshed, leaving a trail of sparkles.",
- "Level 29: At the bottom, they found a frozen sign. It read: T-E-A-M. Momo tried to lift the sign alone, but it was far too heavy. Bolt pushed too. Still, it would not move.",
- "Level 30: Then their friends arrived: the frog, the snail, the paper moon, and even the shy pencil. Together, they lifted the sign high into the snowy air.",
- "Level 31: The word TEAM glowed brightly. A white star appeared at the mountain’s purple peak. It floated down and landed in Momo’s open paws.",
- "Level 32: “Three stars!” everyone cheered. The academy bell rang by itself. Colourful ribbons unfurled from the ceiling, and the school bag began to wiggle.",
- "Level 33: The school bag grew little feet and tap-danced across the floor. Tap-tap-tap! Momo clapped. Bolt measured every step with his ruler. The bag was very proud of its dancing.",
- "Level 34: “You collected three stars,” said the bag. “Now you may unlock a new story.” It opened wide, and a swirl of yellow, purple, white, and shiny black colours rose into the air.",
- "Level 35: The colours spun around Momo and Bolt. They wrapped the walls in rainbows, painted the floor with stars, and turned the grey desks into bright, cheerful little boats.",
- "Level 36: The school colours were back! Children ran in from the playground. They gasped at the rainbow walls, the dancing bag, and the friendly moon still glowing near the ceiling.",
- "Level 37: Momo held up the three stars. “We did it together,” he said. Bolt nodded. “Spelling, kindness, and teamwork made the magic stronger.”",
- "Level 38: The yellow crayon drew a big sun. The purple crayon drew a winding road. The white crayon drew snowy mountains. The black crayon drew a calm, friendly night.",
- "Level 39: The eraser cleaned a smudge from the window, then hiccupped one last glittery dot. It landed on Bolt’s antenna and stayed there, twinkling like a tiny robot star.",
- "Level 40: The pencil wrote a new message on the board: Every explorer can learn. Every friend can help. Momo read it aloud, and everyone clapped.",
- "Level 41: The school bag stopped dancing and sat quietly by the door. “Thank you,” it said. “But adventures never truly end. New words are always waiting to be found.”",
- "Level 42: Bolt opened his map screen again. This time, it showed a red bridge, a blue sea, and a green forest full of whispering leaves. Momo’s eyes grew wide with excitement.",
- "Level 43: “Shall we go?” asked Momo. Bolt held out his metal hand. “Always,” he said. And with their notebook, crayons, and three shining stars, the two friends stepped toward the next adventure.",
- "Level 44: At the red bridge, they met a worried little bird. Her nest had lost its colours. “The wind scattered my feathers’ rainbow,” she chirped sadly.",
- "Level 45: Momo found a red feather under the bridge. Bolt found an orange one in the grass. They searched carefully until they had yellow, green, blue, and purple feathers too.",
- "Level 46: They placed the feathers in the nest. The bird fluffed them happily. “My colours are home!” she sang. She gave Momo a small rainbow badge for being a helpful friend.",
- "Level 47: Next, they reached the blue sea. Waves rolled onto the sand with a gentle hush-hush sound. A crab wearing a tiny helmet waved at them from a rock.",
- "Level 48: “I lost my shell pattern,” said the crab. “It had stripes, dots, and zigzags.” Momo picked up a stick and drew wavy lines in the wet sand.",
- "Level 49: Bolt used small pebbles to make dots. Together, they created stripes, spots, and zigzags. The crab looked at the patterns and clicked his claws with joy.",
- "Level 50: The sea sparkled. The crab gave them a shiny shell sticker. “Every shell can have its own pattern,” he said. “Just like every friend can be special.”",
- "Level 51: The green forest was quiet at first. Then the leaves began to whisper: “Find the hidden word… find the hidden word…” Momo listened closely.",
- "Level 52: Bolt’s scanner pointed to a mossy log. Underneath, they found letters carved into the wood: L, E, A, F. Momo arranged them carefully.",
- "Level 53: LEAF! The forest rustled with delight. A green music note floated down and landed on Bolt’s antenna. The squirrel in an acorn hat clapped her tiny paws.",
- "Level 54: “You listen well,” said the squirrel. “Listening helps friends understand each other.” Momo and Bolt thanked the forest and promised to visit again soon.",
- "Level 55: Back at school, the rainbow badge, shell sticker, and music note joined the three stars. The school bag hummed a happy tune. “You unlocked the Story of the Missing Music,” it said.",
- "Level 56: Inside the notebook, musical notes had escaped from their lines and were hiding behind the crayons. A shy note named Do hid inside the yellow crayon box.",
- "Level 57: Re hid under the ruler. Mi peeked from behind the eraser. Fa rolled beneath a desk. “Where are you, little notes?” Momo sang softly.",
- "Level 58: One by one, the notes came out. But just as Bolt placed the last note on the line, the notebook gave a sad little shiver. The music would not play.",
- "Level 59: “What is wrong?” asked Momo. A tiny triangle instrument was missing! Bolt searched behind the piano. Momo looked inside the school bag. Nothing.",
- "Level 60: The bird from the red bridge flew in through the window. “I saw something shiny near the garden!” she chirped. Everyone hurried outside to look.",
- "Level 61: There, beneath a sunflower, lay the little triangle. A beetle was using it as a roof. “Sorry,” said the beetle. “It looked like a perfect tiny house.”",
- "Level 62: Momo did not scold the beetle. Instead, Bolt built a leaf shelter with a pebble door. The beetle moved in happily, and the triangle returned to the music room.",
- "Level 63: When the triangle rang—ting!—the notebook began to play a cheerful tune. Everyone clapped, hummed, and swayed. Even the quiet whiteboard seemed to glow in time.",
- "Level 64: Momo tapped a little drum gently. Boom-boom! Bolt tapped a rhythm too. The frog hopped in time. The snail swayed slowly, smiling beneath his raincoat.",
- "Level 65: The paper moon danced across the ceiling. The crayons marched in a colourful parade, waving their little paper flags. The school bag tap-danced once more.",
- "Level 66: The notebook gave them a golden music note sticker. “Music sounds best when everyone joins in,” it said. Momo pinned it beside his rainbow badge.",
- "Level 67: The next morning, the notebook flipped to a new page. It showed a castle made entirely of books. “The Library Castle,” read Momo. “The doors are locked by story words.”",
- "Level 68: At the castle gate, a friendly dragon made of paper was waiting. “I cannot remember my favourite word,” she sighed. “It begins with B and means a place full of books.”",
- "Level 69: Momo thought hard. “Bookshop?” he guessed. The dragon shook her head. Bolt suggested, “Bookcase?” Still, the dragon sighed. Then a child called out, “Library!”",
- "Level 70: LIBRARY! The castle doors opened with a creak. Inside, shelves reached the ceiling, and books fluttered their covers like birds preparing to fly.",
- "Level 71: The paper dragon danced with joy. “You remembered my word!” she cried. She gave Momo a purple story key. “This opens the door to new adventures.”",
- "Level 72: Inside the castle, they met a book with no ending. Its last pages were blank. “I am scared to finish,” the book whispered. “What if nobody likes my ending?”",
- "Level 73: Momo sat beside the book. “Endings can be new beginnings,” he said gently. Bolt added, “And friends can help you imagine one.”",
- "Level 74: Together, they wrote: The little book flew beyond the clouds, carrying stories to children who needed a friend. The blank pages filled with soft golden light.",
- "Level 75: The book laughed and fluttered around the library. It gave Bolt a tiny bookmark shaped like a heart. “For explorers who help friends feel brave,” it said.",
- "Level 76: Suddenly, the library lights flickered. The paper dragon looked scared. “The Story Wind is coming!” she cried. Books flapped their covers, and the castle doors began to rattle.",
- "Level 77: Bolt held the door with his strong robot arms. Momo used his purple crayon lantern to make a warm light. “Stay close,” he told the little book.",
- "Level 78: The Story Wind rushed through the shelves, trying to blow the words away. But the friends held hands, sang their spelling song, and kept every word safe.",
- "Level 79: When the wind passed, the library was quiet again. The paper dragon smiled. “You stayed together,” she said. “That is why the stories are safe.”",
- "Level 80: The school bag appeared at the castle door, panting from all its dancing. “Explorers,” it said, “look up! Your kindness is making a picture in the sky.”",
- "Level 81: Above them, the three stars connected with the rainbow badge, shell sticker, music note, story key, and heart bookmark. They formed the shape of a giant open book.",
- "Level 82: Letters floated down like snowflakes. Momo caught one: D. Bolt caught another: R. Soon they had D, R, E, A, M. “What word will they make?” asked Momo.",
- "Level 83: DREAM shone across the library ceiling. The paper dragon curled up beneath it. “Every good story begins with a dream,” she said sleepily.",
- "Level 84: Momo and Bolt returned to their classroom. The sun had set, and the room was peaceful. The crayons rested in their box. The pencils stood quietly in their pot.",
- "Level 85: But one window was still dark. Outside, a little star had lost its way. It tapped softly on the glass. “Can you help me find my friends in the sky?” it asked.",
- "Level 86: Bolt opened the window carefully. Momo held up his purple crayon lantern. The little star followed its gentle glow across the playground.",
- "Level 87: They walked past the garden, the pond, and the big oak tree. At last, they reached a clear patch of sky where other stars were waiting.",
- "Level 88: The little star zoomed into place. The sky filled with light. The star gave Momo a tiny silver thank-you sticker before twinkling happily with its friends.",
- "Level 89: Back inside, the notebook opened by itself. On its page was a map of the whole school: classroom, library, garden, pond, music room, and playground.",
- "Level 90: Tiny coloured lights appeared at every place they had visited. The map showed that kindness had travelled everywhere—like invisible strings connecting all their friends.",
- "Level 91: Momo traced the strings with one claw. “We did not just find colours,” he said. “We found ways to care.” Bolt nodded, his lights glowing warmly.",
- "Level 92: The school bag opened one last time. Inside lay a small box labelled: For the Super Spelling Explorers. Momo lifted the lid with trembling paws.",
- "Level 93: Inside were shiny medals, one for Momo, one for Bolt, and one for every child who had helped along the way. The medals sparkled with all the colours of their adventures.",
- "Level 94: Then there was a knock at the door. The bird, crab, frog, snail, squirrel, beetle, paper moon, paper dragon, and the little book had all come to visit!",
- "Level 95: The classroom filled with feathers, shells, music, stories, and happy voices. The children placed medals around their friends’ necks. Even the beetle wore a tiny leaf ribbon.",
- "Level 96: The paper moon rose above them all. “You have learned something important,” it said. “Words are powerful, but kindness makes them shine.”",
- "Level 97: Momo looked at the notebook. The once-scattered letters were now neat and colourful. Each word had found its home, just like every friend had found a way to help.",
- "Level 98: Bolt printed a final message: THE SCHOOL COLOURS ARE SAFE. The letters glowed in yellow, purple, white, black, red, blue, and green.",
- "Level 99: That night, the school slept peacefully. The rainbow walls glowed softly. The paper moon watched over the desks. The stars twinkled outside like tiny friendly eyes.",
- "Level 100: In the morning, sunlight touched the classroom. Momo and Bolt were ready for a brand-new adventure. What adventure would you like them to find next—one word, one friend, and one colour at a time?",
+	{ word: "notebook", emoji: "📓", clue: "You write notes and drawings in it." },
+	{ word: "yellow", emoji: "💛", clue: "It is the colour of a banana." },
+	{ word: "purple", emoji: "💜", clue: "It is a colour made by mixing red and blue." },
+	{ word: "crayon", emoji: "🖍️", clue: "You use it to draw colourful pictures." },
+	{ word: "eraser", emoji: "🧽", clue: "It rubs away pencil mistakes." },
+	{ word: "pencil", emoji: "✏️", clue: "You use it to write and draw." },
+	{ word: "school", emoji: "🏫", clue: "A place where children learn." },
+	{ word: "white", emoji: "⬜", clue: "The colour of a clean blank page." },
+	{ word: "black", emoji: "⬛", clue: "A very dark colour." },
+	{ word: "ruler", emoji: "📏", clue: "You use it to draw straight lines." },
+	{ word: "bag", emoji: "🎒", clue: "You carry school things in it." },
+	{ word: "friends", emoji: "🧑‍🤝‍🧑", clue: "We are friends." },
+	{ word: "quiet", emoji: "🤫", clue: "It is no noise, being calm." },
+	{ word: "class", emoji: "👩🏻‍🏫", clue: "Students are taught together in the same room ." },
+	{ word: "name", emoji: "📛", clue: "This is used to refer to person." },
+	{ word: "boys", emoji: "👦", clue: "They are a group of male children." },
+	{ word: "Hill", emoji: "🏔️", clue: "This is a small mountain, a raised area of land." },
 ];
 const modeStories = {
-    spell: "The Word Workshop Story. Momo and Bolt opened a workshop full of mixed-up letters. Put each letter in the correct order to repair the school words and make the workshop lights shine.",
-    fish: "The Poor Dock Fish Story. At the old poor dock, hungry little letter fish could not find their way to the warm water garden. Every correct letter you catch repairs the dock and helps the fish swim home.",
-    ghost: "The Friendly Ghost Story. In the school library, tiny letter ghosts floated out of an old black notebook. Bolt built a gentle zapper to send the correct letter ghosts safely back to their word homes.",
-    race: "The Rainbow Race Story. A speedy word sprite raced through the school playground, carrying mixed-up letters. Catch each correct letter to chase the sprite along the rainbow track and recover the colours.",
+	spell: "The Word Workshop Story. Momo and Bolt opened a workshop full of mixed-up letters. Put each letter in the correct order to repair the school words and make the workshop lights shine.",
+	fish: "The Poor Dock Fish Story. At the old poor dock, hungry little letter fish could not find their way to the warm water garden. Every correct letter you catch repairs the dock and helps the fish swim home.",
+	ghost: "The Friendly Ghost Story. In the school library, tiny letter ghosts floated out of an old black notebook. Bolt built a gentle zapper to send the correct letter ghosts safely back to their word homes.",
+	race: "The Rainbow Race Story. A speedy word sprite raced through the school playground, carrying mixed-up letters. Catch each correct letter to chase the sprite along the rainbow track and recover the colours.",
 };
 const modeLabels = { spell: "Spelling", fish: "Fish", ghost: "Ghosts", race: "Race" };
 const funnyColors = [
-    "#d8f7ff",
-    "#ffe0f0",
-    "#fff0b6",
-    "#dff8d1",
-    "#e7dcff",
-    "#ffd9b8",
-    "#c9f4ee",
-    "#dce6ff",
-    "#ffd5dc",
-    "#e8f7c8",
+	"#d8f7ff",
+	"#ffe0f0",
+	"#fff0b6",
+	"#dff8d1",
+	"#e7dcff",
+	"#ffd9b8",
+	"#c9f4ee",
+	"#dce6ff",
+	"#ffd5dc",
+	"#e8f7c8",
 ];
 const $ = (id) => document.getElementById(id);
 const speech = $("speech"),
-    emoji = $("emoji"),
-    hint = $("hint"),
-    slots = $("slots"),
-    letters = $("letters"),
-    message = $("message"),
-    starsEl = $("stars"),
-    levelEl = $("level"),
-    bar = $("bar"),
-    progressNumber = $("progressNumber"),
-    starTrack = $("starTrack"),
-    monster = $("monster"),
-    robot = $("robot");
+	emoji = $("emoji"),
+	hint = $("hint"),
+	slots = $("slots"),
+	letters = $("letters"),
+	message = $("message"),
+	starsEl = $("stars"),
+	levelEl = $("level"),
+	bar = $("bar"),
+	progressNumber = $("progressNumber"),
+	starTrack = $("starTrack"),
+	monster = $("monster"),
+	robot = $("robot");
 let current,
-    answer = [],
-    selected = [],
-    robotMode = false,
-    letterOrder = [],
-    checking = false,
-    audioCtx,
-    popupTimer,
-    wordDeck = [],
-    activeMode = "spell",
-    bonusWord = "",
-    bonusRemaining = [],
-    nextMode = "spell";
+	answer = [],
+	selected = [],
+	robotMode = false,
+	letterOrder = [],
+	checking = false,
+	audioCtx,
+	popupTimer,
+	wordDeck = [],
+	activeMode = "spell",
+	bonusWord = "",
+	bonusRemaining = [],
+	nextMode = "spell";
 	
 const params = new URLSearchParams(location.search);
 let level = Number(params.get("level") || 1);
@@ -1089,457 +185,457 @@ starsEl.textContent = stars;
 levelEl.textContent = level;
 
 function tone(f = 440, d = 0.08, t = "sine", v = 0.05) {
-    try {
-        audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === "suspended") audioCtx.resume();
-        const o = audioCtx.createOscillator(),
-            g = audioCtx.createGain();
-        o.type = t;
-        o.frequency.value = f;
-        g.gain.setValueAtTime(v, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
-        o.connect(g);
-        g.connect(audioCtx.destination);
-        o.start();
-        o.stop(audioCtx.currentTime + d);
-    } catch (e) {}
+	try {
+		audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+		if (audioCtx.state === "suspended") audioCtx.resume();
+		const o = audioCtx.createOscillator(),
+			g = audioCtx.createGain();
+		o.type = t;
+		o.frequency.value = f;
+		g.gain.setValueAtTime(v, audioCtx.currentTime);
+		g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
+		o.connect(g);
+		g.connect(audioCtx.destination);
+		o.start();
+		o.stop(audioCtx.currentTime + d);
+	} catch (e) {}
 }
 const sounds = {
-    click: () => tone(520, 0.06, "square"),
-    undo: () => tone(280, 0.1, "triangle"),
-    hear: () => {
-        tone(660, 0.08);
-        setTimeout(() => tone(880, 0.1), 85);
-    },
-    wrong: () => {
-        tone(190, 0.12, "sawtooth");
-        setTimeout(() => tone(160, 0.16, "sawtooth"), 120);
-    },
-    win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.13, "sine", 0.07), i * 110)),
-    level: () =>
-        [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.17, "triangle", 0.08), i * 100)),
+	click: () => tone(520, 0.06, "square"),
+	undo: () => tone(280, 0.1, "triangle"),
+	hear: () => {
+		tone(660, 0.08);
+		setTimeout(() => tone(880, 0.1), 85);
+	},
+	wrong: () => {
+		tone(190, 0.12, "sawtooth");
+		setTimeout(() => tone(160, 0.16, "sawtooth"), 120);
+	},
+	win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.13, "sine", 0.07), i * 110)),
+	level: () =>
+		[523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.17, "triangle", 0.08), i * 100)),
 };
 function say(text, stop = true) {
-    if (!("speechSynthesis" in window)) return;
-    if (stop) speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-UK";
-    u.rate = 1.00;
-    u.pitch = 1.00;
-    speechSynthesis.speak(u);
+	if (!("speechSynthesis" in window)) return;
+	if (stop) speechSynthesis.cancel();
+	const u = new SpeechSynthesisUtterance(text);
+	u.lang = "en-UK";
+	u.rate = 1.00;
+	u.pitch = 1.00;
+	speechSynthesis.speak(u);
 }
 function spellWord(word) {
-    return word + ". " + word.split("").join(",") + " . " + word + ". ";
+	return word + ". " + word.split("").join(",") + " . " + word + ". ";
 }
 function shuffle(a) {
-    const b = [...a];
-    for (let i = b.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [b[i], b[j]] = [b[j], b[i]];
-    }
-    return b;
+	const b = [...a];
+	for (let i = b.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[b[i], b[j]] = [b[j], b[i]];
+	}
+	return b;
 }
 function randomBg() {
-    document.body.style.background = funnyColors[Math.floor(Math.random() * funnyColors.length)];
+	document.body.style.background = funnyColors[Math.floor(Math.random() * funnyColors.length)];
 }
 function setPrompt(t, read = true) {
-    speech.textContent = t;
-    if (read) say(t);
+	speech.textContent = t;
+	if (read) say(t);
 }
 function updateProgress() {
-    const n = stars % 3;
-    bar.style.width = (n / 3) * 100 + "%";
-    starTrack.textContent = "★".repeat(n) + "☆".repeat(3 - n);
-    progressNumber.textContent = n + " / 3 stars to Level " + (level + 1);
+	const n = stars % 3;
+	bar.style.width = (n / 3) * 100 + "%";
+	starTrack.textContent = "★".repeat(n) + "☆".repeat(3 - n);
+	progressNumber.textContent = n + " / 3 stars to Level " + (level + 1);
 }
 function closeWordPopup() {
-    clearTimeout(popupTimer);
-    $("wordPop").classList.remove("show");
+	clearTimeout(popupTimer);
+	$("wordPop").classList.remove("show");
 }
 function nextWord() {
-    if (!wordDeck.length) wordDeck = shuffle(words);
-    return wordDeck.pop();
+	if (!wordDeck.length) wordDeck = shuffle(words);
+	return wordDeck.pop();
 }
 
 function activateMode(mode) {
-    closeWordPopup();
-    activeMode = mode;
-    $("spellingView").style.display = mode === "spell" ? "block" : "none";
-    $("bonusView").classList.toggle("active", mode !== "spell");
-    randomBg();
-    if (mode === "spell") {
-        chooseWord();
-    } else {
-        startBonusMode(mode);
-    }
+	closeWordPopup();
+	activeMode = mode;
+	$("spellingView").style.display = mode === "spell" ? "block" : "none";
+	$("bonusView").classList.toggle("active", mode !== "spell");
+	randomBg();
+	if (mode === "spell") {
+		chooseWord();
+	} else {
+		startBonusMode(mode);
+	}
 }
 
 function awardWin(word) {
-    stars++;
-    starsEl.textContent = stars;
-    updateProgress();
-    message.textContent = "🎉 ZAP! Correct! You spelled " + word + ".";
-    setPrompt("Hooray! You are a super speller!");
-    setTimeout(() => say("The word is " + spellWord(word)), 350);
-    if (stars % 3 === 0) {
-        level++;
-        levelEl.textContent = level;
-        setTimeout(showLevelUp, 950);
-    } else {
-        setTimeout(() => {
-            if (activeMode === "spell") chooseWord();
-            else startBonusMode(activeMode);
-        }, 1650);
-    }
+	stars++;
+	starsEl.textContent = stars;
+	updateProgress();
+	message.textContent = "🎉 ZAP! Correct! You spelled " + word + ".";
+	setPrompt("Hooray! You are a super speller!");
+	setTimeout(() => say("The word is " + spellWord(word)), 350);
+	if (stars % 3 === 0) {
+		level++;
+		levelEl.textContent = level;
+		setTimeout(showLevelUp, 950);
+	} else {
+		setTimeout(() => {
+			if (activeMode === "spell") chooseWord();
+			else startBonusMode(activeMode);
+		}, 1650);
+	}
 }
 function showLevelUp() {
-    sounds.level();
-    const story = levelStories[(level - 2) % levelStories.length];
-    nextMode = ["spell", "fish", "ghost", "race"][Math.floor(Math.random() * 4)];
-    $("levelMessage").textContent = "You collected 3 stars and reached Level " + level + "!";
-    $("levelStory").textContent = story;
-    $("levelModal").style.display = "grid";
-    say("Level up! You reached level " + level + ". " + story + " Next adventure: " + modeLabels[nextMode] + " mode.");
+	sounds.level();
+	const story = RoboStory.getStoryPage(level).text;
+	nextMode = ["spell", "fish", "ghost", "race"][Math.floor(Math.random() * 4)];
+	$("levelMessage").textContent = "You collected 3 stars and reached Level " + level + "!";
+	$("levelStory").textContent = story;
+	$("levelModal").style.display = "grid";
+	say("Level up! You reached level " + level + ". " + story + " Next adventure: " + modeLabels[nextMode] + " mode.");
 }
 function startBonusMode(mode) {
-    bonusWord = nextWord().word;
-    bonusRemaining = bonusWord.split("");
-    $("bonusTitle").textContent = {
-        fish: "🐟 Fish for Letters",
-        ghost: "👻 Ghost Letter Zap",
-        race: "🏃 Rainbow Race and Chase",
-    }[mode];
-    $("bonusStory").textContent = modeStories[mode];
-    renderMiniWord(-1);
-    //say($("bonusTitle").textContent + ". " + modeStories[mode] + " The word is " + spellWord(bonusWord) + ".");
-    buildBonus();
+	bonusWord = nextWord().word;
+	bonusRemaining = bonusWord.split("");
+	$("bonusTitle").textContent = {
+		fish: "🐟 Fish for Letters",
+		ghost: "👻 Ghost Letter Zap",
+		race: "🏃 Rainbow Race and Chase",
+	}[mode];
+	$("bonusStory").textContent = modeStories[mode];
+	renderMiniWord(-1);
+	//say($("bonusTitle").textContent + ". " + modeStories[mode] + " The word is " + spellWord(bonusWord) + ".");
+	buildBonus();
 }
 const mazeLayout = ["101010101", "000000000", "101010101", "000000000", "101010101", "000000000", "111111111"];
 let mazePos = { r: 3, c: 4 },
-    ghosts = [],
-    ghostTimer = null,
-    flashTimer = null,
-    ghostHintTimer = null,
-    ghostHintHideTimer = null;
+	ghosts = [],
+	ghostTimer = null,
+	flashTimer = null,
+	ghostHintTimer = null,
+	ghostHintHideTimer = null;
 function buildBonus() {
-    const area = $("playArea");
-    if (activeMode === "ghost") {
-        buildGhostMaze();
-        return;
-    }
-    area.innerHTML = "";
-    area.className = "play-area " + (activeMode === "race" ? "race-area" : activeMode === "fish" ? "water" : "");
-    if (activeMode === "race") {
-        const runner = document.createElement("div");
-        runner.className = "runner";
-        runner.id = "runner";
-        runner.style.left = "4%";
-        runner.textContent = "👾";
-        area.appendChild(runner);
-    }
-    if (activeMode === "fish") {
-        const dock = document.createElement("div");
-        dock.className = "dock";
-        area.appendChild(dock);
-    }
-    spawnTargets();
+	const area = $("playArea");
+	if (activeMode === "ghost") {
+		buildGhostMaze();
+		return;
+	}
+	area.innerHTML = "";
+	area.className = "play-area " + (activeMode === "race" ? "race-area" : activeMode === "fish" ? "water" : "");
+	if (activeMode === "race") {
+		const runner = document.createElement("div");
+		runner.className = "runner";
+		runner.id = "runner";
+		runner.style.left = "4%";
+		runner.textContent = "👾";
+		area.appendChild(runner);
+	}
+	if (activeMode === "fish") {
+		const dock = document.createElement("div");
+		dock.className = "dock";
+		area.appendChild(dock);
+	}
+	spawnTargets();
 }
 function clearGhostTimers() {
-    clearInterval(ghostTimer);
-    clearTimeout(ghostHintTimer);
-    clearTimeout(ghostHintHideTimer);
-    ghostTimer = ghostHintTimer = ghostHintHideTimer = null;
+	clearInterval(ghostTimer);
+	clearTimeout(ghostHintTimer);
+	clearTimeout(ghostHintHideTimer);
+	ghostTimer = ghostHintTimer = ghostHintHideTimer = null;
 }
 function buildGhostMaze() {
-    clearGhostTimers();
-    const area = $("playArea");
-    $("gamePage").classList.add("ghost-maze-mode");
-    area.innerHTML = "";
-    area.className = "play-area ghost-maze";
-    const field = document.createElement("div");
-    field.className = "ghost-maze-field";
-    area.appendChild(field);
-    mazeLayout.forEach((row) =>
-        [...row].forEach((cell) => {
-            const tile = document.createElement("div");
-            tile.className = "maze-cell " + (cell === "1" ? "maze-wall" : "maze-floor");
-            field.appendChild(tile);
-        })
-    );
-    const player = document.createElement("div");
-    player.className = "maze-player";
-    player.id = "mazePlayer";
-    player.textContent = "🤖";
-    field.appendChild(player);
-    if (!ghosts.length) {
-        [
-            [1, 7],
-            [3, 1],
-            [5, 7],
-        ].forEach((pos, i) => {
-            const box = document.createElement("button");
-            box.type = "button";
-            box.className = "ghost-box";
-            const wanted = bonusRemaining[0],
-                letters = [wanted, ...shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted))];
-            box.dataset.letter = wanted;
-            box.innerHTML = "<span>👻</span><span>" + wanted + "</span>";
-            box.onclick = () => {};
-            field.appendChild(box);
-            ghosts.push({ r: pos[0], c: pos[1], el: box, dr: i % 2 ? 0 : 1, dc: i % 2 ? 1 : 0 });
-        });
-    } else {
-	    g = ghosts[0];
-        g.el.dataset.letter = bonusRemaining[0];
-        g.el.innerHTML = "<span>👻</span><span>" + bonusRemaining[0] + "</span>";
-        //g.el.style.display = "block";
-        ghosts.forEach((g) => field.appendChild(g.el));
+	clearGhostTimers();
+	const area = $("playArea");
+	$("gamePage").classList.add("ghost-maze-mode");
+	area.innerHTML = "";
+	area.className = "play-area ghost-maze";
+	const field = document.createElement("div");
+	field.className = "ghost-maze-field";
+	area.appendChild(field);
+	mazeLayout.forEach((row) =>
+		[...row].forEach((cell) => {
+			const tile = document.createElement("div");
+			tile.className = "maze-cell " + (cell === "1" ? "maze-wall" : "maze-floor");
+			field.appendChild(tile);
+		})
+	);
+	const player = document.createElement("div");
+	player.className = "maze-player";
+	player.id = "mazePlayer";
+	player.textContent = "🤖";
+	field.appendChild(player);
+	if (!ghosts.length) {
+		[
+			[1, 7],
+			[3, 1],
+			[5, 7],
+		].forEach((pos, i) => {
+			const box = document.createElement("button");
+			box.type = "button";
+			box.className = "ghost-box";
+			const wanted = bonusRemaining[0],
+				letters = [wanted, ...shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted))];
+			box.dataset.letter = wanted;
+			box.innerHTML = "<span>👻</span><span>" + wanted + "</span>";
+			box.onclick = () => {};
+			field.appendChild(box);
+			ghosts.push({ r: pos[0], c: pos[1], el: box, dr: i % 2 ? 0 : 1, dc: i % 2 ? 1 : 0 });
+		});
+	} else {
+		g = ghosts[0];
+		g.el.dataset.letter = bonusRemaining[0];
+		g.el.innerHTML = "<span>👻</span><span>" + bonusRemaining[0] + "</span>";
+		//g.el.style.display = "block";
+		ghosts.forEach((g) => field.appendChild(g.el));
 	}
-    const controls = document.createElement("div");
-    controls.className = "ghost-maze-controls";
-    [
-        ["↑", -1, 0, "up"],
-        ["←", 0, -1, "left"],
-        ["↓", 1, 0, "down"],
-        ["→", 0, 1, "right"],
-    ].forEach(([t, dr, dc, cl]) => {
-        const b = document.createElement("button");
-        b.className = cl;
-        b.type = "button";
-        b.textContent = t;
-        b.onclick = () => moveMaze(dr, dc);
-        controls.appendChild(b);
-    });
-    area.appendChild(controls);
-    positionMaze();
-    ghostTimer = setInterval(moveGhosts, 900);
-    ghostHintTimer = setTimeout(showGhostHint, 20000);
+	const controls = document.createElement("div");
+	controls.className = "ghost-maze-controls";
+	[
+		["↑", -1, 0, "up"],
+		["←", 0, -1, "left"],
+		["↓", 1, 0, "down"],
+		["→", 0, 1, "right"],
+	].forEach(([t, dr, dc, cl]) => {
+		const b = document.createElement("button");
+		b.className = cl;
+		b.type = "button";
+		b.textContent = t;
+		b.onclick = () => moveMaze(dr, dc);
+		controls.appendChild(b);
+	});
+	area.appendChild(controls);
+	positionMaze();
+	ghostTimer = setInterval(moveGhosts, 900);
+	ghostHintTimer = setTimeout(showGhostHint, 20000);
 }
 function positionMaze() {
-    const field = document.querySelector(".ghost-maze-field"),
-        w = field.clientWidth,
-        h = field.clientHeight,
-        cw = w / 9,
-        ch = h / 7,
-        place = (el, r, c) => {
-            el.style.left = c * cw + 8 + "px";
-            el.style.top = r * ch + 8 + "px";
-        };
-    place($("mazePlayer"), mazePos.r, mazePos.c);
-    ghosts.forEach((g) => place(g.el, g.r, g.c));
+	const field = document.querySelector(".ghost-maze-field"),
+		w = field.clientWidth,
+		h = field.clientHeight,
+		cw = w / 9,
+		ch = h / 7,
+		place = (el, r, c) => {
+			el.style.left = c * cw + 8 + "px";
+			el.style.top = r * ch + 8 + "px";
+		};
+	place($("mazePlayer"), mazePos.r, mazePos.c);
+	ghosts.forEach((g) => place(g.el, g.r, g.c));
 }
 function validMaze(r, c) {
-    return r >= 0 && r <= 6 && c >= 0 && c <= 8 && mazeLayout[r][c] === "0";
+	return r >= 0 && r <= 6 && c >= 0 && c <= 8 && mazeLayout[r][c] === "0";
 }
 function moveMaze(dr, dc) {
-    const nr = mazePos.r + dr,
-        nc = mazePos.c + dc;
-    if (!validMaze(nr, nc)) return;
-    mazePos = { r: nr, c: nc };
-    sounds.click();
-    positionMaze();
-    checkGhostCollisions();
+	const nr = mazePos.r + dr,
+		nc = mazePos.c + dc;
+	if (!validMaze(nr, nc)) return;
+	mazePos = { r: nr, c: nc };
+	sounds.click();
+	positionMaze();
+	checkGhostCollisions();
 }
 function moveGhosts() {
-    if (activeMode !== "ghost" || ghosts.length !== 3) return;
-    const used = new Set([mazePos.r + "," + mazePos.c]);
-    ghosts.forEach((g) => used.add(g.r + "," + g.c));
-    ghosts.forEach((g) => {
-        const options = shuffle([
-            [0, 1],
-            [0, -1],
-            [1, 0],
-            [-1, 0],
-        ]).filter(([dr, dc]) => validMaze(g.r + dr, g.c + dc) && !used.has(g.r + dr + "," + (g.c + dc)));
-        if (options.length) {
-            used.delete(g.r + "," + g.c);
-            const [dr, dc] = options[0];
-            g.r += dr;
-            g.c += dc;
-            used.add(g.r + "," + g.c);
-        }
-    });
-    positionMaze();
-    checkGhostCollisions();
+	if (activeMode !== "ghost" || ghosts.length !== 3) return;
+	const used = new Set([mazePos.r + "," + mazePos.c]);
+	ghosts.forEach((g) => used.add(g.r + "," + g.c));
+	ghosts.forEach((g) => {
+		const options = shuffle([
+			[0, 1],
+			[0, -1],
+			[1, 0],
+			[-1, 0],
+		]).filter(([dr, dc]) => validMaze(g.r + dr, g.c + dc) && !used.has(g.r + dr + "," + (g.c + dc)));
+		if (options.length) {
+			used.delete(g.r + "," + g.c);
+			const [dr, dc] = options[0];
+			g.r += dr;
+			g.c += dc;
+			used.add(g.r + "," + g.c);
+		}
+	});
+	positionMaze();
+	checkGhostCollisions();
 }
 function checkGhostCollisions() {
-    const robot = $("mazePlayer");
-    if (!robot) return;
-    const a = robot.getBoundingClientRect();
-    ghosts.slice().forEach((g, i) => {
-        if (mazePos.r === g.r && mazePos.c === g.c) resolveGhostCollision(i);
-    });
+	const robot = $("mazePlayer");
+	if (!robot) return;
+	const a = robot.getBoundingClientRect();
+	ghosts.slice().forEach((g, i) => {
+		if (mazePos.r === g.r && mazePos.c === g.c) resolveGhostCollision(i);
+	});
 }
 function resolveGhostCollision(i) {
-    const g = ghosts[i],
-        wanted = bonusRemaining[0];
+	const g = ghosts[i],
+		wanted = bonusRemaining[0];
 	console.log("resolveGhostCollision=" + g.el.dataset.letter + "," + wanted);
 	
-    if (!g || !wanted) return;
-    if (g.el.dataset.letter !== wanted) {
-        wrongMaze();
-        return;
-    }
+	if (!g || !wanted) return;
+	if (g.el.dataset.letter !== wanted) {
+		wrongMaze();
+		return;
+	}
 	
-    sounds.win();
-    const matchedIndex = bonusWord.length - bonusRemaining.length;
-    bonusRemaining.shift();
-    renderMiniWord(matchedIndex);
+	sounds.win();
+	const matchedIndex = bonusWord.length - bonusRemaining.length;
+	bonusRemaining.shift();
+	renderMiniWord(matchedIndex);
 	
-    if (!bonusRemaining.length) {
-        clearGhostTimers();
-        //$("bonusStatus").textContent = "Amazing! You finished the word.";
-        setTimeout(() => awardWin(bonusWord), 900);
-        return;
-    }
+	if (!bonusRemaining.length) {
+		clearGhostTimers();
+		//$("bonusStatus").textContent = "Amazing! You finished the word.";
+		setTimeout(() => awardWin(bonusWord), 900);
+		return;
+	}
 	
 	//g.el.style.display = "none";
 	g.el.style.transition = "left 0s linear,top 0s linear";
-    g.el.dataset.letter = bonusRemaining[0];
+	g.el.dataset.letter = bonusRemaining[0];
 	g.el.innerHTML = "<span>👻</span><span>" + bonusRemaining[0] + "</span>";
 	
-    const j = Math.floor(Math.random() * 2) + 1;
+	const j = Math.floor(Math.random() * 2) + 1;
 	g.r = ghosts[j].r;
 	g.c = ghosts[j].c;
-    positionMaze();
-    clearTimeout(ghostHintTimer);
-    ghostHintTimer = setTimeout(showGhostHint, 20000);
-    setTimeout(() => {g.el.style.transition = "left 0.8s linear,top 0.8s linear"}, 700);
+	positionMaze();
+	clearTimeout(ghostHintTimer);
+	ghostHintTimer = setTimeout(showGhostHint, 20000);
+	setTimeout(() => {g.el.style.transition = "left 0.8s linear,top 0.8s linear"}, 700);
 }
 function renderMiniWord(matchedIndex = -1) {
-    const target = $("miniWord");
-    target.innerHTML = "";
-    [...bonusWord].forEach((letter, i) => {
-        const span = document.createElement("span");
-        span.textContent = letter;
-        span.className = i <= matchedIndex ? "matched-letter" : "";
-        target.appendChild(span);
-    });
+	const target = $("miniWord");
+	target.innerHTML = "";
+	[...bonusWord].forEach((letter, i) => {
+		const span = document.createElement("span");
+		span.textContent = letter;
+		span.className = i <= matchedIndex ? "matched-letter" : "";
+		target.appendChild(span);
+	});
 }
 function showGhostHint() {
-    const g = ghosts.find((x) => x.el.dataset.letter === bonusRemaining[0]);
-    if (!g) return;
-    g.el.classList.add("hint-ghost");
-    say("Hint! The correct ghost is getting bigger. Find the letter " + bonusRemaining[0] + ".");
-    clearTimeout(ghostHintHideTimer);
-    ghostHintHideTimer = setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
+	const g = ghosts.find((x) => x.el.dataset.letter === bonusRemaining[0]);
+	if (!g) return;
+	g.el.classList.add("hint-ghost");
+	say("Hint! The correct ghost is getting bigger. Find the letter " + bonusRemaining[0] + ".");
+	clearTimeout(ghostHintHideTimer);
+	ghostHintHideTimer = setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
 }
 function wrongMaze() {
-    sounds.wrong();
-    //$("bonusStatus").textContent = "Move Bolt onto a ghost to check its letter.";
-    document.body.classList.add("invert-flash");
-    clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
+	sounds.wrong();
+	//$("bonusStatus").textContent = "Move Bolt onto a ghost to check its letter.";
+	document.body.classList.add("invert-flash");
+	clearTimeout(flashTimer);
+	flashTimer = setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
 }
 function spawnTargets() {
-    const area = $("playArea"),
-        required = [...new Set(bonusRemaining)],
-        distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => !required.includes(x))).slice(
-            0,
-            Math.max(4, required.length + 1)
-        ),
-        choices = shuffle([...required, ...distractors]),
-        positions = [
-            [5, 12],
-            [27, 55],
-            [51, 15],
-            [72, 54],
-            [10, 70],
-            [43, 72],
-            [75, 15],
-            [57, 48],
-            [30, 20],
-            [82, 72],
-        ];
-    choices.slice(0, positions.length).forEach((letter, i) => {
-        const x = document.createElement("button");
-        x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
-        x.type = "button";
-        x.textContent = activeMode === "fish" ? "🐟 " + letter : activeMode === "ghost" ? "👻 " + letter : letter;
-        x.style.left = positions[i][0] + "%";
-        x.style.top = positions[i][1] + "%";
-        x.onclick = () => bonusClick(letter, x);
-        area.appendChild(x);
-    });
+	const area = $("playArea"),
+		required = [...new Set(bonusRemaining)],
+		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => !required.includes(x))).slice(
+			0,
+			Math.max(4, required.length + 1)
+		),
+		choices = shuffle([...required, ...distractors]),
+		positions = [
+			[5, 12],
+			[27, 55],
+			[51, 15],
+			[72, 54],
+			[10, 70],
+			[43, 72],
+			[75, 15],
+			[57, 48],
+			[30, 20],
+			[82, 72],
+		];
+	choices.slice(0, positions.length).forEach((letter, i) => {
+		const x = document.createElement("button");
+		x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
+		x.type = "button";
+		x.textContent = activeMode === "fish" ? "🐟 " + letter : activeMode === "ghost" ? "👻 " + letter : letter;
+		x.style.left = positions[i][0] + "%";
+		x.style.top = positions[i][1] + "%";
+		x.onclick = () => bonusClick(letter, x);
+		area.appendChild(x);
+	});
 }
 function bonusClick(letter, el) {
-    const wanted = bonusRemaining[0];
-    if (letter === wanted) {
-        sounds.win();
-        bonusRemaining.shift();
-        el.remove();
-        $("miniWord").textContent = bonusRemaining.join("") || "You won!";
-        if (activeMode === "race") {
-            const runner = $("runner");
-            runner.style.left =
-                Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / bonusWord.length)) + "%";
-        }
-        if (!bonusRemaining.length) {
-            //$("bonusStatus").textContent = "Amazing! You finished the word.";
-            setTimeout(() => awardWin(bonusWord), 900);
-        } else {
-            //$("bonusStatus").textContent = "Correct! Find the next letter: " + bonusRemaining[0];
-            say("Correct! Find the next letter: " + bonusRemaining[0]);
-            buildBonus();
-        }
-    } else {
-        sounds.wrong();
-        //$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
-        say("Good try. Find the letter " + wanted + ".");
-    }
+	const wanted = bonusRemaining[0];
+	if (letter === wanted) {
+		sounds.win();
+		bonusRemaining.shift();
+		el.remove();
+		$("miniWord").textContent = bonusRemaining.join("") || "You won!";
+		if (activeMode === "race") {
+			const runner = $("runner");
+			runner.style.left =
+				Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / bonusWord.length)) + "%";
+		}
+		if (!bonusRemaining.length) {
+			//$("bonusStatus").textContent = "Amazing! You finished the word.";
+			setTimeout(() => awardWin(bonusWord), 900);
+		} else {
+			//$("bonusStatus").textContent = "Correct! Find the next letter: " + bonusRemaining[0];
+			say("Correct! Find the next letter: " + bonusRemaining[0]);
+			buildBonus();
+		}
+	} else {
+		sounds.wrong();
+		//$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
+		say("Good try. Find the letter " + wanted + ".");
+	}
 }
 /*
 $("hearStoryBtn").onclick = () => {
-    sounds.hear();
-    say($("storyText").innerText);
+	sounds.hear();
+	say($("storyText").innerText);
 };
 $("startModeBtn").onclick = () => {
-    $("gamePage").style.display = "grid";
-    say("Start.");
+	$("gamePage").style.display = "grid";
+	say("Start.");
 	startBonusMode("ghost");
 };
 document.querySelectorAll("[data-mode]").forEach(
-    (b) =>
-        (b.onclick = () => {
-            $("modeSelect").style.display = "none";
-            //$("introPage").style.display = "none";
-            $("gamePage").style.display = "block";
-            activateMode(b.dataset.mode);
-        })
+	(b) =>
+		(b.onclick = () => {
+			$("modeSelect").style.display = "none";
+			//$("introPage").style.display = "none";
+			$("gamePage").style.display = "block";
+			activateMode(b.dataset.mode);
+		})
 );
 $("hearLevelStoryBtn").onclick = () => {
-    sounds.hear();
-    say($("levelStory").textContent);
+	sounds.hear();
+	say($("levelStory").textContent);
 };
 $("continueBtn").onclick = () => {
-    $("levelModal").style.display = "none";
-    activateMode(nextMode);
+	$("levelModal").style.display = "none";
+	activateMode(nextMode);
 };
 */
 $("miniHearBtn").onclick = () => {
-    sounds.hear();
-    say("The word is " + spellWord(bonusWord));
+	sounds.hear();
+	say("The word is " + spellWord(bonusWord));
 };
 
 $("game_mode").onclick = () => {
-    sounds.hear();
-    window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
 $("game_mode_next").onclick = () => {
-    sounds.hear();
-    window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
 
 document.addEventListener("keydown", (e) => {
-    if (activeMode !== "ghost") return;
-    const k = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
-    if (k) {
-        e.preventDefault();
-        moveMaze(...k);
-    }
+	if (activeMode !== "ghost") return;
+	const k = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
+	if (k) {
+		e.preventDefault();
+		moveMaze(...k);
+	}
 });
 window.addEventListener("resize", () => {
-    if (activeMode === "ghost" && document.querySelector(".ghost-maze-field")) positionMaze();
+	if (activeMode === "ghost" && document.querySelector(".ghost-maze-field")) positionMaze();
 });
 
 $("gamePage").style.display = "block";
@@ -1548,8 +644,8 @@ updateProgress();
 </script>
 <script>
 function removeAfterLastLine() {
-    document.querySelectorAll("#lastline ~ *").forEach((anchor) => anchor.remove());
-    return;
+	document.querySelectorAll("#lastline ~ *").forEach((anchor) => anchor.remove());
+	return;
 }
 setTimeout(removeAfterLastLine, 100);
 setTimeout(removeAfterLastLine, 1000);
