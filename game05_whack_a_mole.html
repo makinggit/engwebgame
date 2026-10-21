@@ -43,7 +43,7 @@
 <script src="assets/game-lifecycle.js"></script>
 <script>
 (function(){
-  const { $, $$, readProgress, updateProgress, goTo, speak, sounds, tone } = RoboCommon;
+  const { $, $$, readProgress, updateProgress, goTo, sounds, tone } = RoboCommon;
   const { createTimerManager, createGameLifecycle } = RoboGame;
   const timers = createTimerManager();
 
@@ -52,21 +52,12 @@
   let activeMode = params.get('mode') || 'mole';
   let carrots = parseInt(params.get('carrots') || '0', 10) || 0;
   let target = "", popupTimer = null, wordHintTimer = null;
-  let moleTimer = null, molePopTimers = [];
+  let molePopTimers = [];
   let wordPhase = 'playing';
 
   const board = $('#moleBoard');
   const pop = $('#wordPop'), popWord = $('#popWord'), popSay = $('#popSay'), popClose = $('#popClose');
   const levelUp = $('#levelUp'), luTitle = $('#luTitle'), luText = $('#luText'), luNext = $('#luNext');
-
-  const modeLabels = { spell:'Spell', fish:'Fish', ghost:'Ghost', race:'Race', mole:'Mole' };
-  const modeStories = {
-    spell:['Robo learns to spell!'],
-    fish:['Robo goes fishing!'],
-    ghost:['Robo enters the maze!'],
-    race:['Robo starts racing!'],
-    mole:['Robo whacks moles!']
-  };
 
   function sync(){
     $('#level').textContent = 'Level ' + level;
@@ -140,17 +131,6 @@
   }
 
   popClose.onclick = ()=>{ clearTimeout(popupTimer); pop.classList.remove('show'); };
-
-  function startBonusMode(){
-    wordPhase = 'bonus';
-    stopMoles();
-    clearTimeout(wordHintTimer);
-    const pool = ['spell','fish','ghost','race'].filter(m=>m!==activeMode);
-    const nextMode = pool[Math.floor(Math.random()*pool.length)];
-    luTitle.textContent = 'Bonus!';
-    luText.textContent = 'Next: ' + nextMode;
-    levelUp.classList.add('show');
-  }
 
   luNext.onclick = ()=>{
     levelUp.classList.remove('show');
