@@ -27,6 +27,62 @@ Open `index.html` directly in a modern browser. No server or package installatio
 
 This repository is suitable for GitHub Pages. Enable Pages in repository settings and publish from `main` or a GitHub Actions workflow.
 
+## Shared lifecycle & timers
+
+Each game should use the shared lifecycle module to avoid leftover timers, animation frames, and event listeners when switching modes, completing a word, returning to the mode menu, or hiding the page.
+
+Add this script before the game-specific script:
+
+```html
+<script src="./assets/game-lifecycle.js"></script>
+```
+
+Create a timer manager and game lifecycle:
+
+```js
+const timers = RoboGame.createTimerManager();
+
+const game = RoboGame.createGameLifecycle({
+  name: 'whack-a-word',
+  timers,
+  hooks: {
+    initGame() {
+      // Reset word, score, DOM, and round state.
+    },
+    startRound() {
+      // Show moles, letters, or the next prompt.
+    },
+    handleCorrect() {
+      // Award one star and prepare the next word.
+    },
+    handleWrong() {
+      // Provide feedback without revealing the answer.
+    },
+    completeWord() {
+      // Stop the round and navigate or load the next word.
+    },
+    cleanup() {
+      // Reset DOM and game-specific state.
+    }
+  }
+});
+```
+
+Replace direct browser timer calls with managed calls:
+
+```js
+// Before
+setTimeout(showNextRound, 450);
+setInterval(moveGhost, 1000);
+requestAnimationFrame(render);
+
+// After
+timers.setTimeout(showNextRound, 450);
+timers.setInterval(moveGhost, 1000);
+timers.requestAnimationFrame(render);
+```
+
+Use `game.cleanup()` when leaving a mode or completing a word. The lifecycle also automatically cleans up on `pagehide`, `beforeunload`, and when the page becomes hidden.
 
 # Development Brief
 
