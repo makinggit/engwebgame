@@ -6,6 +6,10 @@ A HTML5 spelling game for children around age 7.
 
 Open `index.html` directly in a modern browser. No server or package installation is required.
 
+## Encoding
+
+File encoding is in UTF-8-BOM.
+
 ## Development workflow
 
 1. Create a feature or fix branch from `main`.
