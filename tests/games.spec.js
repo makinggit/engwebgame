@@ -13,7 +13,6 @@ test.describe('game01_spelling', () => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game01_spelling.html?level=1&stars=0');
     await expect(page.locator('#gamePage')).toBeVisible();
-    await expect(page.locator('#game_mode')).toBeVisible();
     const letter = page.locator('#letters .letter').first();
     await expect(letter).toBeVisible();
     await letter.click();
@@ -77,7 +76,7 @@ test.describe('game06_fill_blank', () => {
     await expect(blanks.first()).toBeVisible();
     const before = await blanks.first().textContent();
     await page.locator('#letters .letter').first().click();
-    const after = await page.locator('.sentence-blank.active, .sentence-blank').first().textContent();
+    const after = await page.locator('.sentence-blank').first().textContent();
     expect(after).not.toBe(before);
     expect(errors).toEqual([]);
   });

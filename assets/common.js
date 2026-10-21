@@ -2,7 +2,16 @@
 (function (global) {
   'use strict';
 
-  const $ = (id) => document.getElementById(id);
+  // Accepts either a bare id ('storyTitle') or a selector ('#game', '.mole-hole').
+  const $ = (sel) => {
+    if (typeof sel !== 'string') return null;
+    if (sel.startsWith('#') || sel.startsWith('.') || sel.includes('[')) {
+      return document.querySelector(sel);
+    }
+    return document.getElementById(sel);
+  };
+
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
   function getParams() {
     return new URLSearchParams(global.location.search);
@@ -78,7 +87,7 @@
   function shuffle(items) {
     const copy = [...items];
     for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(Math.random() * copy.length);
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     return copy;
@@ -106,6 +115,7 @@
 
   global.RoboCommon = {
     $,
+    $$,
     getParams,
     readProgress,
     buildProgressQuery,
