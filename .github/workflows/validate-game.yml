@@ -25,7 +25,11 @@ jobs:
         with:
           node-version: 22
       - name: Check required files
-        run: test -f index.html
+        run: |
+          test -f index.html
+          test -f game_mode.html
+          test -f assets/common.js
+          test -f assets/game-lifecycle.js
       - name: Extract and check JavaScript syntax
         run: |
           python3 - <<'PY'
@@ -38,10 +42,13 @@ jobs:
           node --check game.js
       - name: Check core features
         run: |
-          grep -q "Spelling Mission" index.html
-          grep -q "Fish for Letters" index.html
-          grep -q "Ghost" index.html
-          grep -q "speechSynthesis" index.html
+          grep -q "Robo-Monster Spelling Academy" index.html
+          grep -rq "speechSynthesis" assets/
+          grep -q "Word Fishing" game_mode.html
+          grep -q "Ghost Maze" game_mode.html
+          grep -q "Spelling Race" game_mode.html
+          grep -q "Whack-a-Word" game_mode.html
+          grep -q "Fill in the Blanks" game_mode.html
       - name: Configure GitHub Pages
         if: github.event_name == 'push'
         uses: actions/configure-pages@v5
