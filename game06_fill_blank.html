@@ -1,1 +1,160 @@
-<!-- placeholder: add pause/resume hooks -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robo Spelling · Fill in the Blanks</title>
+<link rel="stylesheet" href="assets/game.css">
+<link rel="stylesheet" href="assets/game06_fill_blank.css">
+</head>
+<body>
+<div id="gamePage">
+  <header class="topbar">
+    <a class="back" href="game_mode.html" aria-label="Back">←</a>
+    <div class="titles">
+      <h1>Fill in the Blanks</h1>
+      <p class="sub">Choose the right word for each blank</p>
+    </div>
+    <div class="hud">
+      <span class="pill" id="level">Level 1</span>
+      <span class="pill" id="stars">★ 0</span>
+    </div>
+  </header>
+  <main class="sentence-wrap">
+    <div id="sentence" class="sentence"></div>
+    <div id="letters" class="letters"></div>
+    <div id="wordPop" class="word-pop" role="dialog" aria-modal="true">
+      <div class="pop-card">
+        <p class="word" id="popWord">word</p>
+        <p class="say" id="popSay">Tap to hear</p>
+        <button class="close" id="popClose" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="levelUp" class="level-up" role="dialog" aria-modal="true">
+      <div class="card">
+        <h2 id="luTitle">Level Up!</h2>
+        <p id="luText"></p>
+        <button id="luNext">Continue</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/common.js"></script>
+<script src="assets/game-lifecycle.js"></script>
+<script>
+(function(){
+  const { $, $$, readProgress, updateProgress, goTo, speak, sounds, tone, modeLabels, modeStories } = RoboCommon;
+  const { createTimerManager, createGameLifecycle } = RoboGame;
+  const timers = createTimerManager();
+
+  const params = new URLSearchParams(location.search);
+  let { level, stars } = readProgress();
+  let activeMode = params.get('mode') || 'spell';
+  let current = null, filled = [], popupTimer = null, sentenceNextTimer = null;
+
+  const sentenceEl = $('#sentence'), lettersEl = $('#letters');
+  const pop = $('#wordPop'), popWord = $('#popWord'), popSay = $('#popSay'), popClose = $('#popClose');
+  const levelUp = $('#levelUp'), luTitle = $('#luTitle'), luText = $('#luText'), luNext = $('#luNext');
+
+  function sync(){
+    $('#level').textContent = 'Level ' + level;
+    $('#stars').textContent = '★ ' + stars;
+    const url = new URL(location.href);
+    url.searchParams.set('level', level);
+    url.searchParams.set('stars', stars);
+    url.searchParams.set('mode', activeMode);
+    history.replaceState(null,'',url);
+  }
+
+  function chooseWord(){
+    const list = RoboCommon.sentencesForLevel(level, activeMode);
+    current = list[Math.floor(Math.random()*list.length)];
+    filled = Array(current.blanks).fill(null);
+    render();
+    timers.setTimeout(showWordPopup, 420, current.word);
+  }
+
+  function render(){
+    sentenceEl.innerHTML = '';
+    current.parts.forEach((part,i)=>{
+      const span = document.createElement('span');
+      span.className = 'sentence-part';
+      span.textContent = part;
+      sentenceEl.appendChild(span);
+      if(i < current.blanks){
+        const b = document.createElement('span');
+        b.className = 'sentence-blank' + (filled[i] ? ' filled' : '');
+        b.textContent = filled[i] || '_';
+        sentenceEl.appendChild(b);
+      }
+    });
+    lettersEl.innerHTML = '';
+    const pool = RoboCommon.letterPool(current.word, level);
+    pool.forEach(ch=>{
+      const btn = document.createElement('button');
+      btn.className = 'letter';
+      btn.textContent = ch;
+      btn.onclick = ()=>{
+        const idx = filled.indexOf(null);
+        if(idx >= 0){
+          filled[idx] = ch;
+          render();
+          tone(520,0.05,'sine',0.04);
+          if(filled.every(x=>x)){
+            const guess = filled.join('');
+            if(guess === current.word){
+              stars += 1;
+              updateProgress(level, stars);
+              sync();
+              tone(660,0.09,'sine',0.05);
+              sentenceNextTimer = timers.setTimeout(chooseWord, 900);
+            } else {
+              tone(220,0.12,'square',0.04);
+              sentenceNextTimer = timers.setTimeout(()=>{ filled = Array(current.blanks).fill(null); render(); }, 900);
+            }
+          }
+        }
+      };
+      lettersEl.appendChild(btn);
+    });
+  }
+
+  function showWordPopup(w){
+    popWord.textContent = w;
+    popSay.textContent = 'Tap to hear';
+    pop.classList.add('show');
+    sounds.hear(w);
+    popupTimer = timers.setTimeout(()=>pop.classList.remove('show'), 5000);
+  }
+
+  popClose.onclick = ()=>{ clearTimeout(popupTimer); pop.classList.remove('show'); };
+
+  function showLevelUp(){
+    const pool = ['spell','fish','ghost','race'].filter(m=>m!==activeMode);
+    const nextMode = pool[Math.floor(Math.random()*pool.length)];
+    luTitle.textContent = 'Level Up!';
+    luText.textContent = (modeStories[nextMode] || ['Great job!'])[0];
+    levelUp.classList.add('show');
+  }
+
+  luNext.onclick = ()=>{
+    levelUp.classList.remove('show');
+    goTo('./game_mode.html', level, stars);
+  };
+
+  const lifecycle = createGameLifecycle({
+    name: 'fill-blank',
+    timers,
+    hooks: {
+      initGame(){ sync(); chooseWord(); },
+      pause(){ document.body.classList.add('is-paused'); },
+      resume(){ document.body.classList.remove('is-paused'); },
+      cleanup(){ pop.classList.remove('show'); }
+    }
+  });
+
+  lifecycle.initGame();
+})();
+</script>
+</body>
+</html>

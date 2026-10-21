@@ -1,1 +1,165 @@
-<!-- placeholder: add pause/resume hooks -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robo Spelling · Spell</title>
+<link rel="stylesheet" href="assets/game.css">
+<link rel="stylesheet" href="assets/game01_spelling.css">
+</head>
+<body>
+<div id="gamePage">
+  <header class="topbar">
+    <a class="back" href="game_mode.html" aria-label="Back">←</a>
+    <div class="titles">
+      <h1>Spell the Word</h1>
+      <p class="sub" id="hint">Listen and build the word</p>
+    </div>
+    <div class="hud">
+      <span class="pill" id="level">Level 1</span>
+      <span class="pill" id="stars">★ 0</span>
+    </div>
+  </header>
+  <main class="board">
+    <section class="word-area">
+      <div class="slots" id="slots"></div>
+      <div class="letters" id="letters"></div>
+      <div class="actions">
+        <button id="hearBtn" class="ghost">🔊 Hear</button>
+        <button id="checkBtn" class="primary">Check</button>
+      </div>
+    </section>
+    <div id="wordPop" class="word-pop" role="dialog" aria-modal="true">
+      <div class="pop-card">
+        <p class="word" id="popWord">word</p>
+        <p class="say" id="popSay">Tap to hear</p>
+        <button class="close" id="popClose" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="levelUp" class="level-up" role="dialog" aria-modal="true">
+      <div class="card">
+        <h2 id="luTitle">Level Up!</h2>
+        <p id="luText"></p>
+        <button id="luNext">Continue</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/common.js"></script>
+<script src="assets/game-lifecycle.js"></script>
+<script>
+(function(){
+  const { $, $$, readProgress, updateProgress, goTo, speak, sounds, tone, modeLabels, modeStories } = RoboCommon;
+  const { createTimerManager, createGameLifecycle } = RoboGame;
+  const timers = createTimerManager();
+
+  const params = new URLSearchParams(location.search);
+  let { level, stars } = readProgress();
+  let activeMode = params.get('mode') || 'spell';
+  let word = "", filled = [], checking = false;
+  let popupTimer = null;
+
+  const slotsEl = $('#slots'), lettersEl = $('#letters');
+  const pop = $('#wordPop'), popWord = $('#popWord'), popSay = $('#popSay'), popClose = $('#popClose');
+  const levelUp = $('#levelUp'), luTitle = $('#luTitle'), luText = $('#luText'), luNext = $('#luNext');
+  const hearBtn = $('#hearBtn'), checkBtn = $('#checkBtn');
+
+  function sync(){
+    $('#level').textContent = 'Level ' + level;
+    $('#stars').textContent = '★ ' + stars;
+    const url = new URL(location.href);
+    url.searchParams.set('level', level);
+    url.searchParams.set('stars', stars);
+    url.searchParams.set('mode', activeMode);
+    history.replaceState(null,'',url);
+  }
+
+  function chooseWord(){
+    const list = RoboCommon.wordsForLevel(level, activeMode);
+    word = list[Math.floor(Math.random()*list.length)];
+    filled = Array(word.length).fill(null);
+    checking = false;
+    render();
+    timers.setTimeout(showWordPopup, 420, word);
+  }
+
+  function render(){
+    slotsEl.innerHTML = '';
+    word.split('').forEach((ch,i)=>{
+      const s = document.createElement('div');
+      s.className = 'slot' + (filled[i] ? ' filled' : '') + (checking && filled[i] !== ch ? ' wrong' : '');
+      s.textContent = filled[i] || '';
+      slotsEl.appendChild(s);
+    });
+    lettersEl.innerHTML = '';
+    const pool = RoboCommon.letterPool(word, level);
+    pool.forEach(ch=>{
+      const b = document.createElement('button');
+      b.className = 'letter';
+      b.textContent = ch;
+      b.onclick = ()=>{
+        if(checking) return;
+        const idx = filled.indexOf(null);
+        if(idx >= 0){ filled[idx] = ch; render(); tone(520,0.05,'sine',0.04); }
+      };
+      lettersEl.appendChild(b);
+    });
+  }
+
+  function showWordPopup(w){
+    popWord.textContent = w;
+    popSay.textContent = 'Tap to hear';
+    pop.classList.add('show');
+    sounds.hear(w);
+    popupTimer = timers.setTimeout(()=>pop.classList.remove('show'), 5000);
+  }
+
+  popClose.onclick = ()=>{ clearTimeout(popupTimer); pop.classList.remove('show'); };
+  hearBtn.onclick = ()=> sounds.hear(word);
+
+  checkBtn.onclick = ()=>{
+    if(checking) return;
+    checking = true;
+    render();
+    const ok = filled.join('') === word;
+    if(ok){
+      stars += 1;
+      updateProgress(level, stars);
+      sync();
+      tone(660,0.09,'sine',0.05);
+      timers.setTimeout(()=>{ checking = false; chooseWord(); }, 900);
+    } else {
+      tone(220,0.12,'square',0.04);
+      timers.setTimeout(()=>{ checking = false; render(); }, 900);
+    }
+  };
+
+  function showLevelUp(){
+    const pool = ['spell','fish','ghost','race'].filter(m=>m!==activeMode);
+    const nextMode = pool[Math.floor(Math.random()*pool.length)];
+    luTitle.textContent = 'Level Up!';
+    luText.textContent = (modeStories[nextMode] || ['Great job!'])[0];
+    levelUp.classList.add('show');
+  }
+
+  luNext.onclick = ()=>{
+    levelUp.classList.remove('show');
+    goTo('./game_mode.html', level, stars);
+  };
+
+  const lifecycle = createGameLifecycle({
+    name: 'spelling',
+    timers,
+    hooks: {
+      initGame(){ sync(); chooseWord(); },
+      pause(){ document.body.classList.add('is-paused'); },
+      resume(){ document.body.classList.remove('is-paused'); },
+      cleanup(){ pop.classList.remove('show'); }
+    }
+  });
+
+  lifecycle.initGame();
+})();
+</script>
+</body>
+</html>

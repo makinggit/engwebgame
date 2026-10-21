@@ -1,1 +1,151 @@
-<!-- placeholder: add pause/resume hooks -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robo Spelling · Ghost Maze</title>
+<link rel="stylesheet" href="assets/game.css">
+<link rel="stylesheet" href="assets/game03_ghost_maze.css">
+</head>
+<body>
+<div id="gamePage">
+  <header class="topbar">
+    <a class="back" href="game_mode.html" aria-label="Back">←</a>
+    <div class="titles">
+      <h1>Ghost Maze</h1>
+      <p class="sub">Find the word and avoid ghosts</p>
+    </div>
+    <div class="hud">
+      <span class="pill" id="level">Level 1</span>
+      <span class="pill" id="stars">★ 0</span>
+    </div>
+  </header>
+  <main class="maze-wrap">
+    <div id="maze" class="maze"></div>
+    <div class="ghost-maze-controls">
+      <button class="up" aria-label="Up">↑</button>
+      <button class="left" aria-label="Left">←</button>
+      <button class="down" aria-label="Down">↓</button>
+      <button class="right" aria-label="Right">→</button>
+    </div>
+    <div id="wordPop" class="word-pop" role="dialog" aria-modal="true">
+      <div class="pop-card">
+        <p class="word" id="popWord">word</p>
+        <p class="say" id="popSay">Tap to hear</p>
+        <button class="close" id="popClose" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="levelUp" class="level-up" role="dialog" aria-modal="true">
+      <div class="card">
+        <h2 id="luTitle">Level Up!</h2>
+        <p id="luText"></p>
+        <button id="luNext">Continue</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="assets/common.js"></script>
+<script src="assets/game-lifecycle.js"></script>
+<script>
+(function(){
+  const { $, $$, readProgress, updateProgress, goTo, speak, sounds, tone, modeLabels, modeStories } = RoboCommon;
+  const { createTimerManager, createGameLifecycle } = RoboGame;
+  const timers = createTimerManager();
+
+  const params = new URLSearchParams(location.search);
+  let { level, stars } = readProgress();
+  let activeMode = params.get('mode') || 'ghost';
+  let target = "", popupTimer = null, ghostHintTimer = null;
+  let paused = false;
+
+  const mazeEl = $('#maze');
+  const pop = $('#wordPop'), popWord = $('#popWord'), popSay = $('#popSay'), popClose = $('#popClose');
+  const levelUp = $('#levelUp'), luTitle = $('#luTitle'), luText = $('#luText'), luNext = $('#luNext');
+
+  function sync(){
+    $('#level').textContent = 'Level ' + level;
+    $('#stars').textContent = '★ ' + stars;
+    const url = new URL(location.href);
+    url.searchParams.set('level', level);
+    url.searchParams.set('stars', stars);
+    url.searchParams.set('mode', activeMode);
+    history.replaceState(null,'',url);
+  }
+
+  function buildGhostMaze(){
+    mazeEl.innerHTML = '';
+    const list = RoboCommon.wordsForLevel(level, activeMode);
+    target = list[Math.floor(Math.random()*list.length)];
+    const size = 5;
+    const cells = [];
+    for(let r=0;r<size;r++){
+      for(let c=0;c<size;c++){
+        const d = document.createElement('div');
+        d.className = 'cell';
+        d.dataset.r = r; d.dataset.c = c;
+        mazeEl.appendChild(d);
+        cells.push(d);
+      }
+    }
+    const targetCell = cells[Math.floor(Math.random()*cells.length)];
+    targetCell.classList.add('target');
+    targetCell.dataset.word = target;
+    targetCell.onclick = ()=>{
+      stars += 1;
+      updateProgress(level, stars);
+      sync();
+      tone(660,0.09,'sine',0.05);
+      buildGhostMaze();
+    };
+    const ghostCount = Math.min(3, 1 + Math.floor(level/2));
+    const ghosts = [];
+    for(let i=0;i<ghostCount;i++){
+      const g = cells[Math.floor(Math.random()*cells.length)];
+      g.classList.add('ghost');
+      ghosts.push(g);
+    }
+    timers.setTimeout(showWordPopup, 420, target);
+    ghostHintTimer = timers.setTimeout(()=>{
+      if(!paused) sounds.hear(target);
+    }, 12000);
+  }
+
+  function showWordPopup(w){
+    popWord.textContent = w;
+    popSay.textContent = 'Tap to hear';
+    pop.classList.add('show');
+    sounds.hear(w);
+    popupTimer = timers.setTimeout(()=>pop.classList.remove('show'), 5000);
+  }
+
+  popClose.onclick = ()=>{ clearTimeout(popupTimer); pop.classList.remove('show'); };
+
+  function showLevelUp(){
+    const pool = ['spell','fish','ghost','race'].filter(m=>m!==activeMode);
+    const nextMode = pool[Math.floor(Math.random()*pool.length)];
+    luTitle.textContent = 'Level Up!';
+    luText.textContent = (modeStories[nextMode] || ['Great job!'])[0];
+    levelUp.classList.add('show');
+  }
+
+  luNext.onclick = ()=>{
+    levelUp.classList.remove('show');
+    goTo('./game_mode.html', level, stars);
+  };
+
+  const lifecycle = createGameLifecycle({
+    name: 'ghost-maze',
+    timers,
+    hooks: {
+      initGame(){ sync(); buildGhostMaze(); },
+      pause(){ paused = true; document.body.classList.add('is-paused'); },
+      resume(){ paused = false; document.body.classList.remove('is-paused'); },
+      cleanup(){ pop.classList.remove('show'); }
+    }
+  });
+
+  lifecycle.initGame();
+})();
+</script>
+</body>
+</html>
