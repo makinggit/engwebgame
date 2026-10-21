@@ -93,6 +93,43 @@
     return copy;
   }
 
+  const GAME_WORDS = [
+    'cat', 'dog', 'sun', 'hat', 'bus', 'red', 'big', 'cup',
+    'notebook', 'yellow', 'purple', 'crayon', 'eraser', 'pencil',
+    'school', 'white', 'black', 'ruler', 'bag', 'friends'
+  ];
+
+  function wordsForLevel(level, mode) {
+    const bank = (global.RoboWords && global.RoboWords.WORD_LIST)
+      ? global.RoboWords.WORD_LIST.map((item) => String(item.word).toLowerCase())
+      : [];
+    const words = bank.length ? bank : GAME_WORDS;
+    const maxLen = level <= 1 ? 6 : level <= 2 ? 8 : 99;
+    const filtered = words.filter((w) => w.length <= maxLen);
+    return filtered.length ? filtered : GAME_WORDS;
+  }
+
+  function letterPool(word, level) {
+    const target = String(word).toLowerCase();
+    const letters = target.split('');
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz';
+    const extras = Math.max(3, Math.min(6, 8 - letters.length));
+    const pool = [...letters];
+    while (pool.length < letters.length + extras) {
+      pool.push(alphabet[Math.floor(Math.random() * alphabet.length)]);
+    }
+    return shuffle(pool);
+  }
+
+  function sentencesForLevel(level, mode) {
+    const words = wordsForLevel(level, mode);
+    return words.map((w) => ({
+      word: w,
+      blanks: 1,
+      parts: ['I have a ', '.']
+    }));
+  }
+
   const funnyColors = [
     '#d8f7ff', '#ffe0f0', '#fff0b6', '#dff8d1', '#e7dcff',
     '#ffd9b8', '#c9f4ee', '#dce6ff', '#ffd5dc', '#e8f7c8'
@@ -125,6 +162,9 @@
     say,
     shuffle,
     randomBg,
+    wordsForLevel,
+    letterPool,
+    sentencesForLevel,
     updateProgress
   };
 })(window);
