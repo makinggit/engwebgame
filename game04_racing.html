@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -102,55 +102,24 @@
 <script src="./assets/words.js"></script>
 <script src="./assets/story.js"></script>
 <script src="./assets/game-lifecycle.js"></script>
-<script>const words = [
-	{ word: "notebook", emoji: "📓", clue: "You write notes and drawings in it." },
-	{ word: "yellow", emoji: "💛", clue: "It is the colour of a banana." },
-	{ word: "purple", emoji: "💜", clue: "It is a colour made by mixing red and blue." },
-	{ word: "crayon", emoji: "🖍️", clue: "You use it to draw colourful pictures." },
-	{ word: "eraser", emoji: "🧽", clue: "It rubs away pencil mistakes." },
-	{ word: "pencil", emoji: "✏️", clue: "You use it to write and draw." },
-	{ word: "school", emoji: "🏫", clue: "A place where children learn." },
-	{ word: "white", emoji: "⬜", clue: "The colour of a clean blank page." },
-	{ word: "black", emoji: "⬛", clue: "A very dark colour." },
-	{ word: "ruler", emoji: "📏", clue: "You use it to draw straight lines." },
-	{ word: "bag", emoji: "🎒", clue: "You carry school things in it." },
-	{ word: "friends", emoji: "🧑‍🤝‍🧑", clue: "We are friends." },
-	{ word: "quiet", emoji: "🤫", clue: "It is no noise, being calm." },
-	{ word: "class", emoji: "👩🏻‍🏫", clue: "Students are taught together in the same room ." },
-	{ word: "name", emoji: "📛", clue: "This is used to refer to person." },
-	{ word: "boys", emoji: "👦", clue: "They are a group of male children." },
-	{ word: "Hill", emoji: "🏔️", clue: "This is a small mountain, a raised area of land." },
-];
-const $ = (id) => document.getElementById(id);
-const speech = $("speech"),
-	emoji = $("emoji"),
-	hint = $("hint"),
-	slots = $("slots"),
-	//letters = $("letters"),
-	message = $("message"),
-	starsEl = $("stars"),
-	levelEl = $("level"),
-	bar = $("bar"),
-	progressNumber = $("progressNumber"),
-	starTrack = $("starTrack"),
-	monster = $("monster"),
-	robot = $("robot");
-	
-const params = new URLSearchParams(location.search);
+<script>
+const { $, readProgress, getParams, goTo, sounds, say } = RoboCommon;
+const { level: initialLevel, stars: initialStars } = readProgress();
+let level = initialLevel;
+let stars = initialStars;
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.WORD_LIST;
+const params = getParams();
 const safeNumber = (value, fallback) =>
 	Number.isFinite(Number(value)) && Number(value) >= 0 ? Math.floor(Number(value)) : fallback;
-let level = Math.max(1, safeNumber(params.get("level") ?? 1, 1));
-let stars = safeNumber(params.get("stars") ?? 0, 0);
 const requestedWord = params.get("word");
 const canvas = $("game");
 const ctx = canvas.getContext("2d", { alpha: false });
 const JUMP_SPEED = 720;
 const GRAVITY = 1024;
 const SPEED = 96;
-//const ZOOM = 1.5;
 const MAX_FRAME_TIME = 0.05;
 const PHYSICS_STEP = 1 / 120;
-let audioCtx;
 let current, previousWord, player, letters, platforms, worldWidth;
 let index = 0;
 let state = "intro";
@@ -170,52 +139,8 @@ let deviceScale = 1;
 let wrongAttempt = 0;
 let popupTimer;
 
-function unlockAudio() {
-	try {
-		audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-		if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
-	} catch (error) {}
-}
-
 function tone(f = 440, d = 0.08, t = "sine", v = 0.05) {
-	try {
-		audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-		if (audioCtx.state === "suspended") audioCtx.resume();
-		const o = audioCtx.createOscillator(),
-			g = audioCtx.createGain();
-		o.type = t;
-		o.frequency.value = f;
-		g.gain.setValueAtTime(v, audioCtx.currentTime);
-		g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
-		o.connect(g);
-		g.connect(audioCtx.destination);
-		o.start();
-		o.stop(audioCtx.currentTime + d);
-	} catch (e) {}
-}
-const sounds = {
-	click: () => tone(520, 0.06, "square"),
-	undo: () => tone(280, 0.1, "triangle"),
-	hear: () => {
-		tone(660, 0.08);
-		setTimeout(() => tone(880, 0.1), 85);
-	},
-	wrong: () => {
-		tone(190, 0.12, "sawtooth");
-		setTimeout(() => tone(160, 0.16, "sawtooth"), 120);
-	},
-	win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.13, "sine", 0.07), i * 110)),
-	level: () =>
-		[523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.17, "triangle", 0.08), i * 100)),
-};
-function say(text, stop = true) {
-	if (!("speechSynthesis" in window)) return;
-	if (stop) speechSynthesis.cancel();
-	const u = new SpeechSynthesisUtterance(text);
-	u.lang = "en-UK";
-	u.rate = 0.9;
-	u.pitch = 1.00;
-	speechSynthesis.speak(u);
+	sounds && null;
 }
 function spellWord(word) {
 	return word + ". " + word.split("").join(",") + " . " + word + ". ";
@@ -240,13 +165,12 @@ function showWordPopup() {
 	$("wordPop").classList.add("show");
 	sounds.hear();
 	say("The word is " + spellWord(current.word));
-	popupTimer = setTimeout(closeWordPopup, 8000);
+	popupTimer = timers.setTimeout(closeWordPopup, 8000);
 }
 
 function sync() {
 	$("level").textContent = level;
 	$("stars").textContent = stars;
-	//$("stats").textContent = "Lv " + level + " · ⭐ " + stars;
 	$("emoji").textContent = current.emoji;
 	$("word").replaceChildren(
 		...[...current.word].map((letter, i) => {
@@ -266,11 +190,10 @@ function sync() {
 
 function addChoices(start) {
 	const wanted = current.word[index].toLowerCase();
-	// One current target and one distractor per pair, in random order.
 	const pair = Math.random() < 0.5 ? [true, false] : [false, true];
 	pair.forEach((correct, i) => {
 		const x = start + i * 170;
-		const raised = 1; //Math.random() < 0.5;
+		const raised = 1;
 		const surface = raised ? 330 : 480;
 		const alphabet = "abcdefghijklmnopqrstuvwxyz".split("").filter((ch) => ch !== wanted);
 		letters.push({
@@ -289,7 +212,6 @@ function startWord(first = false) {
 		first && requestedWord ? words.find((item) => item.word.toLowerCase() === requestedWord.toLowerCase()) : null;
 	current ||= pool[Math.floor(Math.random() * pool.length)] || words[0];
 	previousWord = current.word;
-	// Reset all per-round state, especially timestamps and the previous trap.
 	index = 0;
 	clock = 0;
 	trappedUntil = 0;
@@ -334,7 +256,6 @@ function showLevelUp() {
 	$("levelMessage").textContent = "You collected 3 stars and reached Level " + level + "!";
 	$("levelStory").textContent = story;
 	$("levelModal").style.display = "grid";
-	console.log("showLevelUp level:" + level);
 	say("Level up! You reached level " + level + ". " + story);
 }
 
@@ -348,10 +269,10 @@ function update(dt) {
 			state = "result";
 			if (stars % 3 === 0) {
 				levelEl.textContent = level;
-				setTimeout(showLevelUp, 950);
+				timers.setTimeout(showLevelUp, 950);
 			} else {
-				setTimeout(startWord, 950);
-				setTimeout(showWordPopup, 960);
+				timers.setTimeout(startWord, 950);
+				timers.setTimeout(showWordPopup, 960);
 			}
 		}
 		return;
@@ -407,7 +328,6 @@ function update(dt) {
 					completeWord();
 					return;
 				}
-				// Remove stale choices so they cannot trap the next letter's progress.
 				letters = letters.filter((letter) => letter.x < player.x - 100);
 				addChoices(player.x + 260);
 				addChoices(player.x + 660);
@@ -415,7 +335,7 @@ function update(dt) {
 			} else {
 				wrongAttempt++;
 				if (wrongAttempt > 2) {
-					setTimeout(say, 1000, "Try again! The word is " + spellWord(current.word));
+					timers.setTimeout(say, 1000, "Try again! The word is " + spellWord(current.word));
 				}
 				trappedUntil = clock + 0.8;
 				$("hint").textContent = "Try again! Find " + current.word[index];
@@ -424,7 +344,6 @@ function update(dt) {
 			break;
 		}
 	}
-	// Missed targets reappear ahead: automatic movement can never strand a word.
 	const ahead = letters.filter((item) => !item.used && item.x > player.x + 60);
 	if (!ahead.some((item) => item.letter === current.word[index].toLowerCase())) {
 		addChoices(player.x + 350);
@@ -461,7 +380,6 @@ function draw() {
 		canvas.width = width;
 		canvas.height = height;
 	}
-	// 150% of the previous fit-to-960x540 world scale.
 	const scale = Math.min(width / 960, height / 540);
 	viewWidth = width / scale;
 	const viewHeight = height / scale;
@@ -512,7 +430,6 @@ function draw() {
 }
 
 function jump() {
-	unlockAudio();
 	sounds.click();
 	if (state === "running") jumpQueued = true;
 }
@@ -528,7 +445,6 @@ $("jump").addEventListener("click", (event) => {
 	if (event.detail === 0) jump();
 });
 $("hear").onclick = () => {
-	unlockAudio();
 	speak("The word is " + spellWord(current.word));
 };
 $("pause").onclick = () => {
@@ -543,27 +459,11 @@ $("pause").onclick = () => {
 	}
 };
 $("next").onclick = () => {
-	unlockAudio();
-	//$("modal").close();
 	closeWordPopup();
 };
 
 
 $("hearBtn").onclick = showWordPopup;
-/*
-$("newBtn").onclick = () => {
-	sounds.click();
-	chooseWord();
-};
-$("wordPop").onclick = closeWordPopup;
-$("wordPop").onkeydown = (e) => {
-	if (e.key === "Enter" || e.key === " ") closeWordPopup();
-};
-$("hearStoryBtn").onclick = () => {
-	sounds.hear();
-	say($("storyText").innerText);
-};
-*/
 $("hearLevelStoryBtn").onclick = () => {
 	sounds.hear();
 	say($("levelStory").textContent);
@@ -574,14 +474,13 @@ $("miniHearBtn").onclick = () => {
 };
 $("game_mode").onclick = () => {
 	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+	goTo('./game_mode.html', level, stars);
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+	goTo('./game_mode.html', level, stars);
 };
 
-//$("modal").addEventListener("cancel", (event) => event.preventDefault());
 document.addEventListener("contextmenu", (event) => event.preventDefault());
 document.addEventListener("selectstart", (event) => event.preventDefault());
 document.addEventListener("keydown", (event) => {
@@ -598,8 +497,6 @@ document.addEventListener("visibilitychange", () => {
 });
 
 function frame(time) {
-	// Use a fixed-timestep accumulator: physics is stable while rendering stays
-	// tied to the display refresh rate.
 	if (lastTime === null) {
 		lastTime = time;
 	} else {
@@ -612,27 +509,11 @@ function frame(time) {
 		}
 	}
 	draw();
-	requestAnimationFrame(frame);
+	timers.requestAnimationFrame(frame);
 }
 startWord(true);
-/*
-state = "intro";
-$("title").textContent = "🌈 Letter Adventure";
-$("story").textContent = "Bolt runs automatically. Tap Jump or the game area to jump. Collect the letters in order to reveal the castle!";
-$("modal").showModal();
-*/
 showWordPopup();
-requestAnimationFrame(frame);
+timers.requestAnimationFrame(frame);
 </script>
-<script>
-function removeAfterLastLine() {
-	document.querySelectorAll("#lastline ~ *").forEach((anchor) => anchor.remove());
-	return;							 
-}
-setTimeout(removeAfterLastLine, 100);
-setTimeout(removeAfterLastLine, 1000);
-setTimeout(removeAfterLastLine, 3000);					 
-</script>
-<a id="lastline"></div><!--MakeLayer-->																				
 </body>
 </html>
