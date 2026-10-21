@@ -1,519 +1,283 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#bdeaff">
-<title>Robo-Monster Spelling Academy</title>
-<link rel="stylesheet" href="./assets/styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robo Spelling · Racing</title>
+<link rel="stylesheet" href="assets/game.css">
+<link rel="stylesheet" href="assets/game04_racing.css">
 </head>
 <body>
-	
-<main class="wrap">
-	<section class="panel game" id="gamePage">
+<div id="racingApp">
+  <header class="topbar">
+    <a class="back" href="game_mode.html" aria-label="Back">←</a>
+    <div class="titles">
+      <h1>Spelling Race</h1>
+      <p class="sub">Tap the right word to boost your racer</p>
+    </div>
+    <div class="hud">
+      <span class="pill" id="level">Level 1</span>
+      <span class="pill" id="stars">★ 0</span>
+    </div>
+  </header>
 
-		<div id="spellingView">
-			<div class="top">
-				<div class="speech" id="speech">Listen first, then build the word!</div>
-				<div class="friend monster" id="monster">
-					<i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
-					><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
-				</div>
-				<div class="friend robot" id="robot"><div class="screen">^_^</div></div>
-			</div>
-			<div class="word-box">
-				<div class="emoji" id="emoji2">📓</div>
-				<div class="hint" id="hint"></div>
-				<div class="slots" id="slots"></div>
-			</div>
-			<div class="letters" id="letters"></div>
-			<div class="controls">
-				<button class="control purple" id="undoBtn" type="button">↩ Undo</button
-				><button class="control yellow" id="hearBtn" type="button">🔊 Hear the Word</button
-				><!--<button class="control yellow" id="newBtn" type="button">🎲 New Word</button>-->
-			</div>
-			<div class="message" id="message"></div>
-			<div class="progress">
-				<div class="bar" id="bar"></div>
-				<div class="progress-content">
-					<span class="star-track" id="starTrack">☆☆☆</span
-					><span id="progressNumber">0 / 3 stars to Level 2</span>
-				</div>
-			</div>
-		</div>
-
-		<section class="bonus-screen" id="bonusView">
-			<div class="bonus-header">
-				<div class="bonus-title" id="bonusTitle"></div>
-				<div class="bonus-story" id="bonusStory"></div>
-			</div>
-			<div class="mini-word" id="miniWord"></div>
-			<div class="bonus-status" id="bonusStatus"></div>
-			<div class="play-area" id="playArea"></div>
-			<div class="controls">
-				<button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Word</button>
-			</div>
-		</section>
-	</section>
-</main>
-
-<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
-	<div class="word-card">
-		<div class="small">Listen to the word:</div>
-		<div class="emoji" id="emoji"></div>
-		<div class="bigword" id="popWord">notebook</div>
-		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
-		<button class="control" id="next" type="button">Start</button>
-	</div>
-</div>									  
-	
-<div class="levelup" id="levelModal">
-	<div class="level-card">
-		<div class="sparkles">✨ 🏆 ✨</div>
-		<h2>Level Up!</h2>
-		<p id="levelMessage"></p>
-		<article class="level-story" id="levelStory"></article>
-		<div class="controls">
-			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
-			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
-		</div>
-	</div>
+  <main class="stage">
+    <canvas id="game" width="720" height="360"></canvas>
+    <button id="jump" class="jump-btn" aria-label="Jump">JUMP</button>
+    <div id="wordPop" class="word-pop" role="dialog" aria-modal="true">
+      <div class="pop-card">
+        <p class="word" id="popWord">word</p>
+        <p class="say" id="popSay">Tap to hear</p>
+        <div class="choices" id="popChoices"></div>
+        <button class="close" id="popClose" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="levelUp" class="level-up" role="dialog" aria-modal="true">
+      <div class="card">
+        <h2 id="luTitle">Level Up!</h2>
+        <p id="luText"></p>
+        <button id="luNext">Continue</button>
+      </div>
+    </div>
+  </main>
 </div>
-<main id="racingApp">
-		<header class="racing-header">
-			<h1 id="gameHeading">Spelling Mission</h1>
-			<div class="badges">
-				<button class="badge" id="game_mode" type="button" aria-label="Choose game mode">🎮 Mode</button>
-				<div class="badge">🏆 Level <span id="level">1</span></div>
-				<div class="badge">⭐ Stars <span id="stars">0</span></div>
-			</div>
-		</header>
-	<div id="emoji"></div>
-	<div id="word"></div>
-	<div id="hint" aria-live="polite"></div>
-	<section id="stage"><canvas id="game" aria-label="Tap to jump and collect letters"></canvas></section>
-	<footer><button id="hear">🔊 Hear</button><button id="pause">⏸</button><button id="jump">⬆ Jump</button></footer>
-</main>
 
-
-<script src="./assets/common.js"></script>
-<script src="./assets/words.js"></script>
-<script src="./assets/story.js"></script>
-<script src="./assets/game-lifecycle.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/game-lifecycle.js"></script>
 <script>
-const { $, readProgress, getParams, goTo, sounds, say } = RoboCommon;
-const { level: initialLevel, stars: initialStars } = readProgress();
-let level = initialLevel;
-let stars = initialStars;
-const timers = RoboGame.createTimerManager();
-const words = RoboWords.WORD_LIST;
-const params = getParams();
-const safeNumber = (value, fallback) =>
-	Number.isFinite(Number(value)) && Number(value) >= 0 ? Math.floor(Number(value)) : fallback;
-const requestedWord = params.get("word");
-const canvas = $("game");
-const ctx = canvas.getContext("2d", { alpha: false });
-const JUMP_SPEED = 720;
-const GRAVITY = 1024;
-const SPEED = 96;
-const MAX_FRAME_TIME = 0.05;
-const PHYSICS_STEP = 1 / 120;
-let current, previousWord, player, letters, platforms, worldWidth;
-let index = 0;
-let state = "intro";
-let clock = 0;
-let trappedUntil = 0;
-let jumpQueued = false;
-let lastTime = null;
-let accumulator = 0;
-let castleX = null;
-let celebrationUntil = 0;
-let viewWidth = 640;
-let cameraX = 0;
-let cameraY = 0;
-let canvasWidth = 0;
-let canvasHeight = 0;
-let deviceScale = 1;
-let wrongAttempt = 0;
-let popupTimer;
+(function(){
+  const { $, $$, readProgress, updateProgress, goTo, speak, sounds, tone } = RoboCommon;
+  const { createTimerManager, createGameLifecycle } = RoboGame;
+  const timers = createTimerManager();
 
-function tone(f = 440, d = 0.08, t = "sine", v = 0.05) {
-	sounds && null;
-}
-function spellWord(word) {
-	return word + ". " + word.split("").join(",") + " . " + word + ". ";
-}
+  const params = new URLSearchParams(location.search);
+  let { level, stars } = readProgress();
+  let nextMode = "spell";
 
-function speak(text) {
-	say(text)
-}
+  const canvas = $('#game');
+  const ctx = canvas.getContext('2d');
+  const jumpBtn = $('#jump');
+  const pop = $('#wordPop');
+  const popWord = $('#popWord');
+  const popSay = $('#popSay');
+  const popChoices = $('#popChoices');
+  const popClose = $('#popClose');
+  const levelUp = $('#levelUp');
+  const luTitle = $('#luTitle');
+  const luText = $('#luText');
+  const luNext = $('#luNext');
 
-function closeWordPopup() {
-	state = "running";
-	lastTime = null;
-	accumulator = 0;
-	clearTimeout(popupTimer);
-	$("wordPop").classList.remove("show");
-}
-function showWordPopup() {
-	state = "intro";
-	if (!current) return;
-	clearTimeout(popupTimer);
-	$("popWord").textContent = current.word;
-	$("wordPop").classList.add("show");
-	sounds.hear();
-	say("The word is " + spellWord(current.word));
-	popupTimer = timers.setTimeout(closeWordPopup, 8000);
-}
+  const words = [
+    { word: 'cat', choices: ['cat','cap','car'] },
+    { word: 'dog', choices: ['dog','dot','dig'] },
+    { word: 'sun', choices: ['sun','fun','run'] },
+    { word: 'hat', choices: ['hat','hit','hot'] },
+    { word: 'bus', choices: ['bus','bug','but'] },
+    { word: 'red', choices: ['red','bed','led'] },
+    { word: 'big', choices: ['big','bag','bit'] },
+    { word: 'cup', choices: ['cup','cap','cub'] }
+  ];
 
-function sync() {
-	$("level").textContent = level;
-	$("stars").textContent = stars;
-	$("emoji").textContent = current.emoji;
-	$("word").replaceChildren(
-		...[...current.word].map((letter, i) => {
-			const span = document.createElement("span");
-			span.textContent = letter;
-			span.className = i < index ? "done" : "";
-			return span;
-		})
-	);
-	params.set("level", level);
-	params.set("stars", stars);
-	params.set("word", current.word);
-	try {
-		history.replaceState(null, "", "?" + params);
-	} catch (error) {}
-}
+  let lanes = [0,1,2];
+  let player = { lane: 1, y: 0, vy: 0, jumping: false };
+  let obstacles = [];
+  let score = 0;
+  let speed = 2.2;
+  let lastTime = 0;
+  let accumulator = 0;
+  let current = null;
+  let running = false;
 
-function addChoices(start) {
-	const wanted = current.word[index].toLowerCase();
-	const pair = Math.random() < 0.5 ? [true, false] : [false, true];
-	pair.forEach((correct, i) => {
-		const x = start + i * 170;
-		const raised = 1;
-		const surface = raised ? 330 : 480;
-		const alphabet = "abcdefghijklmnopqrstuvwxyz".split("").filter((ch) => ch !== wanted);
-		letters.push({
-			x,
-			y: surface - 24,
-			letter: correct ? wanted : alphabet[Math.floor(Math.random() * alphabet.length)],
-			used: false,
-		});
-		if (Math.random() < 0.1) platforms.push({ x: x - 95, y: surface, width: 190 });
-	});
-}
+  const G = 0.55;
+  const JUMP = -11;
 
-function startWord(first = false) {
-	const pool = words.filter((item) => item.word !== previousWord);
-	current =
-		first && requestedWord ? words.find((item) => item.word.toLowerCase() === requestedWord.toLowerCase()) : null;
-	current ||= pool[Math.floor(Math.random() * pool.length)] || words[0];
-	previousWord = current.word;
-	index = 0;
-	clock = 0;
-	trappedUntil = 0;
-	celebrationUntil = 0;
-	castleX = null;
-	jumpQueued = false;
-	lastTime = null;
-	accumulator = 0;
-	player = { x: 60, y: 436, vy: 0, grounded: true };
-	letters = [];
-	platforms = [];
-	worldWidth = Math.max(24000, current.word.length * 2500 + 5000);
-	for (let x = 320; x < worldWidth; x += 760) {
-		platforms.push({ x, y: 350, width: 180 });
-		platforms.push({ x: x + 220, y: 230, width: 170 });
-	}
-	addChoices(320);
-	addChoices(720);
-	state = "running";
-	$("pause").textContent = "⏸";
-	$("hint").textContent = current.emoji + " " + current.clue + " · Find " + current.word[index];
-	sync();
-}
+  function resize(){
+    const w = Math.min(window.innerWidth - 24, 720);
+    const h = Math.round(w * 0.5);
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    canvas.width = w * devicePixelRatio;
+    canvas.height = h * devicePixelRatio;
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    draw();
+  }
 
-function completeWord() {
-	if (state !== "running") return;
-	state = "celebrating";
-	trappedUntil = 0;
-	castleX = player.x + Math.min(230, viewWidth - 130);
-	celebrationUntil = clock + 2.5;
-	stars += 1;
-	level = Math.floor(stars/3.0) + 1;
-	sync();
-	sounds.click();
-	$("hint").textContent = "🏰 Well done! " + current.word;
-}
+  function draw(){
+    const w = canvas.width / devicePixelRatio;
+    const h = canvas.height / devicePixelRatio;
+    ctx.clearRect(0,0,w,h);
+    // sky
+    ctx.fillStyle = '#dff3ff';
+    ctx.fillRect(0,0,w,h);
+    // ground
+    ctx.fillStyle = '#cdeccd';
+    ctx.fillRect(0,h-60,w,60);
+    // road
+    ctx.fillStyle = '#f4f6f8';
+    ctx.fillRect(0,h-60,w,8);
+    // player
+    const px = 80;
+    const py = h-60-40+player.y;
+    ctx.fillStyle = '#2f6df6';
+    ctx.fillRect(px,py,40,40);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(px+8,py+8,10,10);
+    // obstacles
+    obstacles.forEach(o=>{
+      const oy = h-60-30;
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(o.x,oy,26,30);
+    });
+    // score
+    ctx.fillStyle = '#111';
+    ctx.font = '16px system-ui';
+    ctx.fillText('Score '+score, 12, 24);
+  }
 
-function showLevelUp() {
-	sounds.level();
-	const story = RoboStory.getStoryPage(level).text;
-	nextMode = ["spell", "fish", "ghost", "race"][Math.floor(Math.random() * 4)];
-	$("levelMessage").textContent = "You collected 3 stars and reached Level " + level + "!";
-	$("levelStory").textContent = story;
-	$("levelModal").style.display = "grid";
-	say("Level up! You reached level " + level + ". " + story);
-}
+  function spawn(){
+    const lane = lanes[Math.floor(Math.random()*lanes.length)];
+    obstacles.push({ x: canvas.width/devicePixelRatio + 20, lane });
+  }
 
-function update(dt) {
-	if (state !== "running" && state !== "celebrating") return;
-	clock += dt;
-	if (state === "celebrating") {
-		player.x = Math.min(castleX - 45, player.x + SPEED * dt);
-		player.y = 436;
-		if (clock >= celebrationUntil) {
-			state = "result";
-			if (stars % 3 === 0) {
-				levelEl.textContent = level;
-				timers.setTimeout(showLevelUp, 950);
-			} else {
-				timers.setTimeout(startWord, 950);
-				timers.setTimeout(showWordPopup, 960);
-			}
-		}
-		return;
-	}
-	if (clock < trappedUntil) {
-		jumpQueued = false;
-		return;
-	}
-	player.x += SPEED * dt;
-	if (jumpQueued && player.grounded) {
-		player.vy = -JUMP_SPEED;
-		player.grounded = false;
-	}
-	jumpQueued = false;
-	const previousBottom = player.y + 44;
-	player.vy += GRAVITY * dt;
-	player.y += player.vy * dt;
-	let landing = 480;
-	if (player.vy >= 0) {
-		for (const platform of platforms) {
-			if (
-				previousBottom <= platform.y + 1 &&
-				player.y + 44 >= platform.y &&
-				player.x + 36 > platform.x &&
-				player.x < platform.x + platform.width
-			) {
-				landing = Math.min(landing, platform.y);
-			}
-		}
-	}
-	player.grounded = false;
-	if (player.vy >= 0 && player.y + 44 >= landing) {
-		player.y = landing - 44;
-		player.vy = 0;
-		player.grounded = true;
-	}
-	const wanted = current.word[index].toLowerCase();
-	for (const item of letters) {
-		if (item.used) continue;
-		if (
-			player.x + 36 > item.x - 21 &&
-			player.x < item.x + 21 &&
-			player.y + 44 > item.y - 21 &&
-			player.y < item.y + 21
-		) {
-			item.used = true;
-			if (item.letter === wanted) {
-				wrongAttempt = 0;
-				index += 1;
-				sounds.win();
-				sync();
-				if (index === current.word.length) {
-					completeWord();
-					return;
-				}
-				letters = letters.filter((letter) => letter.x < player.x - 100);
-				addChoices(player.x + 260);
-				addChoices(player.x + 660);
-				$("hint").textContent = "Correct! Find " + current.word[index];
-			} else {
-				wrongAttempt++;
-				if (wrongAttempt > 2) {
-					timers.setTimeout(say, 1000, "Try again! The word is " + spellWord(current.word));
-				}
-				trappedUntil = clock + 0.8;
-				$("hint").textContent = "Try again! Find " + current.word[index];
-				sounds.wrong();
-			}
-			break;
-		}
-	}
-	const ahead = letters.filter((item) => !item.used && item.x > player.x + 60);
-	if (!ahead.some((item) => item.letter === current.word[index].toLowerCase())) {
-		addChoices(player.x + 350);
-	}
-	worldWidth = Math.max(worldWidth, player.x + 1400);
-	letters = letters.filter((item) => item.x > player.x - 250);
-}
+  function update(dt){
+    if(!running) return;
+    speed += 0.0006*dt;
+    obstacles.forEach(o=> o.x -= speed*dt/16);
+    obstacles = obstacles.filter(o=> o.x > -40);
+    if(player.jumping){
+      player.vy += G;
+      player.y += player.vy;
+      if(player.y >= 0){ player.y = 0; player.vy = 0; player.jumping = false; }
+    }
+    // collision
+    const w = canvas.width/devicePixelRatio;
+    const h = canvas.height/devicePixelRatio;
+    const px = 80, py = h-60-40+player.y;
+    for(const o of obstacles){
+      const oy = h-60-30;
+      if(px+40 > o.x && px < o.x+26 && py+40 > oy){
+        running = false;
+        showWordPop();
+        break;
+      }
+    }
+    score += Math.round(dt/16);
+  }
 
-function drawCastle(x) {
-	ctx.fillStyle = "#9b8ae0";
-	ctx.fillRect(x - 40, 385, 90, 95);
-	ctx.fillRect(x - 60, 350, 28, 130);
-	ctx.fillRect(x + 42, 350, 28, 130);
-	ctx.fillStyle = "#6548ab";
-	for (const towerX of [x - 60, x + 42]) {
-		ctx.beginPath();
-		ctx.moveTo(towerX - 5, 350);
-		ctx.lineTo(towerX + 14, 320);
-		ctx.lineTo(towerX + 33, 350);
-		ctx.fill();
-	}
-	ctx.fillStyle = "#3d285c";
-	ctx.fillRect(x - 10, 435, 30, 45);
-	ctx.font = "28px system-ui";
-	ctx.fillText("🚩", x, 380);
-}
+  function frame(time){
+    if(!lastTime) lastTime = time;
+    let dt = time - lastTime;
+    lastTime = time;
+    if(dt > 100) dt = 100;
+    accumulator += dt;
+    while(accumulator >= 16){ update(16); accumulator -= 16; }
+    draw();
+    timers.requestAnimationFrame(frame);
+  }
 
-function draw() {
-	const bounds = canvas.getBoundingClientRect();
-	const dpr = Math.min(devicePixelRatio || 1, 2);
-	const width = Math.max(1, Math.round(bounds.width * dpr));
-	const height = Math.max(1, Math.round(bounds.height * dpr));
-	if (canvas.width !== width || canvas.height !== height) {
-		canvas.width = width;
-		canvas.height = height;
-	}
-	const scale = Math.min(width / 960, height / 540);
-	viewWidth = width / scale;
-	const viewHeight = height / scale;
-	cameraX = player.x - 36;
-	cameraY = Math.min(500 - viewHeight, player.y - 70);
-	ctx.setTransform(1, 0, 0, 1, 0, 0);
-	ctx.fillStyle = "#bdeaff";
-	ctx.fillRect(0, 0, width, height);
-	ctx.setTransform(scale, 0, 0, scale, -cameraX * scale, -cameraY * scale);
-	ctx.fillStyle = "#fff";
-	for (let i = -1; i < viewWidth / 240 + 2; i += 1) {
-		const x = cameraX + i * 240 - ((player.x * 0.15) % 240);
-		ctx.beginPath();
-		ctx.ellipse(x, 140, 50, 20, 0, 0, Math.PI * 2);
-		ctx.fill();
-	}
-	ctx.fillStyle = "#6acb62";
-	ctx.fillRect(cameraX, 480, viewWidth, Math.max(80, viewHeight));
-	ctx.fillStyle = "#a87145";
-	ctx.fillRect(cameraX, 496, viewWidth, Math.max(80, viewHeight));
-	for (const platform of platforms) {
-		if (platform.x + platform.width < cameraX || platform.x > cameraX + viewWidth) continue;
-		ctx.fillStyle = "#b67d43";
-		ctx.fillRect(platform.x, platform.y, platform.width, 24);
-		ctx.fillStyle = "#70bb67";
-		ctx.fillRect(platform.x, platform.y, platform.width, 6);
-	}
-	for (const item of letters) {
-		if (item.used) continue;
-		ctx.fillStyle = "#ffa27c";
-		ctx.beginPath();
-		ctx.arc(item.x, item.y, 21, 0, Math.PI * 2);
-		ctx.fill();
-		ctx.fillStyle = "#202452";
-		ctx.font = "bold 27px system-ui";
-		ctx.textAlign = "center";
-		ctx.fillText(item.letter, item.x, item.y + 9);
-	}
-	if (castleX !== null) drawCastle(castleX);
-	ctx.textAlign = "left";
-	ctx.font = "40px system-ui";
-	ctx.fillText("🐰", player.x, player.y + 37);
-	if (clock < trappedUntil) {
-		ctx.strokeStyle = "#ed645e";
-		ctx.lineWidth = 4;
-		ctx.strokeRect(player.x - 5, player.y - 5, 46, 54);
-	}
-}
+  function startRun(){
+    running = true;
+    obstacles = [];
+    score = 0;
+    speed = 2.2;
+    player = { lane:1, y:0, vy:0, jumping:false };
+    lastTime = 0;
+    accumulator = 0;
+    timers.requestAnimationFrame(frame);
+  }
 
-function jump() {
-	sounds.click();
-	if (state === "running") jumpQueued = true;
-}
-$("jump").addEventListener("pointerdown", (event) => {
-	event.preventDefault();
-	jump();
-});
-canvas.addEventListener("pointerdown", (event) => {
-	event.preventDefault();
-	jump();
-});
-$("jump").addEventListener("click", (event) => {
-	if (event.detail === 0) jump();
-});
-$("hear").onclick = () => {
-	speak("The word is " + spellWord(current.word));
-};
-$("pause").onclick = () => {
-	if (state === "running") {
-		state = "paused";
-		$("pause").textContent = "▶";
-	} else if (state === "paused") {
-		state = "running";
-		lastTime = null;
-		accumulator = 0;
-		$("pause").textContent = "⏸";
-	}
-};
-$("next").onclick = () => {
-	closeWordPopup();
-};
+  function showWordPop(){
+    current = words[Math.floor(Math.random()*words.length)];
+    popWord.textContent = current.word;
+    popSay.textContent = 'Tap to hear';
+    popChoices.innerHTML = '';
+    current.choices.forEach(c=>{
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.textContent = c;
+      b.onclick = ()=>{
+        if(c === current.word){
+          stars += 1;
+          level = Math.floor(stars/3.0) + 1;
+          updateProgress(level, stars);
+          sync();
+          pop.classList.remove('show');
+          startRun();
+        } else {
+          b.classList.add('wrong');
+          timers.setTimeout(say, 1000, "Try again! Listen and choose.");
+        }
+      };
+      popChoices.appendChild(b);
+    });
+    pop.classList.add('show');
+    say(current.word);
+  }
 
+  function say(text){
+    if(sounds && sounds.hear) sounds.hear(text);
+  }
 
-$("hearBtn").onclick = showWordPopup;
-$("hearLevelStoryBtn").onclick = () => {
-	sounds.hear();
-	say($("levelStory").textContent);
-};
-$("miniHearBtn").onclick = () => {
-	sounds.hear();
-	say("The word is " + spellWord(bonusWord));
-};
-$("game_mode").onclick = () => {
-	sounds.hear();
-	goTo('./game_mode.html', level, stars);
-};
-$("game_mode_next").onclick = () => {
-	sounds.hear();
-	goTo('./game_mode.html', level, stars);
-};
+  function sync(){
+    $('#level').textContent = 'Level ' + level;
+    $('#stars').textContent = '★ ' + stars;
+    const url = new URL(location.href);
+    url.searchParams.set('level', level);
+    url.searchParams.set('stars', stars);
+    history.replaceState(null,'',url);
+  }
 
-document.addEventListener("contextmenu", (event) => event.preventDefault());
-document.addEventListener("selectstart", (event) => event.preventDefault());
-document.addEventListener("keydown", (event) => {
-	if (event.code === "Space" || event.code === "ArrowUp") {
-		if (event.target.tagName === "BUTTON") return;
-		event.preventDefault();
-		if (!event.repeat) jump();
-	}
-});
-document.addEventListener("visibilitychange", () => {
-	lastTime = null;
-	accumulator = 0;
-	jumpQueued = false;
-});
+  function showLevelUp(){
+    const pool = ['spell','fish','ghost','race'].filter(m=>m!=='race');
+    nextMode = pool[Math.floor(Math.random()*pool.length)];
+    luTitle.textContent = 'Level Up!';
+    luText.textContent = 'Next: ' + nextMode;
+    levelUp.classList.add('show');
+  }
 
-function frame(time) {
-	if (lastTime === null) {
-		lastTime = time;
-	} else {
-		let frameTime = Math.min((time - lastTime) / 1000, MAX_FRAME_TIME);
-		lastTime = time;
-		accumulator += frameTime;
-		while (accumulator >= PHYSICS_STEP) {
-			update(PHYSICS_STEP);
-			accumulator -= PHYSICS_STEP;
-		}
-	}
-	draw();
-	timers.requestAnimationFrame(frame);
-}
-startWord(true);
-showWordPopup();
-timers.requestAnimationFrame(frame);
+  jumpBtn.addEventListener('pointerdown', ()=>{
+    if(!player.jumping){ player.jumping = true; player.vy = JUMP; }
+  });
+
+  popClose.addEventListener('click', ()=>{
+    pop.classList.remove('show');
+    startRun();
+  });
+
+  luNext.addEventListener('click', ()=>{
+    levelUp.classList.remove('show');
+    goTo('./game_mode.html', level, stars);
+  });
+
+  const lifecycle = createGameLifecycle({
+    name: 'racing',
+    timers,
+    hooks: {
+      initGame(){
+        sync();
+        resize();
+        startRun();
+      },
+      pause(){
+        running = false;
+      },
+      resume(){
+        lastTime = 0;
+        accumulator = 0;
+        if(!running){
+          running = true;
+          timers.requestAnimationFrame(frame);
+        }
+      },
+      cleanup(){
+        running = false;
+      }
+    }
+  });
+
+  window.addEventListener('resize', resize);
+  lifecycle.initGame();
+})();
 </script>
 </body>
 </html>
