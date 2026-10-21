@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -85,25 +85,16 @@
 	</div>
 </div>
 
-<script>const words = [
-	{ word: "notebook", emoji: "📓", clue: "You write notes and drawings in it." },
-	{ word: "yellow", emoji: "💛", clue: "It is the colour of a banana." },
-	{ word: "purple", emoji: "💜", clue: "It is a colour made by mixing red and blue." },
-	{ word: "crayon", emoji: "🖍️", clue: "You use it to draw colourful pictures." },
-	{ word: "eraser", emoji: "🧽", clue: "It rubs away pencil mistakes." },
-	{ word: "pencil", emoji: "✏️", clue: "You use it to write and draw." },
-	{ word: "school", emoji: "🏫", clue: "A place where children learn." },
-	{ word: "white", emoji: "⬜", clue: "The colour of a clean blank page." },
-	{ word: "black", emoji: "⬛", clue: "A very dark colour." },
-	{ word: "ruler", emoji: "📏", clue: "You use it to draw straight lines." },
-	{ word: "bag", emoji: "🎒", clue: "You carry school things in it." },
-	{ word: "friends", emoji: "🧑‍🤝‍🧑", clue: "We are friends." },
-	{ word: "quiet", emoji: "🤫", clue: "It is no noise, being calm." },
-	{ word: "class", emoji: "👩🏻‍🏫", clue: "Students are taught together in the same room ." },
-	{ word: "name", emoji: "📛", clue: "This is used to refer to person." },
-	{ word: "boys", emoji: "👦", clue: "They are a group of male children." },
-	{ word: "Hill", emoji: "🏔️", clue: "This is a small mountain, a raised area of land." },
-];
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script src="./assets/game-lifecycle.js"></script>
+<script>
+const { $, readProgress, getParams, goTo, sounds, say, shuffle, randomBg, updateProgress, tone } = RoboCommon;
+const { level, stars } = readProgress();
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.WORD_LIST;
+const params = getParams();
 const modeStories = {
 	spell: "The Word Workshop Story. Momo and Bolt opened a workshop full of mixed-up letters. Put each letter in the correct order to repair the school words and make the workshop lights shine.",
 	fish: "The Poor Dock Fish Story. At the old poor dock, hungry little letter fish could not find their way to the warm water garden. Every correct letter you catch repairs the dock and helps the fish swim home.",
@@ -112,19 +103,6 @@ const modeStories = {
 	mole: "The Letter Garden. Friendly letter moles are popping out of nine holes! Tap the next letter to spell the word. Missed letters will return, so take your time.",
 };
 const modeLabels = { spell: "Spelling", fish: "Fishs", ghost: "Ghosts", race: "Race", mole: "Moles" };
-const funnyColors = [
-	"#d8f7ff",
-	"#ffe0f0",
-	"#fff0b6",
-	"#dff8d1",
-	"#e7dcff",
-	"#ffd9b8",
-	"#c9f4ee",
-	"#dce6ff",
-	"#ffd5dc",
-	"#e8f7c8",
-];
-const $ = (id) => document.getElementById(id);
 const speech = $("speech"),
 	emoji = $("emoji"),
 	hint = $("hint"),
@@ -144,17 +122,13 @@ let current,
 	robotMode = false,
 	letterOrder = [],
 	checking = false,
-	audioCtx,
 	popupTimer,
 	wordDeck = [],
 	activeMode = "spell",
 	bonusWord = "",
 	bonusRemaining = [],
 	nextMode = "spell";
-	
-const params = new URLSearchParams(location.search);
-let level = Number(params.get("level") || 1);
-let stars = Number(params.get("stars") || 0);
+
 const CARROTS_PER_STAR = 7;
 const savedCarrots = Number(params.get("carrots") || 0);
 let carrots = Number.isFinite(savedCarrots) && savedCarrots >= 0
@@ -162,70 +136,14 @@ let carrots = Number.isFinite(savedCarrots) && savedCarrots >= 0
 starsEl.textContent = stars;
 levelEl.textContent = level;
 
-function tone(f = 440, d = 0.08, t = "sine", v = 0.05) {
-	try {
-		audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-		if (audioCtx.state === "suspended") audioCtx.resume();
-		const o = audioCtx.createOscillator(),
-			g = audioCtx.createGain();
-		o.type = t;
-		o.frequency.value = f;
-		g.gain.setValueAtTime(v, audioCtx.currentTime);
-		g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
-		o.connect(g);
-		g.connect(audioCtx.destination);
-		o.start();
-		o.stop(audioCtx.currentTime + d);
-	} catch (e) {}
-}
-const sounds = {
-	pop: () => { if (audioCtx && audioCtx.state === "running") tone(740, 0.055, "triangle", 0.035); },
-	click: () => tone(520, 0.06, "square"),
-	undo: () => tone(280, 0.1, "triangle"),
-	hear: () => {
-		tone(660, 0.08);
-		setTimeout(() => tone(880, 0.1), 85);
-	},
-	wrong: () => {
-		tone(190, 0.12, "sawtooth");
-		setTimeout(() => tone(160, 0.16, "sawtooth"), 120);
-	},
-	win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.13, "sine", 0.07), i * 110)),
-	level: () =>
-		[523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.17, "triangle", 0.08), i * 100)),
-};
-function say(text, stop = true) {
-	if (!("speechSynthesis" in window)) return;
-	if (stop) speechSynthesis.cancel();
-	const u = new SpeechSynthesisUtterance(text);
-	u.lang = "en-UK";
-	u.rate = 1.00;
-	u.pitch = 1.20;
-	speechSynthesis.speak(u);
-}
+const popSound = () => tone(740, 0.055, "triangle", 0.035);
+
 function spellWord(word) {
 	return word + ". " + word.split("").join(",") + " . " + word + ". ";
-}
-function shuffle(a) {
-	const b = [...a];
-	for (let i = b.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[b[i], b[j]] = [b[j], b[i]];
-	}
-	return b;
-}
-function randomBg() {
-	document.body.style.background = funnyColors[Math.floor(Math.random() * funnyColors.length)];
 }
 function setPrompt(t, read = true) {
 	speech.textContent = t;
 	if (read) say(t);
-}
-function updateProgress() {
-	const n = stars % 3;
-	bar.style.width = (n / 3) * 100 + "%";
-	starTrack.textContent = "★".repeat(n) + "☆".repeat(3 - n);
-	progressNumber.textContent = n + " / 3 stars to Level " + (level + 1);
 }
 function closeWordPopup() {
 	clearTimeout(popupTimer);
@@ -238,8 +156,7 @@ function showWordPopup() {
 	$("wordPop").classList.add("show");
 	sounds.hear();
 	say("The word is " + current.word);
-	console.log("showWordPopup: The word is " + current.word)
-	popupTimer = setTimeout(closeWordPopup, 8000);
+	popupTimer = timers.setTimeout(closeWordPopup, 8000);
 }
 function nextWord() {
 	if (!wordDeck.length) wordDeck = shuffle(words);
@@ -274,7 +191,7 @@ function chooseWord() {
 	message.textContent = "";
 	setPrompt(robotMode ? "BEEP! Robo Bolt has a word for you!" : "Momo has a new spelling mission!");
 	render();
-	setTimeout(showWordPopup, 420);
+	timers.setTimeout(showWordPopup, 420);
 }
 function render(result = null) {
 	slots.innerHTML = "";
@@ -324,17 +241,17 @@ function awardWin(word) {
 	stars++;
 	starsEl.textContent = stars;
 	updateCarrots();
-	updateProgress();
+	updateProgress(level, stars);
 	message.textContent = "🎉 ZAP! Correct! You spelled " + word + ".";
 	setPrompt("Hooray! You are a super speller!");
-	if (activeMode !== "mole") setTimeout(() => say("The word is " + word), 350);
+	if (activeMode !== "mole") timers.setTimeout(() => say("The word is " + word), 350);
 	if (stars % 3 === 0) {
 		level++;
 		levelEl.textContent = level;
 		updateCarrots();
-		setTimeout(showLevelUp, 950);
+		timers.setTimeout(showLevelUp, 950);
 	} else {
-		setTimeout(() => {
+		timers.setTimeout(() => {
 			if (activeMode === "spell") chooseWord();
 			else startBonusMode(activeMode);
 		}, 1650);
@@ -385,15 +302,14 @@ function startBonusMode(mode) {
 	if (note) note.textContent = "Remember this word • starts automatically in 5 seconds";
 	say("The word is " + bonusWord);
 	const round = wordRound;
-	wordIntroTimer = setTimeout(() => {
+	wordIntroTimer = timers.setTimeout(() => {
 		if (round !== wordRound || activeMode !== "mole") return;
 		$("wordPop").classList.remove("show");
 		$("popWord").textContent = "";
 		wordPhase = "playing";
 		moleFinishing = false;
 		popMoles();
-		// One repeating timer per target, independent of the short mole waves.
-		wordHintTimer = setInterval(() => {
+		wordHintTimer = timers.setInterval(() => {
 			if (round === wordRound && activeMode === "mole" &&
 				wordPhase === "playing" && !document.hidden) {
 				say("Remember, find the word " + bonusWord + ".");
@@ -425,8 +341,6 @@ function buildBonus() {
 	}
 	spawnTargets();
 	ensureTargetFish();
-						 
-															
 }
 function ensureTargetFish() {
 	if (activeMode === "mole") {
@@ -506,7 +420,7 @@ function bonusClick(letter, el) {
 		renderMiniWord(bonusWord.length - bonusRemaining.length - 1);
 		if (!bonusRemaining.length) {
 			$("bonusStatus").textContent = "Amazing! You finished the word.";
-			setTimeout(() => awardWin(bonusWord), 900);
+			timers.setTimeout(() => awardWin(bonusWord), 900);
 		} else {
 			$("bonusStatus").textContent = "Correct!";
 			say("Correct! The word is " + bonusWord);
@@ -532,8 +446,7 @@ function hitWordMole(word, button) {
 	const round = wordRound;
 	if (word.toLowerCase() !== bonusWord.toLowerCase()) {
 		sounds.wrong();
-		// Wrong hits do not reset the 12-second reminder.
-		moleTimer = setTimeout(() => {
+		moleTimer = timers.setTimeout(() => {
 			if (round !== wordRound || activeMode !== "mole" || wordPhase !== "playing") return;
 			moleFinishing = false;
 			popMoles();
@@ -547,7 +460,7 @@ function hitWordMole(word, button) {
 	sounds.win();
 	const earnedStar = collectCarrot();
 	const completedWord = bonusWord;
-	wordAwardTimer = setTimeout(() => {
+	wordAwardTimer = timers.setTimeout(() => {
 		if (round !== wordRound || activeMode !== "mole") return;
 		if (earnedStar) awardWin(completedWord);
 		else startBonusMode("mole");
@@ -583,11 +496,11 @@ $("miniHearBtn").onclick = () => {
 };
 $("game_mode").onclick = () => {
 	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars + '&carrots=' + carrots);
+	goTo('./game_mode.html', level, stars, { carrots });
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars + '&carrots=' + carrots);
+	goTo('./game_mode.html', level, stars, { carrots });
 };
 
 
@@ -632,7 +545,6 @@ function popMoles() {
 	if (activeMode !== "mole" || wordPhase !== "playing" || moleFinishing || document.hidden) return;
 	if (!$("playArea").classList.contains("mole-board")) return;
 
-	// Immediately lower every mole before preparing the next wave.
 	moleButtons.forEach(button => {
 		button.disabled = true;
 		button.classList.remove("is-up", "is-hit");
@@ -643,7 +555,6 @@ function popMoles() {
 	const choices = [bonusWord, ...shuffle(distractors).slice(0, 2)];
 	const holes = shuffle([...moleButtons]);
 
-	// Pop moles one by one, with a 100 ms delay between each.
 	choices.forEach((word, i) => {
 		const button = holes[i];
 		button.dataset.word = word;
@@ -656,20 +567,20 @@ function popMoles() {
 		label.className = "mole-word";
 		label.textContent = word;
 		button.replaceChildren(face, label);
-		molePopTimers.push(setTimeout(() => {
+		molePopTimers.push(timers.setTimeout(() => {
 			if (document.hidden || wordPhase !== "playing" || moleFinishing || activeMode !== "mole") return;
 			button.disabled = false;
 			button.classList.add("is-up");
-			sounds.pop();
+			popSound();
 		}, i * 100));
 	});
 
-	moleTimer = setTimeout(() => {
+	moleTimer = timers.setTimeout(() => {
 		moleButtons.forEach(button => {
 			button.disabled = true;
 			button.classList.remove("is-up", "is-hit");
 		});
-		moleTimer = setTimeout(popMoles, 300);
+		moleTimer = timers.setTimeout(popMoles, 300);
 	}, 2400);
 }
 
@@ -716,14 +627,7 @@ window.addEventListener("pagehide", () => {
 updateCarrots();
 $("gamePage").style.display = "block";
 activateMode("mole");
-updateProgress();
+updateProgress(level, stars);
 </script>
-<script>
-function removeAfterLastLine(){document.querySelectorAll('#lastline ~ *').forEach(anchor => anchor.remove());return;}
-setTimeout(removeAfterLastLine, 100);
-setTimeout(removeAfterLastLine, 1000);
-setTimeout(removeAfterLastLine, 3000);
-</script>
-<a id="lastline"></div><!--MakeLayer-->
 </body>
 </html>
