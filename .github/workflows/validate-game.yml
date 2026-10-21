@@ -44,11 +44,12 @@ jobs:
         run: |
           grep -q "Robo-Monster Spelling Academy" index.html
           grep -rq "speechSynthesis" assets/
-          grep -q "Word Fishing" game_mode.html
-          grep -q "Ghost Maze" game_mode.html
-          grep -q "Spelling Race" game_mode.html
-          grep -q "Whack-a-Word" game_mode.html
-          grep -q "Fill in the Blanks" game_mode.html
+          grep -q "Spelling Mission" game_mode.html
+          grep -q "Fish for Letters" game_mode.html
+          grep -q "Ghost Letter Zap" game_mode.html
+          grep -q "Race and Chase" game_mode.html
+          grep -q "Whack-a-mole" game_mode.html
+          grep -q "Blank Letters" game_mode.html
       - name: Configure GitHub Pages
         if: github.event_name == 'push'
         uses: actions/configure-pages@v5
