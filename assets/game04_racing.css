@@ -1,0 +1,205 @@
+/* Robo Spelling · Racing */
+
+#racingApp {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #eaf7ff;
+  color: #172033;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+#racingApp .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(23, 32, 51, 0.08);
+}
+
+#racingApp .back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #e8f1ff;
+  color: #2f6df6;
+  font-size: 20px;
+  text-decoration: none;
+}
+
+#racingApp .titles h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+#racingApp .titles .sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #5b6779;
+}
+
+#racingApp .hud {
+  display: flex;
+  gap: 8px;
+}
+
+#racingApp .pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #2f6df6;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#racingApp .stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px;
+}
+
+#racingApp #game {
+  max-width: 100%;
+  border-radius: 18px;
+  background: #dff3ff;
+  box-shadow: 0 10px 30px rgba(23, 32, 51, 0.12);
+  touch-action: manipulation;
+}
+
+#racingApp .jump-btn {
+  min-width: 140px;
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 16px;
+  background: #2f6df6;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(47, 109, 246, 0.28);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+#racingApp .jump-btn:active {
+  transform: scale(0.97);
+  background: #2359d1;
+}
+
+#racingApp .word-pop,
+#racingApp .level-up {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 20;
+}
+
+#racingApp .word-pop.show,
+#racingApp .level-up.show {
+  display: flex;
+}
+
+#racingApp .pop-card,
+#racingApp .card {
+  width: min(360px, 100%);
+  padding: 22px;
+  border-radius: 20px;
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+}
+
+#racingApp .word {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 800;
+}
+
+#racingApp .say {
+  margin: 6px 0 14px;
+  color: #5b6779;
+}
+
+#racingApp .choices {
+  display: grid;
+  gap: 10px;
+}
+
+#racingApp .choice {
+  padding: 12px;
+  border: 2px solid #dbe6f5;
+  border-radius: 14px;
+  background: #f8fbff;
+  color: #172033;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#racingApp .choice.wrong {
+  border-color: #ef4444;
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+#racingApp .close {
+  margin-top: 14px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: #e8f1ff;
+  color: #2f6df6;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#racingApp #luTitle {
+  margin: 0;
+  font-size: 24px;
+}
+
+#racingApp #luText {
+  margin: 8px 0 16px;
+  color: #5b6779;
+}
+
+#racingApp #luNext {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 14px;
+  background: #2f6df6;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  #racingApp .titles h1 {
+    font-size: 17px;
+  }
+
+  #racingApp .titles .sub {
+    font-size: 12px;
+  }
+
+  #racingApp .jump-btn {
+    width: 100%;
+    max-width: 320px;
+  }
+}
