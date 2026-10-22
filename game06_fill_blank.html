@@ -92,6 +92,7 @@
 		<h2>Level Up!</h2>
 		<p id="levelMessage"></p>
 		<article class="level-story" id="levelStory"></article>
+		<p id="nextModeMessage"></p>
 		<div class="controls">
 			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
 			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
@@ -127,7 +128,8 @@
 
 let { level, stars } = readProgress();
 const timers = RoboGame.createTimerManager();
-const words = RoboWords.WORD_LIST;
+//const words = RoboWords.getWordsByChapter((level<5) ? 1 : 2);
+const sentences = RoboWords.getSentencesByChapter(1);
 
 const speech = $("speech"),
 	emoji = $("emoji"),
@@ -281,7 +283,6 @@ $("game_mode_next").onclick = () => {
 	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
 
-const sentences = ["Hi!", "I am Mark!", "What is your name?", "Wait!", "I am in Class 1A.", "What class are you in?", "Hello, Eric.", "I am Miss Hill.", "What is it?", "It is a pencil case.", "What are they?", "They are erasers.", "Oh, look!", "I am Eric.", "We are friends!", "Be quiet, boys!"];
 let sentenceDeck = [];
 let blankIndices = [];
 let sentenceAnswers = [];

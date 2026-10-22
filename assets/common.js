@@ -53,9 +53,10 @@ function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 const sounds = {
 	click: () => tone(520, 0.06, 'square'),
 	undo: () => tone(280, 0.1, 'triangle'),
-	hear: () => {
+	hear: (text) => {
 		tone(660, 0.08);
-		setTimeout(() => tone(880, 0.1), 85);
+		if (text) say(text);
+		else setTimeout(() => tone(880, 0.1), 85);
 	},
 	wrong: () => {
 		tone(190, 0.12, 'sawtooth');
@@ -75,6 +76,17 @@ function say(text, stop = true) {
 	utterance.pitch = 1.08;
 	global.speechSynthesis.speak(utterance);
 }
+
+function speak(text, stop = true) {
+	if (!('speechSynthesis' in global)) return;
+	if (stop) global.speechSynthesis.cancel();
+	const utterance = new SpeechSynthesisUtterance(text);
+	utterance.lang = 'en-US';
+	utterance.rate = 0.9;
+	utterance.pitch = 1.2;
+	global.speechSynthesis.speak(utterance);
+}
+
 function spellWord(word) {
 	return word + '. ' + word.split('').join(',') + ' . ' + word + '. ';
 }

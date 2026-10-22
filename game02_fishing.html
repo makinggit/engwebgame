@@ -112,7 +112,7 @@
 
 let { level, stars } = readProgress();
 const timers = RoboGame.createTimerManager();
-const words = RoboWords.WORD_LIST;
+const words = RoboWords.getWordsByChapter((level<5) ? 1 : 2);
 
 const speech = $("speech"),
 	emoji = $("emoji"),

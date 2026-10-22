@@ -217,6 +217,7 @@ body > main.wrap {
 		<h2>Level Up!</h2>
 		<p id="levelMessage"></p>
 		<article class="level-story" id="levelStory"></article>
+		<p id="nextModeMessage"></p>
 		<div class="controls">
 			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
 			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
@@ -267,7 +268,7 @@ body > main.wrap {
 
 let { level, stars } = readProgress();
 const timers = RoboGame.createTimerManager();
-const words = RoboWords.WORD_LIST;
+const words = RoboWords.getWordsByChapter((level<5) ? 1 : 2);
 
 const speech = $("speech"),
 	emoji = $("emoji"),
