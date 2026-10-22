@@ -1,160 +1,427 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
+﻿<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Robo Spelling · Fill in the Blanks</title>
-<link rel="stylesheet" href="assets/game.css">
-<link rel="stylesheet" href="assets/game06_fill_blank.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#bdeaff">
+<title>Robo-Monster Spelling Academy</title>
+<link rel="stylesheet" href="./assets/styles.css">
+<style>
+/* Sentence mode keeps the academy template and its header. */
+#slots { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 8px; }
+.sentence-word { display: inline-flex; align-items: center; gap: 2px;}
+.sentence-char { font: 800 clamp(20px, 4vw, 30px) "Trebuchet MS", sans-serif; width: 48px; height: 48px; }
+#slots .sentence-blank { min-width: 38px; min-height: 48px; padding: 2px; font: 800 26px "Trebuchet MS", sans-serif; border: 3px dashed var(--purple); border-radius: 9px; background: #fff8cf; color: var(--ink); touch-action: manipulation; }
+#slots .sentence-blank.active { outline: 3px solid var(--sky); outline-offset: 2px; }
+#slots .sentence-blank.good { border-color: var(--good); background: #dcffe8; }
+#slots .sentence-blank.bad { border-color: var(--bad); background: #ffe3e8; }
+#letters { gap: 8px; flex-wrap: wrap; }
+#letters .letter { min-width: 48px; min-height: 48px; }
+* { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+</style>
 </head>
 <body>
-<div id="gamePage">
-  <header class="topbar">
-    <a class="back" href="game_mode.html" aria-label="Back">←</a>
-    <div class="titles">
-      <h1>Fill in the Blanks</h1>
-      <p class="sub">Choose the right word for each blank</p>
-    </div>
-    <div class="hud">
-      <span class="pill" id="level">Level 1</span>
-      <span class="pill" id="stars">★ 0</span>
-    </div>
-  </header>
-  <main class="sentence-wrap">
-    <div id="sentence" class="sentence"></div>
-    <div id="letters" class="letters"></div>
-    <div id="wordPop" class="word-pop" role="dialog" aria-modal="true">
-      <div class="pop-card">
-        <p class="word" id="popWord">word</p>
-        <p class="say" id="popSay">Tap to hear</p>
-        <button class="close" id="popClose" aria-label="Close">✕</button>
-      </div>
-    </div>
-    <div id="levelUp" class="level-up" role="dialog" aria-modal="true">
-      <div class="card">
-        <h2 id="luTitle">Level Up!</h2>
-        <p id="luText"></p>
-        <button id="luNext">Continue</button>
-      </div>
-    </div>
-  </main>
+<main class="wrap">
+	<section class="panel game" id="gamePage">
+		<header>
+			<h1 id="gameHeading">Spelling Mission</h1>
+			<div class="badges">
+				<div class="badge" id="game_mode">🎮 Mode</div>
+				<div class="badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge">⭐ Stars <span id="stars">0</span></div>
+			</div>
+		</header>
+		<div id="spellingView">
+			<div class="top">
+				<div class="speech" id="speech">Listen first, then build the word!</div>
+				<div class="friend monster" id="monster">
+					<i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
+					><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
+				</div>
+				<div class="friend robot" id="robot"><div class="screen">^_^</div></div>
+			</div>
+			<div class="word-box">
+				<div class="emoji" id="emoji">📓</div>
+				<div class="hint" id="hint"></div>
+				<div class="slots" id="slots"></div>
+			</div>
+			<div class="letters" id="letters"></div>
+			<div class="controls">
+				<button class="control purple" id="undoBtn" type="button">↩ Undo</button
+				><button class="control yellow" id="hearBtn" type="button">🔊 Hear the Sentence</button
+				><!--<button class="control yellow" id="newBtn" type="button">🎲 New Word</button>-->
+			</div>
+			<div class="message" id="message"></div>
+			<div class="progress">
+				<div class="bar" id="bar"></div>
+				<div class="progress-content">
+					<span class="star-track" id="starTrack">☆☆☆</span
+					><span id="progressNumber">0 / 3 stars to Level 2</span>
+				</div>
+			</div>
+		</div>
+
+		<section class="bonus-screen" id="bonusView">
+			<div class="bonus-header">
+				<div class="bonus-title" id="bonusTitle"></div>
+				<div class="bonus-story" id="bonusStory"></div>
+			</div>
+			<div class="mini-word" id="miniWord"></div>
+			<div class="bonus-status" id="bonusStatus"></div>
+			<div class="play-area" id="playArea"></div>
+			<div class="controls">
+				<button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Sentence</button>
+			</div>
+		</section>
+	</section>
+</main>
+
+<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+	<div class="word-card">
+		<div class="small">Listen to the word:</div>
+		<div class="bigword" id="popWord">notebook</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
+	</div>
 </div>
-<script src="assets/common.js"></script>
-<script src="assets/game-lifecycle.js"></script>
-<script>
-(function(){
-  const { $, $$, readProgress, updateProgress, goTo, speak, sounds, tone, modeLabels, modeStories } = RoboCommon;
-  const { createTimerManager, createGameLifecycle } = RoboGame;
-  const timers = createTimerManager();
 
-  const params = new URLSearchParams(location.search);
-  let { level, stars } = readProgress();
-  let activeMode = params.get('mode') || 'spell';
-  let current = null, filled = [], popupTimer = null, sentenceNextTimer = null;
+<div class="levelup" id="levelModal">
+	<div class="level-card">
+		<div class="sparkles">✨ 🏆 ✨</div>
+		<h2>Level Up!</h2>
+		<p id="levelMessage"></p>
+		<article class="level-story" id="levelStory"></article>
+		<div class="controls">
+			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
+			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
+		</div>
+	</div>
+</div>
 
-  const sentenceEl = $('#sentence'), lettersEl = $('#letters');
-  const pop = $('#wordPop'), popWord = $('#popWord'), popSay = $('#popSay'), popClose = $('#popClose');
-  const levelUp = $('#levelUp'), luTitle = $('#luTitle'), luText = $('#luText'), luNext = $('#luNext');
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script src="./assets/game-lifecycle.js"></script>
+<script>const {
+	$,
+	getParams,
+	readProgress,
+	buildProgressQuery,
+	goTo,
+	tone,
+	sounds,
+	say,
+	spellWord,
+	shuffle,
+	randomBg,
+	updateProgress,
+	setPrompt,
+	closeWordPopup,
+	showWordPopup,
+	nextWord,
+	activateMode,
+	awardWin,
+	showLevelUp,
+} = RoboCommon;
 
-  function sync(){
-    $('#level').textContent = 'Level ' + level;
-    $('#stars').textContent = '★ ' + stars;
-    const url = new URL(location.href);
-    url.searchParams.set('level', level);
-    url.searchParams.set('stars', stars);
-    url.searchParams.set('mode', activeMode);
-    history.replaceState(null,'',url);
-  }
+let { level, stars } = readProgress();
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.WORD_LIST;
 
-  function chooseWord(){
-    const list = RoboCommon.sentencesForLevel(level, activeMode);
-    current = list[Math.floor(Math.random()*list.length)];
-    filled = Array(current.blanks).fill(null);
-    render();
-    timers.setTimeout(showWordPopup, 420, current.word);
-  }
+const speech = $("speech"),
+	emoji = $("emoji"),
+	hint = $("hint"),
+	slots = $("slots"),
+	letters = $("letters"),
+	message = $("message"),
+	starsEl = $("stars"),
+	levelEl = $("level"),
+	bar = $("bar"),
+	progressNumber = $("progressNumber"),
+	starTrack = $("starTrack"),
+	monster = $("monster"),
+	robot = $("robot");
+let current,
+	answer = [],
+	selected = [],
+	robotMode = false,
+	letterOrder = [],
+	checking = false,
+	audioCtx,
+	popupTimer,
+	wordDeck = [],
+	activeMode = "spell",
+	bonusWord = "",
+	bonusRemaining = [],
+	nextMode = "spell";
+	
+function buildBonus() {
+	const area = $("playArea");
+	if (activeMode === "ghost") {
+		buildGhostMaze();
+		return;
+	}
+	area.innerHTML = "";
+	area.className = "play-area " + (activeMode === "race" ? "race-area" : activeMode === "fish" ? "water" : "");
+	if (activeMode === "race") {
+		const runner = document.createElement("div");
+		runner.className = "runner";
+		runner.id = "runner";
+		runner.style.left = "4%";
+		runner.textContent = "👾";
+		area.appendChild(runner);
+	}
+	if (activeMode === "fish") {
+		const dock = document.createElement("div");
+		dock.className = "dock";
+		area.appendChild(dock);
+	}
+	spawnTargets();
+}
+function spawnTargets() {
+	const area = $("playArea"),
+		required = [...new Set(bonusRemaining)],
+		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => !required.includes(x))).slice(
+			0,
+			Math.max(4, required.length + 1)
+		),
+		choices = shuffle([...required, ...distractors]),
+		positions = [
+			[5, 12],
+			[27, 55],
+			[51, 15],
+			[72, 54],
+			[10, 70],
+			[43, 72],
+			[75, 15],
+			[57, 48],
+			[30, 20],
+			[82, 72],
+		];
+	choices.slice(0, positions.length).forEach((letter, i) => {
+		const x = document.createElement("button");
+		x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
+		x.type = "button";
+		x.textContent = activeMode === "fish" ? "🐟 " + letter : activeMode === "ghost" ? "👻 " + letter : letter;
+		x.style.left = positions[i][0] + "%";
+		x.style.top = positions[i][1] + "%";
+		x.onclick = () => bonusClick(letter, x);
+		area.appendChild(x);
+	});
+}
+function bonusClick(letter, el) {
+	const wanted = bonusRemaining[0];
+	if (letter === wanted) {
+		sounds.win();
+		bonusRemaining.shift();
+		el.remove();
+		$("miniWord").textContent = bonusRemaining.join("") || "You won!";
+		if (activeMode === "race") {
+			const runner = $("runner");
+			runner.style.left =
+				Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / bonusWord.length)) + "%";
+		}
+		if (!bonusRemaining.length) {
+			$("bonusStatus").textContent = "Amazing! You finished the word.";
+			setTimeout(() => awardWin(bonusWord), 900);
+		} else {
+			$("bonusStatus").textContent = "Correct! Find the next letter: " + bonusRemaining[0];
+			say("Correct! Find the next letter: " + bonusRemaining[0]);
+			buildBonus();
+		}
+	} else {
+		sounds.wrong();
+		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
+		say("Good try. Find the letter " + wanted + ".");
+	}
+}
+$("undoBtn").onclick = () => {
+	if (!answer.length) return;
+	sounds.undo();
+	const last = answer.pop(),
+		item = letterOrder.find((x) => x.letter === last && selected[x.index]);
+	if (item) selected[item.index] = false;
+	checking = false;
+	message.textContent = "";
+	setPrompt("One letter removed. Choose another letter.");
+	render();
+};
+$("hearBtn").onclick = showWordPopup;
+/*
+$("newBtn").onclick = () => {
+	sounds.click();
+	chooseWord();
+};
+*/
+$("wordPop").onclick = closeWordPopup;
+$("wordPop").onkeydown = (e) => {
+	if (e.key === "Enter" || e.key === " ") closeWordPopup();
+};
+/*
+$("hearStoryBtn").onclick = () => {
+	sounds.hear();
+	say($("storyText").innerText);
+};
+*/
+$("hearLevelStoryBtn").onclick = () => {
+	sounds.hear();
+	say($("levelStory").textContent);
+};
+$("miniHearBtn").onclick = () => {
+	sounds.hear();
+	say("The word is " + bonusWord + ". " + bonusWord);
+};
+$("game_mode").onclick = () => {
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+};
+$("game_mode_next").onclick = () => {
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+};
 
-  function render(){
-    sentenceEl.innerHTML = '';
-    current.parts.forEach((part,i)=>{
-      const span = document.createElement('span');
-      span.className = 'sentence-part';
-      span.textContent = part;
-      sentenceEl.appendChild(span);
-      if(i < current.blanks){
-        const b = document.createElement('span');
-        b.className = 'sentence-blank' + (filled[i] ? ' filled' : '');
-        b.textContent = filled[i] || '_';
-        sentenceEl.appendChild(b);
-      }
-    });
-    lettersEl.innerHTML = '';
-    const pool = RoboCommon.letterPool(current.word, level);
-    pool.forEach(ch=>{
-      const btn = document.createElement('button');
-      btn.className = 'letter';
-      btn.textContent = ch;
-      btn.onclick = ()=>{
-        const idx = filled.indexOf(null);
-        if(idx >= 0){
-          filled[idx] = ch;
-          render();
-          tone(520,0.05,'sine',0.04);
-          if(filled.every(x=>x)){
-            const guess = filled.join('');
-            if(guess === current.word){
-              stars += 1;
-              updateProgress(level, stars);
-              sync();
-              tone(660,0.09,'sine',0.05);
-              sentenceNextTimer = timers.setTimeout(chooseWord, 900);
-            } else {
-              tone(220,0.12,'square',0.04);
-              sentenceNextTimer = timers.setTimeout(()=>{ filled = Array(current.blanks).fill(null); render(); }, 900);
-            }
-          }
-        }
-      };
-      lettersEl.appendChild(btn);
-    });
-  }
+const sentences = ["Hi!", "I am Mark!", "What is your name?", "Wait!", "I am in Class 1A.", "What class are you in?", "Hello, Eric.", "I am Miss Hill.", "What is it?", "It is a pencil case.", "What are they?", "They are erasers.", "Oh, look!", "I am Eric.", "We are friends!", "Be quiet, boys!"];
+let sentenceDeck = [];
+let blankIndices = [];
+let sentenceAnswers = [];
+let activeBlank = 0;
+let undoHistory = [];
+let sentenceAwarded = false;
+let sentenceNextTimer = null;
 
-  function showWordPopup(w){
-    popWord.textContent = w;
-    popSay.textContent = 'Tap to hear';
-    pop.classList.add('show');
-    sounds.hear(w);
-    popupTimer = timers.setTimeout(()=>pop.classList.remove('show'), 5000);
-  }
+function makeBlanks(sentence) {
+	const candidates = [...sentence].map((ch, i) => ch === " " ? -1 : i).filter(i => i >= 0);
+	return shuffle(candidates).slice(0, Math.min(4, candidates.length)).sort((a, b) => a - b);
+}
 
-  popClose.onclick = ()=>{ clearTimeout(popupTimer); pop.classList.remove('show'); };
+function chooseWord() {
+	clearTimeout(sentenceNextTimer);
+	closeWordPopup();
+	if (!sentenceDeck.length) sentenceDeck = shuffle(sentences);
+	current = { word: sentenceDeck.pop() };
+	blankIndices = makeBlanks(current.word);
+	sentenceAnswers = Array(blankIndices.length).fill("");
+	activeBlank = 0;
+	undoHistory = [];
+	checking = false;
+	sentenceAwarded = false;
+	emoji.textContent = "✏️";
+	$("gameHeading").textContent = "Fill in the Blanks";
+	hint.textContent = "Choose letters or punctuation. Capital and small letters are different.";
+	setPrompt("Fill " + blankIndices.length + " blanks. Spaces are already included!");
+	message.textContent = "";
+	randomBg();
+	render();
+}
 
-  function showLevelUp(){
-    const pool = ['spell','fish','ghost','race'].filter(m=>m!==activeMode);
-    const nextMode = pool[Math.floor(Math.random()*pool.length)];
-    luTitle.textContent = 'Level Up!';
-    luText.textContent = (modeStories[nextMode] || ['Great job!'])[0];
-    levelUp.classList.add('show');
-  }
+function render(result = null) {
+	slots.replaceChildren();
+	let position = 0;
+	current.word.split(" ").forEach((word, wordIndex) => {
+		const group = document.createElement("span");
+		group.className = "sentence-word";
+		[...word].forEach(ch => {
+			const blank = blankIndices.indexOf(position);
+			let cell;
+			cell = document.createElement("button");
+			cell.type = "button";
+			cell.className = "sentence-blank" + (blank === activeBlank && !sentenceAwarded ? " active" : "");
+			cell.textContent = sentenceAnswers[blank] || "_";
+			cell.setAttribute("aria-label", "Blank " + (blank + 1) + (sentenceAnswers[blank] ? ": " + sentenceAnswers[blank] : ""));
+			if (blank < 0) {
+				cell.disabled = true;
+				cell.className = "sentence-char";
+				cell.textContent = ch;
+			}
+			cell.disabled = sentenceAwarded;
+			cell.onclick = () => { activeBlank = blank; render(); };
+			if (result) cell.classList.add(result[blank] ? "good" : "bad");
+			group.appendChild(cell);
+			position += 1;
+		});
+		
+		if (1==1) {
+			const blank = -1;
+			let cell;
+			cell = document.createElement("button");
+			cell.type = "button";
+			cell.className = "sentence-char";
+			cell.textContent = " ";
+			cell.setAttribute("aria-label", "Blank " + (blank + 1) + (sentenceAnswers[blank] ? ": " + sentenceAnswers[blank] : ""));
+			cell.setAttribute("disabled", "disabled");
+			cell.disabled = sentenceAwarded;
+			group.appendChild(cell);
+		}
+		
+		slots.appendChild(group);
+		if (wordIndex < current.word.split(" ").length - 1) {
+			slots.appendChild(document.createTextNode(" "));
+			position += 1;
+		}
+	});
+	letters.replaceChildren();
+	// Reusable choices allow duplicate answers such as two lower-case e's.
+	const required = blankIndices.map(i => current.word[i]);
+	const cases = required.filter(ch => /[a-z]/i.test(ch)).map(ch => ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase());
+	const extras = shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?.,1A".split("")).slice(0, 5);
+	const choices = [...new Set([...required, ...cases, ...extras])];
+	// Stable ordering while filling: only shuffle when the sentence is created.
+	if (!current.choices) current.choices = shuffle(choices);
+	current.choices.forEach(ch => {
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = "letter";
+		button.textContent = ch;
+		button.disabled = sentenceAwarded;
+		button.onclick = () => pick(ch);
+		letters.appendChild(button);
+	});
+	$("undoBtn").disabled = !undoHistory.length || sentenceAwarded;
+}
 
-  luNext.onclick = ()=>{
-    levelUp.classList.remove('show');
-    goTo('./game_mode.html', level, stars);
-  };
+function pick(ch) {
+	if (sentenceAwarded) return;
+	sounds.click();
+	undoHistory.push({ index: activeBlank, value: sentenceAnswers[activeBlank] });
+	sentenceAnswers[activeBlank] = ch;
+	const empty = sentenceAnswers.findIndex(value => !value);
+	if (empty >= 0) activeBlank = empty;
+	render();
+	if (sentenceAnswers.every(Boolean)) check();
+}
 
-  const lifecycle = createGameLifecycle({
-    name: 'fill-blank',
-    timers,
-    hooks: {
-      initGame(){ sync(); chooseWord(); },
-      pause(){ document.body.classList.add('is-paused'); },
-      resume(){ document.body.classList.remove('is-paused'); },
-      cleanup(){ pop.classList.remove('show'); }
-    }
-  });
+function check() {
+	if (sentenceAwarded) return;
+	const result = blankIndices.map((position, i) => current.word[position] === sentenceAnswers[i]);
+	if (result.every(Boolean)) {
+		sentenceAwarded = true;
+		render(result);
+		sounds.win();
+		awardWin(current.word);
+	} else {
+		activeBlank = result.findIndex(ok => !ok);
+		render(result);
+		message.textContent = "Good try! Fix the red blanks. Check capitals and punctuation.";
+		sounds.wrong();
+	}
+}
 
-  lifecycle.initGame();
-})();
+$("undoBtn").onclick = () => {
+	if (!undoHistory.length || sentenceAwarded) return;
+	const last = undoHistory.pop();
+	sentenceAnswers[last.index] = last.value;
+	activeBlank = last.index;
+	message.textContent = "";
+	sounds.undo();
+	render();
+};
+$("hearBtn").onclick = () => { sounds.hear(); say(current.word); };
+window.addEventListener("pagehide", () => clearTimeout(sentenceNextTimer));
+
+$("gamePage").style.display = "block";
+activateMode("spell");
+updateProgress();
 </script>
 </body>
 </html>

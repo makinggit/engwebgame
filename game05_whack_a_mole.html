@@ -1,182 +1,643 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
+﻿<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Robo Spelling · Whack-a-Word</title>
-<link rel="stylesheet" href="assets/game.css">
-<link rel="stylesheet" href="assets/game05_whack_a_mole.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#bdeaff">
+<title>Robo-Monster Spelling Academy</title>
+<link rel="stylesheet" href="./assets/styles.css">
+
+<style>
+/* Whack-a-letter: preserve the surrounding academy layout. */
+#playArea.mole-board {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-rows: repeat(3, minmax(0, 1fr));
+	gap: clamp(6px, 2vw, 14px);
+	padding: clamp(8px, 2vw, 16px);
+	background: linear-gradient(#b8e897, #72bb66);
+	height: clamp(270px, 48vh, 430px);
+}
+.mole-hole {
+	position: relative;
+	overflow: hidden;
+	min-width: 0;
+	min-height: 0;
+	border-radius: 22px;
+	background: radial-gradient(ellipse at 50% 78%, #3c251c 0 34%, #8d613c 36% 45%, transparent 47%);
+}
+.mole-button {
+	position: absolute;
+	inset: 3px 8% 12%;
+	width: 84%;
+	border: 0;
+	border-radius: 35% 35% 18% 18%;
+	background: #bb8052;
+	color: #fff;
+	font: 900 clamp(24px, 5vw, 38px) "Trebuchet MS", sans-serif;
+	text-shadow: 1px 2px #503322;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	cursor: pointer;
+	touch-action: manipulation;
+	transform: translateY(130%);
+	visibility: hidden;
+	transition: transform 180ms ease, visibility 180ms;
+	-webkit-user-select: none;
+	user-select: none;
+}
+.mole-button.is-up {
+	transform: translateY(0);
+	visibility: visible;
+}
+.mole-button:active { filter: brightness(1.15); }
+.mole-button:focus-visible { outline: 4px solid #ffe466; outline-offset: -4px; }
+.mole-face { font-size: clamp(22px, 4vw, 36px); }
+@media (prefers-reduced-motion: reduce) {
+	.mole-button { transition: none; }
+}
+
+
+/* Whole-word mode: retain legacy elements for compatibility, but hide hints. */
+#miniWord, #bonusStatus { display: none !important; }
+#playArea.mole-board .mole-button {
+	flex-direction: column;
+	gap: 0;
+	padding: 2px;
+	font-size: clamp(13px, 3.2vw, 25px);
+	line-height: 1.1;
+}
+.mole-button .mole-word {
+	display: block;
+	max-width: 100%;
+	overflow-wrap: anywhere;
+	text-shadow: 1px 1px #503322;
+}
+.mole-button.is-hit .mole-face { animation: word-hit 280ms ease; }
+@keyframes word-hit {
+	40% { transform: scale(1.15, .65) rotate(-10deg); }
+	100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+	.mole-button.is-hit .mole-face { animation: none; }
+}
+
+</style>
 </head>
 <body>
-<div id="gamePage">
-  <header class="topbar">
-    <a class="back" href="game_mode.html" aria-label="Back">←</a>
-    <div class="titles">
-      <h1>Whack-a-Word</h1>
-      <p class="sub">Tap the mole with the right word</p>
-    </div>
-    <div class="hud">
-      <span class="pill" id="level">Level 1</span>
-      <span class="pill" id="stars">★ 0</span>
-      <span class="pill" id="carrots">🥕 0</span>
-    </div>
-  </header>
-  <main class="garden">
-    <div id="moleBoard" class="mole-board"></div>
-    <div id="wordPop" class="word-pop" role="dialog" aria-modal="true">
-      <div class="pop-card">
-        <p class="word" id="popWord">word</p>
-        <p class="say" id="popSay">Tap to hear</p>
-        <button class="close" id="popClose" aria-label="Close">✕</button>
-      </div>
-    </div>
-    <div id="levelUp" class="level-up" role="dialog" aria-modal="true">
-      <div class="card">
-        <h2 id="luTitle">Level Up!</h2>
-        <p id="luText"></p>
-        <button id="luNext">Continue</button>
-      </div>
-    </div>
-  </main>
+<main class="wrap">
+	<section class="panel game" id="gamePage">
+		<header>
+			<h1 id="gameHeading">Spelling Mission</h1>
+			<div class="badges">
+				<div class="badge" id="game_mode">🎮 Mode</div>
+				<div class="badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge" id="carrotBadge" aria-live="polite">🥕 <span id="carrots">0</span>/7</div>
+				<div class="badge">⭐ Stars <span id="stars">0</span></div>
+			</div>
+		</header>
+		<div id="spellingView">
+			<div class="top">
+				<div class="speech" id="speech">Listen first, then build the word!</div>
+				<div class="friend monster" id="monster">
+					<i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
+					><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
+				</div>
+				<div class="friend robot" id="robot"><div class="screen">^_^</div></div>
+			</div>
+			<div class="word-box">
+				<div class="emoji" id="emoji">📓</div>
+				<div class="hint" id="hint"></div>
+				<div class="slots" id="slots"></div>
+			</div>
+			<div class="letters" id="letters"></div>
+			<div class="controls">
+				<button class="control purple" id="undoBtn" type="button">↩ Undo</button
+				><button class="control yellow" id="hearBtn" type="button">🔊 Hear the Word</button
+				><button class="control yellow" id="newBtn" type="button">🎲 New Word</button>
+			</div>
+			<div class="message" id="message"></div>
+			<div class="progress">
+				<div class="bar" id="bar"></div>
+				<div class="progress-content">
+					<span class="star-track" id="starTrack">☆☆☆</span
+					><span id="progressNumber">0 / 3 stars to Level 2</span>
+				</div>
+			</div>
+		</div>
+		<section class="bonus-screen" id="bonusView">
+			<div class="bonus-header">
+				<div class="bonus-title" id="bonusTitle"></div>
+				<div class="bonus-story" id="bonusStory"></div>
+			</div>
+			<div class="mini-word" id="miniWord"></div>
+			<div class="bonus-status" id="bonusStatus"></div>
+			<div class="play-area" id="playArea"></div>
+			<div class="controls">
+				<button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Word</button>
+			</div>
+		</section>
+	</section>
+</main>
+<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+	<div class="word-card">
+		<div class="small">Listen to the word:</div>
+		<div class="bigword" id="popWord">notebook</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 5 seconds</div>
+	</div>
 </div>
-<script src="assets/common.js"></script>
-<script src="assets/game-lifecycle.js"></script>
-<script>
-(function(){
-  const { $, $$, readProgress, updateProgress, goTo, sounds, tone } = RoboCommon;
-  const { createTimerManager, createGameLifecycle } = RoboGame;
-  const timers = createTimerManager();
+<div class="levelup" id="levelModal">
+	<div class="level-card">
+		<div class="sparkles">✨ 🏆 ✨</div>
+		<h2>Level Up!</h2>
+		<p id="levelMessage"></p>
+		<article class="level-story" id="levelStory"></article>
+		<p id="nextModeMessage"></p>
+		<div class="controls">
+			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
+			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
+		</div>
+	</div>
+</div>
 
-  const params = new URLSearchParams(location.search);
-  let { level, stars } = readProgress();
-  let activeMode = params.get('mode') || 'mole';
-  let carrots = parseInt(params.get('carrots') || '0', 10) || 0;
-  let target = "", popupTimer = null, wordHintTimer = null;
-  let molePopTimers = [];
-  let wordPhase = 'playing';
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script src="./assets/game-lifecycle.js"></script>
+<script>const {
+	$,
+	getParams,
+	readProgress,
+	buildProgressQuery,
+	goTo,
+	tone,
+	sounds,
+	say,
+	spellWord,
+	shuffle,
+	randomBg,
+	updateProgress,
+	setPrompt,
+	closeWordPopup,
+	showWordPopup,
+	nextWord,
+	activateMode,
+	awardWin,
+	showLevelUp,
+} = RoboCommon;
 
-  const board = $('#moleBoard');
-  const pop = $('#wordPop'), popWord = $('#popWord'), popSay = $('#popSay'), popClose = $('#popClose');
-  const levelUp = $('#levelUp'), luTitle = $('#luTitle'), luText = $('#luText'), luNext = $('#luNext');
+let { level, stars } = readProgress();
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.WORD_LIST;
 
-  function sync(){
-    $('#level').textContent = 'Level ' + level;
-    $('#stars').textContent = '★ ' + stars;
-    $('#carrots').textContent = '🥕 ' + carrots;
-    const url = new URL(location.href);
-    url.searchParams.set('level', level);
-    url.searchParams.set('stars', stars);
-    url.searchParams.set('mode', activeMode);
-    url.searchParams.set('carrots', carrots);
-    history.replaceState(null,'',url);
-  }
+const speech = $("speech"),
+	emoji = $("emoji"),
+	hint = $("hint"),
+	slots = $("slots"),
+	letters = $("letters"),
+	message = $("message"),
+	starsEl = $("stars"),
+	levelEl = $("level"),
+	bar = $("bar"),
+	progressNumber = $("progressNumber"),
+	starTrack = $("starTrack"),
+	monster = $("monster"),
+	robot = $("robot");
+let current,
+	answer = [],
+	selected = [],
+	robotMode = false,
+	letterOrder = [],
+	checking = false,
+	audioCtx,
+	popupTimer,
+	wordDeck = [],
+	activeMode = "spell",
+	bonusWord = "",
+	bonusRemaining = [],
+	nextMode = "spell";
+	
+const params = new URLSearchParams(location.search);
+const CARROTS_PER_STAR = 7;
+const savedCarrots = Number(params.get("carrots") || 0);
+let carrots = Number.isFinite(savedCarrots) && savedCarrots >= 0
+	? Math.floor(savedCarrots) % CARROTS_PER_STAR : 0;
+starsEl.textContent = stars;
+levelEl.textContent = level;
 
-  function buildMoleBoard(){
-    board.innerHTML = '';
-    for(let i=0;i<9;i++){
-      const hole = document.createElement('div');
-      hole.className = 'mole-hole';
-      hole.dataset.index = i;
-      board.appendChild(hole);
-    }
-  }
-
-  function popMoles(){
-    if(wordPhase !== 'playing') return;
-    const list = RoboCommon.wordsForLevel(level, activeMode);
-    target = list[Math.floor(Math.random()*list.length)];
-    const others = list.filter(w=>w!==target).slice(0,2);
-    const moleWords = [target, ...others].sort(()=>Math.random()-0.5);
-    const holes = $$('.mole-hole');
-    molePopTimers.forEach(clearTimeout);
-    molePopTimers = [];
-    moleWords.forEach((w,i)=>{
-      const t = timers.setTimeout(()=>{
-        const hole = holes[i];
-        if(!hole) return;
-        hole.innerHTML = '<button class="mole" data-word="'+w+'">'+w+'</button>';
-        const btn = hole.querySelector('.mole');
-        btn.onclick = ()=>{
-          if(w === target){
-            stars += 1;
-            updateProgress(level, stars);
-            sync();
-            tone(660,0.09,'sine',0.05);
-            popMoles();
-          } else {
-            tone(220,0.12,'square',0.04);
-            btn.classList.add('wrong');
-          }
-        };
-        const hide = timers.setTimeout(()=>{ hole.innerHTML = ''; }, 1800);
-        molePopTimers.push(hide);
-      }, i*400);
-      molePopTimers.push(t);
-    });
-    timers.setTimeout(showWordPopup, 420, target);
-  }
-
-  function stopMoles(){
-    molePopTimers.forEach(clearTimeout);
-    molePopTimers = [];
-    $$('.mole-hole').forEach(h=>h.innerHTML = '');
-  }
-
-  function showWordPopup(w){
-    popWord.textContent = w;
-    popSay.textContent = 'Tap to hear';
-    pop.classList.add('show');
-    sounds.hear(w);
-    popupTimer = timers.setTimeout(()=>pop.classList.remove('show'), 5000);
-  }
-
-  popClose.onclick = ()=>{ clearTimeout(popupTimer); pop.classList.remove('show'); };
-
-  luNext.onclick = ()=>{
-    levelUp.classList.remove('show');
-    goTo('./game_mode.html', level, stars, { carrots });
-  };
-
-  const lifecycle = createGameLifecycle({
-    name: 'whack-a-word',
-    timers,
-    hooks: {
-      initGame(){
-        sync();
-        buildMoleBoard();
-        wordPhase = 'playing';
+				
+function chooseWord() {
+	if (activeMode !== 'spell') return;
+	checking = false;
+	randomBg();
+	robotMode = !robotMode;
+	monster.style.display = robotMode ? 'none' : 'block';
+	robot.style.display = robotMode ? 'block' : 'none';
+	current = nextWord();
+	answer = [];
+	selected = Array(current.word.length).fill(false);
+	letterOrder = shuffle(current.word.split('').map((letter, index) => ({ letter, index })));
+	emoji.textContent = current.emoji;
+	hint.textContent = current.clue;
+	message.textContent = '';
+	setPrompt(robotMode ? 'BEEP! Robo Bolt has a word for you!' : 'Momo has a new spelling mission!');
+	render();
+	setTimeout(showWordPopup, 420);
+}
+function render(result = null) {
+	slots.innerHTML = '';
+	for (let i = 0; i < current.word.length; i++) {
+		const d = document.createElement('div');
+		d.className = 'slot';
+		d.textContent = answer[i] || '';
+		if (result && answer[i]) d.classList.add(result[i] ? 'good' : 'bad');
+		slots.appendChild(d);
+	}
+	letters.innerHTML = '';
+	letterOrder.forEach(({ letter, index }) => {
+		const b = document.createElement('button');
+		b.className = 'letter';
+		b.type = 'button';
+		b.textContent = letter;
+		b.disabled = selected[index] || checking;
+		b.onclick = () => pick(letter, index);
+		letters.appendChild(b);
+	});
+}
+function pick(letter, index) {
+	if (checking || answer.length >= current.word.length) return;
+	sounds.click();
+	answer.push(letter);
+	selected[index] = true;
+	render();
+}
+function renderMiniWord(matchedIndex = -1) {
+	const target = $('miniWord');
+	target.innerHTML = '';
+	[...bonusWord].forEach((letter, i) => {
+		const span = document.createElement('span');
+		span.textContent = letter;
+		span.className = i <= matchedIndex ? 'matched-letter' : '';
+		target.appendChild(span);
+	});
+}
+function initMole() {
+	stopMoles();
+	clearTimeout(wordIntroTimer);
+	clearTimeout(wordAwardTimer);
+	clearInterval(wordHintTimer);
+	wordHintTimer = null;
+	wordRound += 1;
+	updateCarrots();
+	bonusWord = nextWord().word;
+	bonusRemaining = [bonusWord];
+	wordPhase = 'intro';
+	$('bonusTitle').textContent = '🔨 Whack-a-Word';
+	$('bonusStory').textContent = 'Remember the word, then tap the matching mole!';
+	buildMoleBoard();
+	$('popWord').textContent = bonusWord;
+	$('wordPop').classList.add('show');
+	const note = $('wordPop').querySelector('.close-note');
+	if (note) note.textContent = 'Remember this word • starts automatically in 3 seconds';
+	say('. ' + bonusWord);
+	const round = wordRound;
+	wordIntroTimer = setTimeout(() => {
+		if (round !== wordRound || activeMode !== 'mole') return;
+		$('wordPop').classList.remove('show');
+		$('popWord').textContent = '';
+		wordPhase = 'playing';
+		moleFinishing = false;
         popMoles();
-      },
-      pause(){
-        stopMoles();
-        document.body.classList.add('is-paused');
-      },
-      resume(){
-        document.body.classList.remove('is-paused');
-        if(wordPhase === 'playing') popMoles();
-      },
-      cleanup(){
-        stopMoles();
-        pop.classList.remove('show');
-      }
-    }
-  });
+		// One repeating timer per target, independent of the short mole waves.
+		wordHintTimer = setInterval(() => {
+			if (round === wordRound && activeMode === 'mole' &&
+				wordPhase === 'playing' && !document.hidden) {
+				say('Remember, find the word ' + bonusWord + '.');
+			}
+		}, 12000);
+	}, 3000);
+}
+function buildBonus() {
+	stopMoles();
+	if (activeMode === 'mole') {
+		buildMoleBoard();
+		return;
+	}
+	const area = $('playArea');
+	area.innerHTML = '';
+	area.className = 'play-area ' + (activeMode === 'race' ? 'race-area' : activeMode === 'mole' ? 'water' : '');
+	if (activeMode === 'race') {
+		const runner = document.createElement('div');
+		runner.className = 'runner';
+		runner.id = 'runner';
+		runner.style.left = '4%';
+		runner.textContent = '👾';
+		area.appendChild(runner);
+	}
+	if (activeMode === 'mole') {
+		const dock = document.createElement('div');
+		dock.className = 'dock';
+		area.appendChild(dock);
+	}
+}
+function ensureTargetFish() {
+	if (activeMode === 'mole') {
+		if (!moleTimer && bonusRemaining.length) popMoles();
+		return;
+	}
+	if (activeMode !== 'mole' || !bonusRemaining.length) return;
+	const wanted = bonusRemaining[0];
+	const exists = [...document.querySelectorAll('#playArea .target.fish')].some((el) => el.dataset.letter === wanted);
+	if (exists) return;
+	const area = $('playArea'),
+		fish = [...area.querySelectorAll('.target.fish')],
+		positions = [
+			[5, 12],
+			[27, 55],
+			[51, 15],
+			[72, 54],
+		],
+		used = new Set(fish.map((el) => el.style.left + '/' + el.style.top));
+	const spot = positions.find(([x, y]) => !used.has(x + '%/' + y + '%')) || positions[0],
+		x = document.createElement('button');
+	x.className = 'target fish';
+	x.type = 'button';
+	x.dataset.letter = wanted;
+	x.textContent = '🐟 ' + wanted;
+	x.style.left = spot[0] + '%';
+	x.style.top = spot[1] + '%';
+	x.onclick = () => bonusClick(wanted, x);
+	area.appendChild(x);
+}
+function updateLetter() {
+	ensureTargetFish();
+}
 
-  document.addEventListener('visibilitychange', ()=>{
-    if(document.visibilityState === 'hidden'){
-      stopMoles();
-    } else if(wordPhase === 'playing'){
-      popMoles();
-    }
-  });
+function clearGhostTimers() {
+	clearInterval(ghostTimer);
+	clearTimeout(ghostHintTimer);
+	clearTimeout(ghostHintHideTimer);
+	ghostTimer = ghostHintTimer = ghostHintHideTimer = null;
+}
+function spawnTargets() {
+	const area = $('playArea'),
+		required = [...new Set(bonusRemaining)],
+		distractors = shuffle('abcdefghijklmnopqrstuvwxyz'.split('').filter((x) => !required.includes(x))).slice(
+			0,
+			Math.max(4, required.length + 1)
+		),
+		choices = shuffle([...required, ...distractors]),
+		positions = [
+			[5, 12],
+			[27, 55],
+			[51, 15],
+			[72, 54],
+		];
+	choices.slice(0, positions.length).forEach((letter, i) => {
+		const x = document.createElement('button');
+		x.className = 'target ' + (activeMode === 'mole' ? 'mole' : activeMode === 'ghost' ? 'ghost' : '');
+		x.dataset.letter = letter;
+		x.type = 'button';
+		x.textContent = activeMode === 'mole' ? '🐟 ' + letter : activeMode === 'ghost' ? '👻 ' + letter : letter;
+		x.style.left = positions[i][0] + '%';
+		x.style.top = positions[i][1] + '%';
+		x.onclick = () => bonusClick(letter, x);
+		area.appendChild(x);
+	});
+}
+function bonusClick(letter, el) {
+	if (activeMode === 'mole') {
+		hitWordMole(letter, el);
+		return;
+	}
+	const wanted = bonusRemaining[0];
+	if (letter === wanted) {
+		sounds.win();
+		bonusRemaining.shift();
+		el.remove();
+		renderMiniWord(bonusWord.length - bonusRemaining.length - 1);
+		if (!bonusRemaining.length) {
+			$('bonusStatus').textContent = 'Amazing! You finished the word.';
+			awardWin(bonusWord);
+			initMole();
+		} else {
+			$('bonusStatus').textContent = 'Correct!';
+			say('Correct! ');
+			buildBonus();
+		}
+	} else {
+		sounds.wrong();
+		$('bonusStatus').textContent = 'Good try. Find the letter ' + wanted + '.';
+		say('Good try. Find the letter ' + wanted + '.');
+	}
+}
 
-  document.addEventListener('pointerdown', function once(){
-    sounds.click();
-    document.removeEventListener('pointerdown', once);
-  }, { once:true });
+function hitWordMole(word, button) {
+	if (wordPhase !== 'playing' || moleFinishing || !button || button.disabled ||
+		!button.isConnected || !button.classList.contains('is-up')) return;
+	moleFinishing = true;
+	stopMoles();
+	button.classList.add('is-hit');
+	moleButtons.forEach(mole => {
+		mole.disabled = true;
+		mole.classList.remove('is-up');
+	});
+	const round = wordRound;
+	if (word.toLowerCase() !== bonusWord.toLowerCase()) {
+		sounds.wrong();
+		// Wrong hits do not reset the 12-second reminder.
+		moleTimer = setTimeout(() => {
+			if (round !== wordRound || activeMode !== 'mole' || wordPhase !== 'playing') return;
+			moleFinishing = false;
+			popMoles();
+		}, 450);
+		return;
+	}
+	wordPhase = 'finishing';
+	bonusRemaining = [];
+	clearInterval(wordHintTimer);
+	wordHintTimer = null;
+	sounds.win();
+	const earnedStar = collectCarrot();
+	const completedWord = bonusWord;
+	
+	if (round === wordRound && earnedStar) {
+		awardWin(completedWord);
+		if (stars % 3 != 0) {
+			initMole();
+		}
+	} else {
+		initMole();
+	}
+}
+$('undoBtn').onclick = () => {
+	if (!answer.length) return;
+	sounds.undo();
+	const last = answer.pop(),
+		item = letterOrder.find((x) => x.letter === last && selected[x.index]);
+	if (item) selected[item.index] = false;
+	checking = false;
+	message.textContent = '';
+	setPrompt('One letter removed. Choose another letter.');
+	render();
+};
+$('hearBtn').onclick = showWordPopup;
+$('newBtn').onclick = () => {
+	sounds.click();
+	chooseWord();
+};
+$('wordPop').onclick = closeWordPopup;
+$('wordPop').onkeydown = (e) => {
+	if (e.key === 'Enter' || e.key === ' ') closeWordPopup();
+};
+$('hearLevelStoryBtn').onclick = () => {
+	sounds.hear();
+	say($('levelStory').textContent);
+};
+$('miniHearBtn').onclick = () => {
+	sounds.hear();
+	say(activeMode === 'mole' ? ', The word is ' + bonusWord + '.' : 'The word is ' + bonusWord);
+};
+$('game_mode').onclick = () => {
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars + '&carrots=' + carrots);
+};
+$('game_mode_next').onclick = () => {
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars + '&carrots=' + carrots);
+};
 
-  lifecycle.initGame();
-})();
+
+let molePopTimers = [];
+let moleTimer = null;
+let moleFinishing = false;
+let moleButtons = [];
+
+function stopMoles() {
+	clearTimeout(moleTimer);
+	moleTimer = null;
+	molePopTimers.forEach(clearTimeout);
+	molePopTimers = [];
+}
+
+function buildMoleBoard() {
+	const area = $('playArea');
+	area.replaceChildren();
+	area.className = 'play-area mole-board';
+	area.setAttribute('role', 'group');
+	area.setAttribute('aria-label', 'Nine-hole letter mole board');
+	moleFinishing = false;
+	moleButtons = [];
+    console.log('buildMoleBoard');
+
+	for (let i = 0; i < 9; i += 1) {
+		const hole = document.createElement('div');
+		hole.className = 'mole-hole';
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.className = 'mole-button';
+		button.disabled = true;
+		button.onclick = () => bonusClick(button.dataset.word, button);
+		hole.appendChild(button);
+		area.appendChild(hole);
+		moleButtons.push(button);
+	}
+	popMoles();
+}
+
+function popMoles() {
+    console.log('popMoles(wordPhase):' + wordPhase);
+	stopMoles();
+	if (activeMode !== 'mole' || wordPhase !== 'playing' || moleFinishing || document.hidden) return;
+	if (!$('playArea').classList.contains('mole-board')) return;
+
+	// Immediately lower every mole before preparing the next wave.
+	moleButtons.forEach(button => {
+		button.disabled = true;
+		button.classList.remove('is-up', 'is-hit');
+	});
+
+	const uniqueWords = [...new Set(words.map(item => item.word))];
+	const distractors = uniqueWords.filter(word => word.toLowerCase() !== bonusWord.toLowerCase());
+	const choices = [bonusWord, ...shuffle(distractors).slice(0, 2)];
+	const holes = shuffle([...moleButtons]);
+
+	// Pop moles one by one, with a 100 ms delay between each.
+	choices.forEach((word, i) => {
+		const button = holes[i];
+		button.dataset.word = word;
+		button.setAttribute('aria-label', 'Mole word ' + word);
+		const face = document.createElement('span');
+		face.className = 'mole-face';
+		face.textContent = '🐹';
+		face.setAttribute('aria-hidden', 'true');
+		const label = document.createElement('span');
+		label.className = 'mole-word';
+		label.textContent = word;
+		button.replaceChildren(face, label);
+		molePopTimers.push(setTimeout(() => {
+			if (document.hidden || wordPhase !== 'playing' || moleFinishing || activeMode !== 'mole') return;
+			button.disabled = false;
+			button.classList.add('is-up');
+			sounds.pop();
+		}, i * 100));
+	});
+
+	moleTimer = setTimeout(() => {
+		moleButtons.forEach(button => {
+			button.disabled = true;
+			button.classList.remove('is-up', 'is-hit');
+		});
+		moleTimer = setTimeout(popMoles, 300);
+	}, 1800);
+}
+
+document.addEventListener('visibilitychange', () => {
+	stopMoles();
+	if (!document.hidden && activeMode === 'mole' && !moleFinishing && wordPhase === 'playing' && bonusRemaining.length) popMoles();
+});
+window.addEventListener('pagehide', stopMoles);
+
+let wordIntroTimer = null;
+let wordAwardTimer = null;
+let wordHintTimer = null;
+let wordRound = 0;
+let wordPhase = 'idle';
+
+function updateCarrots() {
+	$('carrots').textContent = carrots;
+	$('carrotBadge').setAttribute('aria-label', carrots + ' of 7 carrots toward a star');
+	params.set('carrots', carrots);
+	params.set('stars', stars);
+	params.set('level', level);
+	try { history.replaceState(null, '', '?' + params.toString()); } catch (error) {}
+}
+
+function collectCarrot() {
+	carrots += 1;
+	const earnedStar = carrots >= CARROTS_PER_STAR;
+	if (earnedStar) carrots -= CARROTS_PER_STAR;
+	updateCarrots();
+	return earnedStar;
+}
+
+document.addEventListener('pointerdown', () => {
+	sounds.click();
+}, { once: true });
+window.addEventListener('pagehide', () => {
+	clearInterval(wordHintTimer);
+	clearTimeout(wordIntroTimer);
+	clearTimeout(wordAwardTimer);
+});
+updateCarrots();
+$('gamePage').style.display = 'block';
+activateMode('mole');
+initMole();
+updateProgress();
 </script>
 </body>
 </html>

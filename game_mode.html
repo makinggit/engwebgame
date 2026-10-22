@@ -11,65 +11,84 @@
 </head>
 <body>
 <main class="wrap">
-    <div class="mode-select" id="modeSelect">
-        <div class="mode-card">
-            <h2>Choose One Game Mode</h2>
-            <p>Select one adventure to begin. After every level-up, the game will switch to a random mode automatically.</p>
-            <div class="mode-grid">
-                <button class="mode-btn" data-mode="spell" type="button" id="game01_spelling">
-                    <span class="mode-icon">🧩🔤</span>Spelling Mission<br /><small>Build the whole word</small>
-                </button>
-                <button class="mode-btn" data-mode="fish" type="button" id="game02_fishing">
-                    <span class="mode-icon">🐟🎣</span>Fish for Letters<br /><small>Help a poor dock</small>
-                </button>
-                <button class="mode-btn" data-mode="ghost" type="button" id="game03_ghost_maze">
-                    <span class="mode-icon">👻🎯</span>Ghost Letter Zap<br /><small>Zap the right letters</small>
-                </button>
-                <button class="mode-btn" data-mode="race" type="button" id="game04_racing">
-                    <span class="mode-icon">🏃💨</span>Race and Chase<br /><small>Catch the word</small>
-                </button>
-                <button class="mode-btn" data-mode="race" type="button" id="game05_whack_a_mole">
-                    <span class="mode-icon">🐹🔨</span>Whack-a-mole<br /><small>Moles in the hole</small>
-                </button>
-                <button class="mode-btn" data-mode="fillblank" type="button" id="game06_fill_blank">
-                    <span class="mode-icon">🔤🧩</span>Blank Letters<br /><small>Fill in the Blank</small>
-                </button>
-            </div>
-        </div>
-    </div>
+	<div class="mode-select" id="modeSelect">
+		<div class="mode-card">
+			<h2>Choose One Game Mode</h2>
+			<p>Select one adventure to begin. After every level-up, the game will switch to a random mode automatically.</p>
+			<div class="mode-grid">
+				<button class="mode-btn" data-mode="spell" type="button" id="game01_spelling">
+					<span class="mode-icon">🧩🔤</span>Spelling Mission<br /><small>Build the whole word</small>
+				</button>
+				<button class="mode-btn" data-mode="fish" type="button" id="game02_fishing">
+					<span class="mode-icon">🐟🎣</span>Fish for Letters<br /><small>Help a poor dock</small>
+				</button>
+				<button class="mode-btn" data-mode="ghost" type="button" id="game03_ghost_maze">
+					<span class="mode-icon">👻🎯</span>Ghost Letter Zap<br /><small>Zap the right letters</small>
+				</button>
+				<button class="mode-btn" data-mode="race" type="button" id="game04_racing">
+					<span class="mode-icon">🏃💨</span>Race and Chase<br /><small>Catch the word</small>
+				</button>
+				<button class="mode-btn" data-mode="race" type="button" id="game05_whack_a_mole">
+					<span class="mode-icon">🐹🔨</span>Whack-a-mole<br /><small>Moles in the hole</small>
+				</button>
+				<button class="mode-btn" data-mode="fillblank" type="button" id="game06_fill_blank">
+					<span class="mode-icon">🔤🧩</span>Blank Letters<br /><small>Fill in the Blank</small>
+				</button>
+			</div>
+		</div>
+	</div>
 </main>
 
 <script src="./assets/common.js"></script>
 <script src="./assets/words.js"></script>
 <script src="./assets/story.js"></script>
 <script>
-(function () {
-    'use strict';
-    const { $, readProgress, goTo, sounds, say, updateProgress } = RoboCommon;
-    const { level, stars } = readProgress();
+'use strict';
+const {
+	$,
+	getParams,
+	readProgress,
+	buildProgressQuery,
+	goTo,
+	tone,
+	sounds,
+	say,
+	spellWord,
+	shuffle,
+	randomBg,
+	updateProgress,
+	setPrompt,
+	closeWordPopup,
+	showWordPopup,
+	nextWord,
+	activateMode,
+	awardWin,
+	showLevelUp,
+} = RoboCommon;
 
-    const modeTargets = {
-        game01_spelling: './game01_spelling.html',
-        game02_fishing: './game02_fishing.html',
-        game03_ghost_maze: './game03_ghost_maze.html',
-        game04_racing: './game04_racing.html',
-        game05_whack_a_mole: './game05_whack_a_mole.html',
-        game06_fill_blank: './game06_fill_blank.html'
-    };
+const { level, stars } = readProgress();
 
-    Object.keys(modeTargets).forEach((id) => {
-        const button = $(id);
-        if (!button) return;
-        button.addEventListener('click', () => {
-            sounds.hear();
-            goTo(modeTargets[id], level, stars);
-        });
-    });
+const modeTargets = {
+	game01_spelling: './game01_spelling.html',
+	game02_fishing: './game02_fishing.html',
+	game03_ghost_maze: './game03_ghost_maze.html',
+	game04_racing: './game04_racing.html',
+	game05_whack_a_mole: './game05_whack_a_mole.html',
+	game06_fill_blank: './game06_fill_blank.html'
+};
 
-    $('modeSelect').style.display = 'grid';
-    say('Choose one game mode.');
-    updateProgress(level, stars);
-})();
+Object.keys(modeTargets).forEach((id) => {
+	const button = $(id);
+	if (!button) return;
+	button.addEventListener('click', () => {
+		sounds.hear();
+		goTo(modeTargets[id], level, stars);
+	});
+});
+
+$('modeSelect').style.display = 'grid';
+say('Choose one game mode.');
+//updateProgress(level, stars);
 </script>
 </body>
 </html>

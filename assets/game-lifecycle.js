@@ -12,8 +12,6 @@
          handleCorrect() {},
          handleWrong() {},
          completeWord() {},
-         pause() {},
-         resume() {},
          cleanup() {}
        }
      });
@@ -94,8 +92,7 @@
     const state = {
       initialized: false,
       roundActive: false,
-      completed: false,
-      paused: false
+      completed: false
     };
 
     function cleanup() {
@@ -108,7 +105,6 @@
       cleanup();
       state.initialized = true;
       state.completed = false;
-      state.paused = false;
       if (typeof hooks.initGame === 'function') hooks.initGame(...args);
     }
 
@@ -137,26 +133,10 @@
       if (typeof hooks.completeWord === 'function') hooks.completeWord(...args);
     }
 
-    function pause() {
-      if (state.paused) return;
-      state.paused = true;
-      if (typeof hooks.pause === 'function') hooks.pause();
-    }
-
-    function resume() {
-      if (!state.paused) return;
-      state.paused = false;
-      if (typeof hooks.resume === 'function') hooks.resume();
-    }
-
     global.addEventListener('pagehide', cleanup);
     global.addEventListener('beforeunload', cleanup);
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        pause();
-      } else {
-        resume();
-      }
+      if (document.visibilityState === 'hidden') cleanup();
     });
 
     return {
@@ -168,8 +148,6 @@
       handleCorrect,
       handleWrong,
       completeWord,
-      pause,
-      resume,
       cleanup
     };
   }
