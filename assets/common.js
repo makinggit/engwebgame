@@ -105,6 +105,7 @@ const sounds = {
 	win: () => [523, 659, 784, 1047].forEach((f, i) => managedTimeout(() => tone(f, 0.13, 'sine', 0.07), i * 110)),
 	level: () => [523, 659, 784, 1047, 1319].forEach((f, i) => managedTimeout(() => tone(f, 0.17, 'triangle', 0.08), i * 100)),
     pop: () => { if (audioCtx && audioCtx.state === "running") tone(740, 0.055, "triangle", 0.035); },
+	star: () => [880, 1175, 1568].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'triangle', 0.06), i * 90)),
 };
 
 function say(text, stop = true) {
@@ -240,6 +241,20 @@ function activateMode(mode) {
 		startBonusMode(mode);
 	}
 }
+function showStarEffect() {
+	const star = document.createElement('div');
+	star.textContent = '⭐';
+	star.style.cssText = 'position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:80px;z-index:9999;pointer-events:none;';
+	document.body.appendChild(star);
+	if (star.animate) {
+		star.animate([
+			{ transform: 'translate(-50%,-50%) scale(0.4)', opacity: 0 },
+			{ transform: 'translate(-50%,-50%) scale(1.2)', opacity: 1 },
+			{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 }
+		], { duration: 500, easing: 'ease-out' });
+	}
+	managedTimeout(() => star.remove(), 600);
+}
 function awardWin(word) {
 	stars++;
 	if (stars % 3 === 0) level++;
@@ -248,15 +263,17 @@ function awardWin(word) {
 	updateProgress();
 	message.textContent = '🎉 ZAP! Correct! You spelled ' + word + '.';
 	setPrompt('Hooray! You are a super speller!');
+	showStarEffect();
+	sounds.star();
 	if (stars % 3 === 0) {
 		levelEl.textContent = level;
-		managedTimeout(showLevelUp, 950);
+		managedTimeout(showLevelUp, 1450);
 	} else if (activeMode !== 'mole') {
 		// Mole mode manages its own next-round flow through initMole().
 		managedTimeout(() => {
 			if (activeMode === 'spell') chooseWord();
 			else startBonusMode(activeMode);
-		}, 1650);
+		}, 2150);
 	}
 }
 function showLevelUp() {
