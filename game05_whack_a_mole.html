@@ -56,7 +56,7 @@
 }
 .mole-button:active { filter: brightness(1.15); }
 .mole-button:focus-visible { outline: 4px solid #ffe466; outline-offset: -4px; }
-.mole-face { font-size: clamp(22px, 4vw, 36px); }
+.mole-face { font-size: clamp(30px, 6vw, 48px); }
 @media (prefers-reduced-motion: reduce) {
 	.mole-button { transition: none; }
 }
@@ -68,7 +68,7 @@
 	flex-direction: column;
 	gap: 0;
 	padding: 2px;
-	font-size: clamp(13px, 3.2vw, 25px);
+	font-size: clamp(18px, 4.5vw, 34px);
 	line-height: 1.1;
 }
 .mole-button .mole-word {
@@ -480,32 +480,32 @@ $('undoBtn').onclick = () => {
 		item = letterOrder.find((x) => x.letter === last && selected[x.index]);
 	if (item) selected[item.index] = false;
 	checking = false;
-	message.textContent = '';
-	setPrompt('One letter removed. Choose another letter.');
+	message.textContent = "";
+	setPrompt("One letter removed. Choose another letter.");
 	render();
 };
-$('hearBtn').onclick = showWordPopup;
-$('newBtn').onclick = () => {
+$("hearBtn").onclick = showWordPopup;
+$("newBtn").onclick = () => {
 	sounds.click();
 	chooseWord();
 };
-$('wordPop').onclick = closeWordPopup;
-$('wordPop').onkeydown = (e) => {
-	if (e.key === 'Enter' || e.key === ' ') closeWordPopup();
+$("wordPop").onclick = closeWordPopup;
+$("wordPop").onkeydown = (e) => {
+	if (e.key === "Enter" || e.key === " ") closeWordPopup();
 };
-$('hearLevelStoryBtn').onclick = () => {
+$("hearLevelStoryBtn").onclick = () => {
 	sounds.hear();
-	say($('levelStory').textContent);
+	say($("levelStory").textContent);
 };
-$('miniHearBtn').onclick = () => {
+$("miniHearBtn").onclick = () => {
 	sounds.hear();
 	say(activeMode === 'mole' ? ', The word is ' + bonusWord + '.' : 'The word is ' + bonusWord);
 };
-$('game_mode').onclick = () => {
+$("game_mode").onclick = () => {
 	sounds.hear();
 	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
-$('game_mode_next').onclick = () => {
+$("game_mode_next").onclick = () => {
 	sounds.hear();
 	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
