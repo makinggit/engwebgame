@@ -199,7 +199,8 @@ function awardWin(word) {
 		level++;
 		levelEl.textContent = level;
 		setTimeout(showLevelUp, 950);
-	} else {
+	} else if (activeMode !== 'mole') {
+		// Mole mode manages its own next-round flow through initMole().
 		setTimeout(() => {
 			if (activeMode === 'spell') chooseWord();
 			else startBonusMode(activeMode);
@@ -212,7 +213,7 @@ function showLevelUp() {
 	nextMode = ['spell', 'fish', 'ghost', 'race'][Math.floor(Math.random() * 4)];
 	$('levelMessage').textContent = 'You collected 3 stars and reached Level ' + level + '!';
 	$('levelStory').textContent = story;
-	$('nextModeMessage').textContent = 'Next adventure: ' + modeLabels[nextMode] + ' mode!';													 
+	$('nextModeMessage').textContent = 'Next adventure: ' + modeLabels[nextMode] + ' mode!';														 
 	$('levelModal').style.display = 'grid';
 	say('Level up! You reached level ' + level + '. ' + story + ' Next adventure: ' + modeLabels[nextMode] + ' mode.');
 }
