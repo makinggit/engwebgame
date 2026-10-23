@@ -10,9 +10,13 @@ function getParams() {
 
 function readProgress() {
 	const params = getParams();
-	const level = Math.max(1, Number(params.get('level') || 1));
-	const stars = Math.max(0, Number(params.get('stars') || 0));
-	return { level, stars };
+	const level = Number(params.get('level'));
+	const stars = Number(params.get('stars'));
+
+	return {
+		level: Number.isFinite(level) && level >= 1 ? Math.floor(level) : 1,
+		stars: Number.isFinite(stars) && stars >= 0 ? Math.floor(stars) : 0
+	};
 }
 
 function buildProgressQuery(level, stars, extra) {
