@@ -128,7 +128,14 @@ body {
 	cursor: pointer;
 	box-shadow: 0 6px 0 rgba(0,0,0,.16);
 }
+.map-button:disabled {
+	opacity: .5;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: 0 6px 0 rgba(0,0,0,.16);
+}
 .map-button.hear { background: #ffd166; }
+.map-button.earlier { background: #ffe0eb; }
 .map-button.more { background: #a0e7ff; }
 .map-button.games { background: #b8f2c9; }
 .map-button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,.16); }
@@ -152,6 +159,7 @@ body {
 		<p class="map-subtitle">You have collected <strong id="foundCount">0</strong> stickers. Earn 1 more star for your next sticker!</p>
 		<div class="adventure-map" id="adventureMap"></div>
 		<div class="map-controls">
+			<button class="map-button earlier" id="earlierBtn" type="button">⬅️ See Earlier Stickers</button>
 			<button class="map-button hear" id="hearBtn" type="button">🔊 Hear My Stickers</button>
 			<button class="map-button more" id="moreBtn" type="button">➕ Show More Map</button>
 			<button class="map-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
@@ -176,6 +184,7 @@ const STICKER_POOL = [
 	{ emoji: "🏅", name: "Medal" },
 ];
 let futureStops = 5;
+let earlierStops = 0;
 
 function getSticker(starNumber) {
 	const base = STICKER_POOL[starNumber % STICKER_POOL.length];
@@ -194,8 +203,8 @@ function getSticker(starNumber) {
 function renderMap() {
 	const map = $("adventureMap");
 	map.replaceChildren();
-	const firstStop = Math.max(1, stars - 3);
-	const lastStop = stars + futureStops;
+	const firstStop = Math.max(1, stars - 3 - earlierStops);
+	const lastStop = Math.max(stars + futureStops, firstStop + 9);
 
 	for (let starNumber = firstStop; starNumber <= lastStop; starNumber += 1) {
 		const sticker = getSticker(starNumber);
@@ -229,12 +238,19 @@ function renderMap() {
 			button.appendChild(marker);
 		}
 	}
+
+	$("earlierBtn").disabled = firstStop <= 1;
 }
 
 $("levelBadge").textContent = "Level " + level;
 $("foundCount").textContent = stars;
 renderMap();
 
+$("earlierBtn").onclick = () => {
+	sounds.click();
+	earlierStops += 5;
+	renderMap();
+};
 $("moreBtn").onclick = () => {
 	sounds.click();
 	futureStops += 5;
