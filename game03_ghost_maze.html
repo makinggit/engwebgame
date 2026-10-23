@@ -148,7 +148,6 @@ function startBonusMode(mode) {
 	}[mode];
 	$("bonusStory").textContent = modeStories[mode];
 	renderMiniWord(-1);
-	//say($("bonusTitle").textContent + ". " + modeStories[mode] + " The word is " + spellWord(bonusWord) + ".");
 	buildBonus();
 }
 const mazeLayout = ["101010101", "000000000", "101010101", "000000000", "101010101", "000000000", "111111111"];
@@ -208,30 +207,28 @@ function buildGhostMaze() {
 	player.id = "mazePlayer";
 	player.textContent = "🤖";
 	field.appendChild(player);
-	if (!ghosts.length) {
-		[
-			[1, 7],
-			[3, 1],
-			[5, 7],
-		].forEach((pos, i) => {
-			const box = document.createElement("button");
-			box.type = "button";
-			box.className = "ghost-box";
-			const wanted = bonusRemaining[0],
-				letters = [wanted, ...shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted))];
-			box.dataset.letter = wanted;
-			box.innerHTML = "<span>👻</span><span>" + wanted + "</span>";
-			box.onclick = () => {};
-			field.appendChild(box);
-			ghosts.push({ r: pos[0], c: pos[1], el: box, dr: i % 2 ? 0 : 1, dc: i % 2 ? 1 : 0 });
-		});
-	} else {
-		g = ghosts[0];
-		g.el.dataset.letter = bonusRemaining[0];
-		g.el.innerHTML = "<span>👻</span><span>" + bonusRemaining[0] + "</span>";
-		//g.el.style.display = "block";
-		ghosts.forEach((g) => field.appendChild(g.el));
-	}
+	
+	// Rebuild all ghosts for every new word so no stale letters remain.
+	ghosts.forEach((ghost) => ghost.el.remove());
+	ghosts = [];
+	[
+		[1, 7],
+		[3, 1],
+		[5, 7],
+	].forEach((pos, i) => {
+		const box = document.createElement("button");
+		box.type = "button";
+		box.className = "ghost-box";
+		const wanted = bonusRemaining[0];
+		const distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((letter) => letter !== wanted)).slice(0, 2);
+		const letter = i === 0 ? wanted : distractors[i - 1];
+		box.dataset.letter = letter;
+		box.innerHTML = "<span>👻</span><span>" + letter + "</span>";
+		box.onclick = () => {};
+		field.appendChild(box);
+		ghosts.push({ r: pos[0], c: pos[1], el: box, dr: i % 2 ? 0 : 1, dc: i % 2 ? 1 : 0 });
+	});
+	
 	const controls = document.createElement("div");
 	controls.className = "ghost-maze-controls";
 	[
@@ -324,19 +321,18 @@ function resolveGhostCollision(i) {
 	
 	if (!bonusRemaining.length) {
 		clearGhostTimers();
-		//$("bonusStatus").textContent = "Amazing! You finished the word.";
 		timers.setTimeout(() => awardWin(bonusWord), 900);
 		return;
 	}
 	
-	//g.el.style.display = "none";
 	g.el.style.transition = "left 0s linear,top 0s linear";
 	g.el.dataset.letter = bonusRemaining[0];
 	g.el.innerHTML = "<span>👻</span><span>" + bonusRemaining[0] + "</span>";
 	
-	const j = Math.floor(Math.random() * 2) + 1;
-	g.r = ghosts[j].r;
-	g.c = ghosts[j].c;
+	const others = ghosts.filter((candidate) => candidate !== g);
+	const target = others[Math.floor(Math.random() * others.length)];
+	g.r = target.r;
+	g.c = target.c;
 	positionMaze();
 	timers.clearTimeout(ghostHintTimer);
 	ghostHintTimer = timers.setTimeout(showGhostHint, 20000);
@@ -362,7 +358,6 @@ function showGhostHint() {
 }
 function wrongMaze() {
 	sounds.wrong();
-	//$("bonusStatus").textContent = "Move Bolt onto a ghost to check its letter.";
 	document.body.classList.add("invert-flash");
 	timers.clearTimeout(flashTimer);
 	flashTimer = timers.setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
@@ -411,16 +406,13 @@ function bonusClick(letter, el) {
 				Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / bonusWord.length)) + "%";
 		}
 		if (!bonusRemaining.length) {
-			//$("bonusStatus").textContent = "Amazing! You finished the word.";
 			timers.setTimeout(() => awardWin(bonusWord), 900);
 		} else {
-			//$("bonusStatus").textContent = "Correct! Find the next letter: " + bonusRemaining[0];
 			say("Correct! Find the next letter: " + bonusRemaining[0]);
 			buildBonus();
 		}
 	} else {
 		sounds.wrong();
-		//$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
 		say("Good try. Find the letter " + wanted + ".");
 	}
 }
