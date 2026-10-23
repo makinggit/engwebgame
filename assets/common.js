@@ -42,7 +42,7 @@ function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 		const o = audioCtx.createOscillator();
 		const g = audioCtx.createGain();
 		o.type = t;
-		o.frequency.value = f;
+		o.frequency.setValueAtTime(f, audioCtx.currentTime);
 		g.gain.setValueAtTime(v, audioCtx.currentTime);
 		g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
 		o.connect(g);
@@ -105,7 +105,7 @@ function spellWord(word) {
 function shuffle(items) {
 	const copy = [...items];
 	for (let i = copy.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
+		const j = Math.floor(Math.random() * (copy.length - i));
 		[copy[i], copy[j]] = [copy[j], copy[i]];
 	}
 	return copy;
@@ -126,6 +126,15 @@ const modeStories = {
 };
 
 const modeLabels = { spell: "Spelling", fish: "Fish", ghost: "Ghosts", race: "Race", mole: "Mole", blank: "Blank" };
+const gamePaths = {
+	spell: "game01_spelling.html",
+	fish: "game02_fishing.html",
+	ghost: "game03_ghost_maze.html",
+	race: "game04_racing.html",
+	mole: "game05_whack_a_mole.html",
+	blank: "game06_fill_blank.html",
+};
+let nextGamePath = "game_mode.html";
 
 function randomBg() {
 	document.body.style.background = funnyColors[Math.floor(Math.random() * funnyColors.length)];
@@ -223,13 +232,28 @@ function awardWin(word) {
 function showLevelUp() {
 	sounds.level();
 	const story = RoboStory.getStoryPage(level).text;
-	nextMode = ['spell', 'fish', 'ghost', 'race'][Math.floor(Math.random() * 4)];
+	nextMode = ['spell', 'fish', 'ghost', 'race', 'mole', 'blank'][Math.floor(Math.random() * 6)];
+	nextGamePath = gamePaths[nextMode];
 	$('levelMessage').textContent = 'You collected 3 stars and reached Level ' + level + '!';
 	$('levelStory').textContent = story;
-	$('nextModeMessage').textContent = 'Next adventure: ' + modeLabels[nextMode] + ' mode!';														 
+	$('nextModeMessage').textContent = 'Next adventure: ' + modeLabels[nextMode] + ' mode!';
 	$('levelModal').style.display = 'grid';
 	say('Level up! You reached level ' + level + '. ' + story + ' Next adventure: ' + modeLabels[nextMode] + ' mode.');
 }
+function startNextGame() {
+	goTo(nextGamePath, level, stars);
+}
+
+// Level Up's Start button goes directly to the assigned next game,
+// rather than returning to game_mode.html.
+document.addEventListener('click', (event) => {
+	const button = event.target.closest('#game_mode_next');
+	if (!button) return;
+	event.preventDefault();
+	event.stopImmediatePropagation();
+	sounds.hear();
+	startNextGame();
+}, true);
 
 global.RoboCommon = {
 	$,
@@ -252,5 +276,6 @@ global.RoboCommon = {
 	activateMode,
 	awardWin,
 	showLevelUp,
+	startNextGame,
 };
 })(window);
