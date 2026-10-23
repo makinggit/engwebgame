@@ -184,7 +184,9 @@ function startBonusMode(mode) {
 }
 function activateMode(mode) {
 	console.log('activateMode ' + mode);
-	//timers.clearAll();
+	if (typeof timers !== 'undefined' && timers && typeof timers.clearAll === 'function') {
+		timers.clearAll();
+	}
 	closeWordPopup();
 	activeMode = mode;
 	$('spellingView').style.display = mode === 'spell' ? 'block' : 'none';
