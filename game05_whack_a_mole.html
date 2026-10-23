@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -562,7 +562,7 @@ function popMoles() {
 
 	const uniqueWords = [...new Set(words.map(item => item.word))];
 	const distractors = uniqueWords.filter(word => word.toLowerCase() !== bonusWord.toLowerCase());
-	const choices = [bonusWord, ...shuffle(distractors).slice(0, 2)];
+	const choices = shuffle([bonusWord, ...shuffle(distractors).slice(0, 2)]);
 	const holes = shuffle([...moleButtons]);
 
 	// Pop moles one by one, with a 100 ms delay between each.
