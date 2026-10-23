@@ -72,6 +72,7 @@ function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 		const g = audioCtx.createGain();
 		o.type = t;
 		o.frequency.setValueAtTime(f, audioCtx.currentTime);
+		o.frequency.exponentialRampToValueAtTime(Math.max(1, f), audioCtx.currentTime + d);
 		g.gain.setValueAtTime(v, audioCtx.currentTime);
 		g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + d);
 		o.connect(g);
@@ -178,15 +179,15 @@ const STICKER_POOL = [
 	{ emoji: "🏅", name: "Medal" },
 ];
 
-function getSticker(starNumber) {
-	const base = STICKER_POOL[starNumber % STICKER_POOL.length];
-	if (starNumber > 0 && starNumber % 50 === 0) {
+function getSticker(levelNumber) {
+	const base = STICKER_POOL[levelNumber % STICKER_POOL.length];
+	if (levelNumber > 0 && levelNumber % 50 === 0) {
 		return { emoji: "👑", name: "Legendary " + base.name, rarity: "Legendary" };
 	}
-	if (starNumber > 0 && starNumber % 25 === 0) {
+	if (levelNumber > 0 && levelNumber % 25 === 0) {
 		return { emoji: "🌈", name: "Rainbow " + base.name, rarity: "Rainbow" };
 	}
-	if (starNumber > 0 && starNumber % 10 === 0) {
+	if (levelNumber > 0 && levelNumber % 10 === 0) {
 		return { emoji: "✨", name: "Golden " + base.name, rarity: "Golden" };
 	}
 	return { ...base, rarity: "" };
@@ -281,7 +282,7 @@ function showStarEffect() {
 	}
 	managedTimeout(() => star.remove(), 600);
 }
-function showStickerPopup(sticker, starNumber) {
+function showStickerPopup(sticker, levelNumber) {
 	const overlay = document.createElement('div');
 	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:10000;';
 	const card = document.createElement('div');
@@ -289,7 +290,7 @@ function showStickerPopup(sticker, starNumber) {
 	card.innerHTML = `
 		<div style="font-size:72px;line-height:1;">${sticker.emoji}</div>
 		<div style="font:900 24px 'Trebuchet MS',sans-serif;color:#5b2a86;margin-top:8px;">${sticker.name}</div>
-		<div style="font:800 16px 'Trebuchet MS',sans-serif;color:#666;margin-top:4px;">Star ${starNumber} reward</div>
+		<div style="font:800 16px 'Trebuchet MS',sans-serif;color:#666;margin-top:4px;">Level ${levelNumber} reward</div>
 		<button id="stickerGiftBtn" type="button" style="margin-top:16px;border:0;border-radius:999px;padding:14px 22px;font:900 18px 'Trebuchet MS',sans-serif;background:#ffd166;color:#333;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.16);">🎁 Go to Gift Page</button>
 	`;
 	overlay.appendChild(card);
@@ -311,7 +312,8 @@ function showStickerPopup(sticker, starNumber) {
 }
 function awardWin(word) {
 	stars++;
-	if (stars % 3 === 0) level++;
+	const levelUp = stars % 3 === 0;
+	if (levelUp) level++;
 	saveProgress(level, stars);
 	starsEl.textContent = stars;
 	updateProgress();
@@ -319,8 +321,8 @@ function awardWin(word) {
 	setPrompt('Hooray! You are a super speller!');
 	showStarEffect();
 	sounds.star();
-	showStickerPopup(getSticker(stars), stars);
-	if (stars % 3 === 0) {
+	if (levelUp) {
+		showStickerPopup(getSticker(level), level);
 		levelEl.textContent = level;
 		managedTimeout(showLevelUp, 1450);
 	} else if (activeMode !== 'mole') {
