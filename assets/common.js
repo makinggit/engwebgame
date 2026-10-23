@@ -150,8 +150,8 @@ function showWordPopup() {
 	clearTimeout(popupTimer);
 	$("popWord").textContent = current.word;
 	$("wordPop").classList.add("show");
-	sounds.hear();
-	say(". " + current.word + ". " + current.word);
+	tone(660, 0.08);
+	say(current.word + ". " + current.word);
 	popupTimer = managedTimeout(closeWordPopup, 5000);
 }
 function nextWord() {
