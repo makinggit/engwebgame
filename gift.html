@@ -1,0 +1,191 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffd166">
+<title>Robo-Monster Sticker Book</title>
+<link rel="stylesheet" href="./assets/styles.css">
+<style>
+body {
+	min-height: 100vh;
+	background: linear-gradient(160deg, #7ee8fa, #ffd6f5 55%, #fff3b0);
+}
+.gift-wrap {
+	width: min(820px, calc(100% - 20px));
+	margin: 16px auto;
+}
+.gift-card {
+	background: #fff;
+	border: 7px solid #ff5d8f;
+	border-radius: 36px;
+	box-shadow: 0 20px 45px rgba(80, 30, 90, .22);
+	padding: clamp(18px, 4vw, 32px);
+}
+.gift-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+.gift-title {
+	margin: 10px 0 4px;
+	color: #5b2a86;
+	font: 900 clamp(30px, 8vw, 48px)/1.1 "Trebuchet MS", sans-serif;
+	text-shadow: 2px 3px #ffd166;
+}
+.gift-subtitle {
+	margin: 0 0 18px;
+	color: #555;
+	font: 800 clamp(15px, 3.6vw, 21px) "Trebuchet MS", sans-serif;
+}
+.level-badge {
+	background: #5b2a86;
+	color: #fff;
+	font: 900 clamp(14px, 3.4vw, 20px) "Trebuchet MS", sans-serif;
+	padding: 9px 15px;
+	border-radius: 999px;
+	box-shadow: 0 5px 0 #3d1a60;
+}
+.sticker-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 14px;
+}
+.sticker {
+	position: relative;
+	border: 0;
+	border-radius: 26px;
+	padding: 18px 10px 14px;
+	background: linear-gradient(180deg, #fff, #f2f7ff);
+	box-shadow: 0 8px 0 #d9e2ff;
+	cursor: pointer;
+	touch-action: manipulation;
+	transition: transform .15s ease;
+}
+.sticker:active { transform: scale(.96); }
+.sticker:focus-visible { outline: 5px solid #ffd166; outline-offset: 3px; }
+.sticker .emoji {
+	display: block;
+	font-size: clamp(38px, 10vw, 58px);
+	line-height: 1;
+}
+.sticker .name {
+	display: block;
+	margin-top: 8px;
+	color: #333;
+	font: 900 clamp(15px, 3.6vw, 20px) "Trebuchet MS", sans-serif;
+}
+.sticker.locked {
+	background: #eceff4;
+	box-shadow: 0 8px 0 #cfd6df;
+	filter: grayscale(1);
+}
+.sticker.locked .emoji { opacity: .35; }
+.sticker.locked .name { color: #7a828e; }
+.gift-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+	margin-top: 24px;
+}
+.gift-button {
+	border: 0;
+	border-radius: 999px;
+	padding: 15px 24px;
+	font: 900 clamp(16px, 4vw, 22px) "Trebuchet MS", sans-serif;
+	color: #333;
+	cursor: pointer;
+	box-shadow: 0 6px 0 rgba(0,0,0,.16);
+}
+.gift-button.hear { background: #ffd166; }
+.gift-button.games { background: #a0e7ff; }
+.gift-button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,.16); }
+.gift-button:focus-visible { outline: 4px solid #5b2a86; outline-offset: 3px; }
+.gift-footer {
+	margin-top: 15px;
+	text-align: center;
+	color: #666;
+	font: 800 15px "Trebuchet MS", sans-serif;
+}
+</style>
+</head>
+<body>
+<main class="gift-wrap">
+	<section class="gift-card" aria-labelledby="giftTitle">
+		<div class="gift-header">
+			<div class="level-badge" id="levelBadge">Level 1</div>
+			<div aria-hidden="true" style="font-size: clamp(30px, 8vw, 46px)">🎁🏆👾</div>
+		</div>
+		<h1 class="gift-title" id="giftTitle">Sticker Book</h1>
+		<p class="gift-subtitle">You have collected <strong id="unlockedCount">0</strong> of 12 awesome stickers!</p>
+		<div class="sticker-grid" id="stickerGrid"></div>
+		<div class="gift-controls">
+			<button class="gift-button hear" id="hearBtn" type="button">🔊 Hear My Stickers</button>
+			<button class="gift-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
+		</div>
+		<p class="gift-footer">Play more games to unlock every sticker!</p>
+	</section>
+</main>
+
+<script src="./assets/common.js"></script>
+<script>
+const { $, readProgress, buildProgressQuery, say, sounds } = RoboCommon;
+
+const { level, stars } = readProgress();
+const stickers = [
+	{ emoji: "🦖", name: "T-Rex" },
+	{ emoji: "🤖", name: "Robot" },
+	{ emoji: "🚀", name: "Rocket" },
+	{ emoji: "🏎️", name: "Race Car" },
+	{ emoji: "🥚", name: "Dinosaur Egg" },
+	{ emoji: "🐕‍🦺", name: "Robot Dog" },
+	{ emoji: "👨‍🚀", name: "Astronaut" },
+	{ emoji: "🐉", name: "Dragon" },
+	{ emoji: "⚽", name: "Football" },
+	{ emoji: "⚔️", name: "Brave Sword" },
+	{ emoji: "🥷", name: "Ninja" },
+	{ emoji: "🎁", name: "Treasure Box" },
+];
+
+const levelUnlocks = Math.min(level * 4, stickers.length);
+const starUnlocks = Math.min(Math.floor(stars / 3), stickers.length - levelUnlocks);
+const unlockedCount = Math.min(levelUnlocks + starUnlocks, stickers.length);
+
+$("levelBadge").textContent = "Level " + level;
+$("unlockedCount").textContent = unlockedCount;
+
+const grid = $("stickerGrid");
+stickers.forEach((sticker, index) => {
+	const button = document.createElement("button");
+	button.type = "button";
+	button.className = "sticker" + (index < unlockedCount ? "" : " locked");
+	button.setAttribute("aria-label", index < unlockedCount
+		? sticker.name + " sticker"
+		: "Locked sticker");
+	button.innerHTML = `<span class="emoji" aria-hidden="true">${index < unlockedCount ? sticker.emoji : "❓"}</span>` +
+		`<span class="name">${index < unlockedCount ? sticker.name : "Locked"}</span>`;
+	button.onclick = () => {
+		sounds.click();
+		say(index < unlockedCount ? sticker.name : "Keep playing to unlock this sticker!");
+	};
+	grid.appendChild(button);
+});
+
+$("hearBtn").onclick = () => {
+	sounds.hear();
+	const owned = stickers.slice(0, unlockedCount).map((sticker) => sticker.name);
+	say(owned.length
+		? "Your stickers are: " + owned.join(", ") + "."
+		: "Play more games to unlock your first sticker!");
+};
+$("gamesBtn").onclick = () => {
+	sounds.hear();
+	window.location.assign("./game_mode.html?" + buildProgressQuery(level, stars));
+};
+</script>
+</body>
+</html>
