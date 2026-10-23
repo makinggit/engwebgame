@@ -68,15 +68,46 @@ test.describe('game05_whack_a_mole', () => {
 });
 
 test.describe('game06_fill_blank', () => {
-  test('renders blanks and fills one from letter choices', async ({ page }) => {
+  test('shows sentence popup, speaks it, and closes after 5 seconds', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game06_fill_blank.html?level=1&stars=0');
     await expect(page.locator('#gamePage')).toBeVisible();
-    const blanks = page.locator('.sentence-blank');
-    await expect(blanks.first()).toBeVisible();
-    const before = await blanks.first().textContent();
-    await page.locator('#letters .letter').first().click();
-    const after = await page.locator('.sentence-blank').first().textContent();
+
+    const popup = page.locator('#wordPop.show');
+    await expect(popup).toBeVisible();
+    await expect(page.locator('#popWord')).not.toHaveText('');
+    await expect(popup).toBeHidden({ timeout: 7000 });
+
+    await page.locator('#hearBtn').click();
+    await expect(popup).toBeVisible();
+    await expect(popup).toBeHidden({ timeout: 7000 });
+
+    expect(errors).toEqual([]);
+  });
+
+  test('renders only lowercase choices and fills the first blank', async ({ page }) => {
+    const errors = trackErrors(page);
+    await page.goto(BASE + 'game06_fill_blank.html?level=1&stars=0');
+    await expect(page.locator('#gamePage')).toBeVisible();
+
+    // Wait for the opening sentence popup to close before interacting.
+    await expect(page.locator('#wordPop.show')).toBeHidden({ timeout: 7000 });
+
+    const choices = page.locator('#letters .letter');
+    await expect(choices.first()).toBeVisible();
+    const choiceCount = await choices.count();
+    expect(choiceCount).toBeGreaterThan(0);
+
+    for (let i = 0; i < choiceCount; i += 1) {
+      await expect(choices.nth(i)).toHaveText(/^[a-z]$/);
+    }
+
+    const firstBlank = page.locator('.sentence-blank').first();
+    await expect(firstBlank).toBeVisible();
+    const before = await firstBlank.textContent();
+    await choices.first().click();
+    const after = await firstBlank.textContent();
+
     expect(after).not.toBe(before);
     expect(errors).toEqual([]);
   });
