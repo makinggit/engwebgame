@@ -203,6 +203,7 @@ function setPrompt(t, read = true) {
 }
 function updateProgress() {
 	const n = stars % 3;
+	if (typeof starsEl !== 'undefined' && starsEl) starsEl.textContent = n;
 	bar.style.width = (n / 3) * 100 + '%';
 	starTrack.textContent = '★'.repeat(n) + '☆'.repeat(3 - n);
 	progressNumber.textContent = n + ' / 3 stars to Level ' + (level + 1);
@@ -315,7 +316,7 @@ function awardWin(word) {
 	const levelUp = stars % 3 === 0;
 	if (levelUp) level++;
 	saveProgress(level, stars);
-	starsEl.textContent = stars;
+	starsEl.textContent = stars % 3;
 	updateProgress();
 	message.textContent = '🎉 ZAP! Correct! You spelled ' + word + '.';
 	setPrompt('Hooray! You are a super speller!');

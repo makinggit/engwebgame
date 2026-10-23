@@ -330,7 +330,7 @@ function speak(text) {
 
 function sync() {
 	$("level").textContent = level;
-	$("stars").textContent = stars;
+	$("stars").textContent = stars % 3;
 	//$("stats").textContent = "Lv " + level + " · ⭐ " + stars;
 	$("emoji").textContent = current.emoji;
 	$("word").replaceChildren(
