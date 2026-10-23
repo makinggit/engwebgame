@@ -173,7 +173,7 @@ function buildBonus() {
 		area.appendChild(dock);
 	}
 	spawnTargets();
-	ensureTargetFish();													
+	ensureTargetFish();														
 }
 function ensureTargetFish() {
 	if (activeMode !== "fish" || !bonusRemaining.length) return;
@@ -182,15 +182,23 @@ function ensureTargetFish() {
 	if (exists) return;
 	const area = $("playArea"),
 		fish = [...area.querySelectorAll(".target.fish")],
-		positions = [
-			[5, 12],
-			[27, 55],
-			[51, 15],
-			[72, 54],
-		],
-		used = new Set(fish.map((el) => el.style.left + "/" + el.style.top));
-	const spot = positions.find(([x, y]) => !used.has(x + "%/" + y + "%")) || positions[0],
-		x = document.createElement("button");
+		existing = fish.map((el) => ({
+			x: parseFloat(el.style.left),
+			y: parseFloat(el.style.top)
+		}));
+	let spot;
+	for (let attempt = 0; attempt < 100; attempt += 1) {
+		const x = 8 + Math.random() * 74;
+		const y = 10 + Math.random() * 68;
+		if (existing.every((pos) => Math.hypot(pos.x - x, pos.y - y) >= 18)) {
+			spot = [x, y];
+			break;
+		}
+	}
+	if (!spot) {
+		spot = [8 + Math.random() * 74, 10 + Math.random() * 68];
+	}
+	const x = document.createElement("button");
 	x.className = "target fish";
 	x.type = "button";
 	x.dataset.letter = wanted;
@@ -218,12 +226,14 @@ function spawnTargets() {
 			Math.max(4, required.length + 1)
 		),
 		choices = shuffle([...required, ...distractors]),
-		positions = [
-			[5, 12],
-			[27, 55],
-			[51, 15],
-			[72, 54],
-		];
+		positions = [];
+	while (positions.length < 10) {
+		const x = 8 + Math.random() * 74;
+		const y = 10 + Math.random() * 68;
+		if (positions.every(([px, py]) => Math.hypot(px - x, py - y) >= 18)) {
+			positions.push([x, y]);
+		}
+	}
 	choices.slice(0, positions.length).forEach((letter, i) => {
 		const x = document.createElement("button");
 		x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
