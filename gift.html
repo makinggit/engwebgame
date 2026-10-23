@@ -197,7 +197,7 @@ body {
 			<button class="map-button hear" id="hearBtn" type="button">🔊 Hear My Stickers</button>
 			<button class="map-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
 		</div>
-		<p class="map-footer">Every star helps Momo find a new sticker!</p>
+		<p class="map-footer">Every level helps Momo find a new sticker!</p>
 	</section>
 </main>
 
@@ -217,15 +217,15 @@ const STICKER_POOL = [
 	{ emoji: "🏅", name: "Medal" },
 ];
 
-function getSticker(starNumber) {
-	const base = STICKER_POOL[starNumber % STICKER_POOL.length];
-	if (starNumber > 0 && starNumber % 50 === 0) {
+function getSticker(levelNumber) {
+	const base = STICKER_POOL[levelNumber % STICKER_POOL.length];
+	if (levelNumber > 0 && levelNumber % 50 === 0) {
 		return { emoji: "👑", name: "Legendary " + base.name, rarity: "Legendary" };
 	}
-	if (starNumber > 0 && starNumber % 25 === 0) {
+	if (levelNumber > 0 && levelNumber % 25 === 0) {
 		return { emoji: "🌈", name: "Rainbow " + base.name, rarity: "Rainbow" };
 	}
-	if (starNumber > 0 && starNumber % 10 === 0) {
+	if (levelNumber > 0 && levelNumber % 10 === 0) {
 		return { emoji: "✨", name: "Golden " + base.name, rarity: "Golden" };
 	}
 	return { ...base, rarity: "" };
@@ -235,31 +235,31 @@ function renderMap() {
 	const map = $("adventureMap");
 	map.replaceChildren();
 
-	if (!stars) {
+	if (!level) {
 		const empty = document.createElement("p");
 		empty.className = "map-subtitle";
-		empty.textContent = "Earn your first star to unlock a sticker!";
+		empty.textContent = "Reach Level 1 to unlock a sticker!";
 		map.appendChild(empty);
 		return;
 	}
 
-	for (let starNumber = stars; starNumber >= 1; starNumber -= 1) {
-		const sticker = getSticker(starNumber);
-		const latest = starNumber === stars;
+	for (let levelNumber = level; levelNumber >= 1; levelNumber -= 1) {
+		const sticker = getSticker(levelNumber);
+		const latest = levelNumber === level;
 		const button = document.createElement("button");
 		button.type = "button";
 		button.className = "map-stop" + (latest ? " current" : "") +
 			(sticker.rarity ? " special" : "");
-		button.setAttribute("aria-label", "Star " + starNumber + ": " + sticker.name);
+		button.setAttribute("aria-label", "Level " + levelNumber + ": " + sticker.name);
 		button.innerHTML = `
 			<span class="emoji" aria-hidden="true">${sticker.emoji}</span>
 			<span class="text">
 				<span class="name">${sticker.name}</span>
-				<span class="task">Star ${starNumber} reward</span>
+				<span class="task">Level ${levelNumber} reward</span>
 			</span>`;
 		button.onclick = () => {
 			sounds.click();
-			say("Star " + starNumber + ". You found the " + sticker.name + ".");
+			say("Level " + levelNumber + ". You found the " + sticker.name + ".");
 		};
 		map.appendChild(button);
 
@@ -274,18 +274,18 @@ function renderMap() {
 }
 
 $("levelBadge").textContent = "Level " + level;
-$("foundCount").textContent = stars;
+$("foundCount").textContent = level;
 renderMap();
 
 $("hearBtn").onclick = () => {
 	sounds.hear();
 	const recent = [];
-	for (let starNumber = Math.max(1, stars - 4); starNumber <= stars; starNumber += 1) {
-		recent.push(getSticker(starNumber).name);
+	for (let levelNumber = Math.max(1, level - 4); levelNumber <= level; levelNumber += 1) {
+		recent.push(getSticker(levelNumber).name);
 	}
 	say(recent.length
 		? "Your latest stickers are: " + recent.join(", ") + "."
-		: "Earn your first star to unlock a sticker!");
+		: "Reach Level 1 to unlock a sticker!");
 };
 $("gamesBtn").onclick = () => {
 	sounds.hear();
