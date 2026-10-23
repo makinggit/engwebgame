@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -115,7 +115,7 @@
 
 let { level, stars } = readProgress();
 const timers = RoboGame.createTimerManager();
-const words = RoboWords.getWordsByChapter((level<5) ? 1 : 2);
+const words = RoboWords.getWordsByChapter(level > 1 ? 2 : 1);
 
 const speech = $("speech"),
 	emoji = $("emoji"),
