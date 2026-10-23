@@ -482,7 +482,7 @@ function update(dt) {
 				if (wrongAttempt > 2) {
 					setTimeout(say, 1000, "Try again! The word is " + spellWord(current.word));
 				}
-				trappedUntil = clock + 1.5;
+				trappedUntil = clock + 1;
 				$("hint").textContent = "Try again! Find " + current.word[index];
 				sounds.wrong();
 			}
