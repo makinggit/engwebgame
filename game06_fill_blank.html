@@ -78,11 +78,11 @@
 	</section>
 </main>
 
-<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close sentence card">
 	<div class="word-card">
-		<div class="small">Listen to the word:</div>
-		<div class="bigword" id="popWord">notebook</div>
-		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
+		<div class="small">Listen to the sentence:</div>
+		<div class="bigword" id="popWord">The hill is quiet.</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 5 seconds</div>
 	</div>
 </div>
 
@@ -249,17 +249,12 @@ $("undoBtn").onclick = () => {
 	setPrompt("One letter removed. Choose another letter.");
 	render();
 };
-$("hearBtn").onclick = showWordPopup;
 /*
 $("newBtn").onclick = () => {
 	sounds.click();
 	chooseWord();
 };
 */
-$("wordPop").onclick = closeWordPopup;
-$("wordPop").onkeydown = (e) => {
-	if (e.key === "Enter" || e.key === " ") closeWordPopup();
-};
 /*
 $("hearStoryBtn").onclick = () => {
 	sounds.hear();
@@ -298,9 +293,23 @@ function makeBlanks(sentence) {
 	return shuffle(candidates).slice(0, Math.min(4, candidates.length)).sort((a, b) => a - b);
 }
 
+function showSentencePopup() {
+	clearTimeout(sentenceNextTimer);
+	if (!current) return;
+	$("popWord").textContent = current.word;
+	$("wordPop").classList.add("show");
+	say(current.word);
+	sentenceNextTimer = setTimeout(closeSentencePopup, 5000);
+}
+
+function closeSentencePopup() {
+	clearTimeout(sentenceNextTimer);
+	$("wordPop").classList.remove("show");
+}
+
 function chooseWord() {
 	clearTimeout(sentenceNextTimer);
-	closeWordPopup();
+	closeSentencePopup();
 	if (!sentenceDeck.length) sentenceDeck = shuffle(sentences);
 	current = { word: sentenceDeck.pop() };
 	blankIndices = makeBlanks(current.word);
@@ -316,6 +325,7 @@ function chooseWord() {
 	message.textContent = "";
 	randomBg();
 	render();
+	showSentencePopup();
 }
 
 function render(result = null) {
@@ -418,12 +428,20 @@ $("undoBtn").onclick = () => {
 	sounds.undo();
 	render();
 };
-$("hearBtn").onclick = () => { sounds.hear(); say(current.word); };
-window.addEventListener("pagehide", () => clearTimeout(sentenceNextTimer));
+$("hearBtn").onclick = showSentencePopup;
+$("wordPop").onclick = closeSentencePopup;
+$("wordPop").onkeydown = (e) => {
+	if (e.key === "Enter" || e.key === " ") closeSentencePopup();
+};
+window.addEventListener("pagehide", () => {
+	clearTimeout(sentenceNextTimer);
+	closeSentencePopup();
+});
 
 $("gamePage").style.display = "block";
 activateMode("spell");
 updateProgress();
+chooseWord();
 </script>
 </body>
 </html>
