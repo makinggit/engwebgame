@@ -9,8 +9,8 @@
 	{ mode_id: '02', mode: 'fish', label: 'Fish',  title: 'game02_fishing',      filename: 'game02_fishing.html',      mode_story: 'The Poor Dock Fish Story. At the old poor dock, hungry little letter fish could not find their way to the warm water garden. Every correct letter you catch repairs the dock and helps the fish swim home.' },
 	{ mode_id: '03', mode: 'ghost', label: 'Ghosts',  title: 'game03_ghost_maze',   filename: 'game03_ghost_maze.html',   mode_story: 'The Friendly Ghost Story. In the school library, tiny letter ghosts floated out of an old black notebook. Bolt built a gentle zapper to send the correct letter ghosts safely back to their word homes.' },
 	{ mode_id: '04', mode: 'race', label: 'Race',  title: 'game04_racing',       filename: 'game04_racing.html',       mode_story: 'The Rainbow Race Story. A speedy word sprite raced through the school playground, carrying mixed-up letters. Catch each correct letter to chase the sprite along the rainbow track and recover the colours.' },
-	{ mode_id: '05', mode: 'mole', label: 'Mole',  title: 'game05_whack_a_mole', filename: 'game05_whack_a_mole.html', mode_story: '...' },
-	{ mode_id: '06', mode: 'blank', label: 'Blank',  title: 'game06_fill_blank',   filename: 'game06_fill_blank.html',   mode_story: '...' },
+	{ mode_id: '05', mode: 'mole', label: 'Mole',  title: 'game05_whack_a_mole', filename: 'game05_whack_a_mole.html', mode_story: 'The Whack-a-Word Story. Mischievous word moles popped up around the school garden. Remember each word, then tap the matching mole to help Momo and Bolt collect the scattered school words.' },
+	{ mode_id: '06', mode: 'blank', label: 'Blank',  title: 'game06_fill_blank',   filename: 'game06_fill_blank.html',   mode_story: 'The Fill-in-the-Blank Story. Important letters disappeared from the classroom words. Choose the missing letters carefully to repair the school words and bring back the classroom colours.' },
   ];
 
   function getModeByText(text) {
