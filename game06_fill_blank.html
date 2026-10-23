@@ -349,7 +349,7 @@ function render(result = null) {
 			}
 			cell.disabled = sentenceAwarded;
 			cell.onclick = () => { activeBlank = blank; render(); };
-			if (result) cell.classList.add(result[blank] ? "good" : "bad");
+			if (result && sentenceAnswers[blank]) cell.classList.add(result[blank] ? "good" : "bad");
 			group.appendChild(cell);
 			position += 1;
 		});
@@ -395,9 +395,10 @@ function pick(ch) {
 	sounds.click();
 	undoHistory.push({ index: activeBlank, value: sentenceAnswers[activeBlank] });
 	sentenceAnswers[activeBlank] = ch;
+	const result = blankIndices.map((position, i) => sentenceAnswers[i] ? current.word[position] === sentenceAnswers[i] : null);
 	const empty = sentenceAnswers.findIndex(value => !value);
 	if (empty >= 0) activeBlank = empty;
-	render();
+	render(result);
 	if (sentenceAnswers.every(Boolean)) check();
 }
 
