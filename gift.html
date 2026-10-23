@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#ffd166">
-<title>Robo-Monster Adventure Map</title>
+<title>Robo-Monster Star Map</title>
 <link rel="stylesheet" href="./assets/styles.css">
 <style>
 body {
@@ -53,19 +53,7 @@ body {
 	position: relative;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
-}
-.map-path {
-	position: absolute;
-	left: 50%;
-	top: 30px;
-	bottom: 30px;
-	width: 8px;
-	transform: translateX(-50%);
-	background-image: linear-gradient(to bottom, #7c5cff 55%, transparent 45%);
-	background-size: 8px 24px;
-	border-radius: 8px;
-	opacity: .45;
+	gap: 10px;
 }
 .map-stop {
 	position: relative;
@@ -113,6 +101,10 @@ body {
 	border-color: #ff5d8f;
 	box-shadow: 0 0 0 5px #ffe0eb, 0 8px 0 #f7b8c9;
 }
+.map-stop.special {
+	border-color: #ffb703;
+	background: linear-gradient(180deg, #fffbe6, #fff3b0);
+}
 .momo-marker {
 	position: absolute;
 	z-index: 2;
@@ -137,7 +129,8 @@ body {
 	box-shadow: 0 6px 0 rgba(0,0,0,.16);
 }
 .map-button.hear { background: #ffd166; }
-.map-button.games { background: #a0e7ff; }
+.map-button.more { background: #a0e7ff; }
+.map-button.games { background: #b8f2c9; }
 .map-button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,.16); }
 .map-button:focus-visible { outline: 4px solid #5b2a86; outline-offset: 3px; }
 .map-footer {
@@ -153,18 +146,17 @@ body {
 	<section class="map-card" aria-labelledby="mapTitle">
 		<div class="map-header">
 			<div class="level-badge" id="levelBadge">Level 1</div>
-			<div aria-hidden="true" style="font-size: clamp(28px, 7vw, 42px)">🗺️🎁👾</div>
+			<div aria-hidden="true" style="font-size: clamp(28px, 7vw, 42px)">🗺️⭐👾</div>
 		</div>
-		<h1 class="map-title" id="mapTitle">Help Momo Find It!</h1>
-		<p class="map-subtitle">Momo has found <strong id="foundCount">0</strong> of 12 missing things.</p>
-		<div class="adventure-map" id="adventureMap">
-			<div class="map-path" aria-hidden="true"></div>
-		</div>
+		<h1 class="map-title" id="mapTitle">Momo’s Star Map</h1>
+		<p class="map-subtitle">You have collected <strong id="foundCount">0</strong> stickers. Earn 1 more star for your next sticker!</p>
+		<div class="adventure-map" id="adventureMap"></div>
 		<div class="map-controls">
-			<button class="map-button hear" id="hearBtn" type="button">🔊 Hear My Finds</button>
+			<button class="map-button hear" id="hearBtn" type="button">🔊 Hear My Stickers</button>
+			<button class="map-button more" id="moreBtn" type="button">➕ Show More Map</button>
 			<button class="map-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
 		</div>
-		<p class="map-footer">Play games to help Momo move along the map!</p>
+		<p class="map-footer">Every star helps Momo find a new sticker!</p>
 	</section>
 </main>
 
@@ -173,66 +165,90 @@ body {
 const { $, readProgress, buildProgressQuery, say, sounds } = RoboCommon;
 
 const { level, stars } = readProgress();
-const stops = [
-	{ emoji: "🎒", name: "School Bag", task: "Find Momo’s school bag." },
-	{ emoji: "🖍️", name: "Yellow Crayon", task: "Find the yellow crayon." },
-	{ emoji: "📓", name: "Notebook", task: "Find the magic notebook." },
-	{ emoji: "🧽", name: "Eraser", task: "Find the hungry eraser." },
-	{ emoji: "📏", name: "Ruler", task: "Find the long ruler." },
-	{ emoji: "⭐", name: "First Star", task: "Find the first star." },
-	{ emoji: "🐸", name: "Frog Friend", task: "Find the frog with glasses." },
-	{ emoji: "🌙", name: "Paper Moon", task: "Find the paper moon." },
-	{ emoji: "🎵", name: "Music Note", task: "Find the missing music note." },
-	{ emoji: "🔑", name: "Story Key", task: "Find the purple story key." },
-	{ emoji: "🔖", name: "Heart Bookmark", task: "Find the heart bookmark." },
-	{ emoji: "🏅", name: "Explorer Medal", task: "Find the explorer medal." },
+const STICKER_POOL = [
+	{ emoji: "🦖", name: "T-Rex" },
+	{ emoji: "🚀", name: "Rocket" },
+	{ emoji: "🤖", name: "Robot" },
+	{ emoji: "🐉", name: "Dragon" },
+	{ emoji: "🏎️", name: "Race Car" },
+	{ emoji: "🥷", name: "Ninja" },
+	{ emoji: "⚽", name: "Football" },
+	{ emoji: "🏅", name: "Medal" },
 ];
+let futureStops = 5;
 
-const levelUnlocks = Math.min(level * 4, stops.length);
-const starUnlocks = Math.min(Math.floor(stars / 3), stops.length - levelUnlocks);
-const foundCount = Math.min(levelUnlocks + starUnlocks, stops.length);
+function getSticker(starNumber) {
+	const base = STICKER_POOL[starNumber % STICKER_POOL.length];
+	if (starNumber > 0 && starNumber % 50 === 0) {
+		return { emoji: "👑", name: "Legendary " + base.name, rarity: "Legendary" };
+	}
+	if (starNumber > 0 && starNumber % 25 === 0) {
+		return { emoji: "🌈", name: "Rainbow " + base.name, rarity: "Rainbow" };
+	}
+	if (starNumber > 0 && starNumber % 10 === 0) {
+		return { emoji: "✨", name: "Golden " + base.name, rarity: "Golden" };
+	}
+	return { ...base, rarity: "" };
+}
+
+function renderMap() {
+	const map = $("adventureMap");
+	map.replaceChildren();
+	const firstStop = Math.max(1, stars - 3);
+	const lastStop = stars + futureStops;
+
+	for (let starNumber = firstStop; starNumber <= lastStop; starNumber += 1) {
+		const sticker = getSticker(starNumber);
+		const unlocked = starNumber <= stars;
+		const current = starNumber === stars + 1;
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = "map-stop" + (unlocked ? "" : " locked") +
+			(current ? " current" : "") + (unlocked && sticker.rarity ? " special" : "");
+		button.setAttribute("aria-label", unlocked
+			? "Star " + starNumber + ": " + sticker.name
+			: "Locked star " + starNumber);
+		button.innerHTML = `
+			<span class="emoji" aria-hidden="true">${unlocked ? sticker.emoji : "🔒"}</span>
+			<span class="text">
+				<span class="name">${unlocked ? sticker.name : "Mystery Sticker"}</span>
+				<span class="task">${unlocked ? "Star " + starNumber + " reward" : "Earn " + (starNumber - stars) + " more star(s)"}</span>
+			</span>`;
+		button.onclick = () => {
+			sounds.click();
+			say(unlocked
+				? "Star " + starNumber + ". You found the " + sticker.name + "."
+				: "Earn " + (starNumber - stars) + " more star to unlock this sticker.");
+		};
+		map.appendChild(button);
+		if (current) {
+			const marker = document.createElement("div");
+			marker.className = "momo-marker";
+			marker.textContent = "👾";
+			marker.setAttribute("aria-hidden", "true");
+			button.appendChild(marker);
+		}
+	}
+}
 
 $("levelBadge").textContent = "Level " + level;
-$("foundCount").textContent = foundCount;
+$("foundCount").textContent = stars;
+renderMap();
 
-const map = $("adventureMap");
-stops.forEach((stop, index) => {
-	const found = index < foundCount;
-	const isCurrent = index === foundCount;
-	const button = document.createElement("button");
-	button.type = "button";
-	button.className = "map-stop" + (found ? "" : " locked") + (isCurrent ? " current" : "");
-	button.setAttribute("aria-label", found
-		? stop.name + ": " + stop.task
-		: "Locked: " + stop.task);
-	button.innerHTML = `
-		<span class="emoji" aria-hidden="true">${found ? stop.emoji : "🔒"}</span>
-		<span class="text">
-			<span class="name">${found ? stop.name : "Mystery Place"}</span>
-			<span class="task">${stop.task}</span>
-		</span>`;
-	button.onclick = () => {
-		sounds.click();
-		say(found
-			? "You found the " + stop.name + ". " + stop.task
-			: "Help Momo! " + stop.task);
-	};
-	map.appendChild(button);
-	if (isCurrent) {
-		const marker = document.createElement("div");
-		marker.className = "momo-marker";
-		marker.textContent = "👾";
-		marker.setAttribute("aria-hidden", "true");
-		button.appendChild(marker);
-	}
-});
-
+$("moreBtn").onclick = () => {
+	sounds.click();
+	futureStops += 5;
+	renderMap();
+};
 $("hearBtn").onclick = () => {
 	sounds.hear();
-	const found = stops.slice(0, foundCount).map((stop) => stop.name);
-	say(found.length
-		? "Momo found: " + found.join(", ") + "."
-		: "Help Momo find his first missing thing!");
+	const recent = [];
+	for (let starNumber = Math.max(1, stars - 4); starNumber <= stars; starNumber += 1) {
+		recent.push(getSticker(starNumber).name);
+	}
+	say(recent.length
+		? "Your latest stickers are: " + recent.join(", ") + "."
+		: "Earn your first star to unlock a sticker!");
 };
 $("gamesBtn").onclick = () => {
 	sounds.hear();
