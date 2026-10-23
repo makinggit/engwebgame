@@ -292,6 +292,8 @@ const SPEED = 96;
 //const ZOOM = 1.5;
 const MAX_FRAME_TIME = 0.05;
 const PHYSICS_STEP = 1 / 120;
+const LETTER_RADIUS = 30;
+const RABBIT_FONT_SIZE = 64;
 
 let activeMode = "spell";
 let nextMode = "spell";
@@ -455,10 +457,10 @@ function update(dt) {
 	for (const item of letters) {
 		if (item.used) continue;
 		if (
-			player.x + 36 > item.x - 21 &&
-			player.x < item.x + 21 &&
-			player.y + 44 > item.y - 21 &&
-			player.y < item.y + 21
+			player.x + 36 > item.x - LETTER_RADIUS &&
+			player.x < item.x + LETTER_RADIUS &&
+			player.y + 44 > item.y - LETTER_RADIUS &&
+			player.y < item.y + LETTER_RADIUS
 		) {
 			item.used = true;
 			if (item.letter === wanted) {
@@ -556,17 +558,17 @@ function draw() {
 		if (item.used) continue;
 		ctx.fillStyle = "#ffa27c";
 		ctx.beginPath();
-		ctx.arc(item.x, item.y, 21, 0, Math.PI * 2);
+		ctx.arc(item.x, item.y, LETTER_RADIUS, 0, Math.PI * 2);
 		ctx.fill();
 		ctx.fillStyle = "#202452";
-		ctx.font = "bold 27px system-ui";
+		ctx.font = "bold 40px system-ui";
 		ctx.textAlign = "center";
-		ctx.fillText(item.letter, item.x, item.y + 9);
+		ctx.fillText(item.letter, item.x, item.y + 14);
 	}
 	if (castleX !== null) drawCastle(castleX);
 	ctx.textAlign = "left";
-	ctx.font = "40px system-ui";
-	ctx.fillText("🐰", player.x, player.y + 37);
+	ctx.font = RABBIT_FONT_SIZE + "px system-ui";
+	ctx.fillText("🐰", player.x, player.y + 47);
 	if (clock < trappedUntil) {
 		ctx.strokeStyle = "#ed645e";
 		ctx.lineWidth = 4;
