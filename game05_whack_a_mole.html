@@ -246,7 +246,7 @@ function chooseWord() {
 	message.textContent = '';
 	setPrompt(robotMode ? 'BEEP! Robo Bolt has a word for you!' : 'Momo has a new spelling mission!');
 	render();
-	setTimeout(showWordPopup, 420);
+	timers.setTimeout(showWordPopup, 420);
 }
 function render(result = null) {
 	slots.innerHTML = '';
@@ -287,9 +287,9 @@ function renderMiniWord(matchedIndex = -1) {
 }
 function initMole() {
 	stopMoles();
-	clearTimeout(wordIntroTimer);
-	clearTimeout(wordAwardTimer);
-	clearInterval(wordHintTimer);
+	timers.clearTimeout(wordIntroTimer);
+	timers.clearTimeout(wordAwardTimer);
+	timers.clearInterval(wordHintTimer);
 	wordHintTimer = null;
 	wordRound += 1;
 	updateCarrots();
@@ -305,7 +305,7 @@ function initMole() {
 	if (note) note.textContent = 'Remember this word • starts automatically in 3 seconds';
 	say('. ' + bonusWord);
 	const round = wordRound;
-	wordIntroTimer = setTimeout(() => {
+	wordIntroTimer = timers.setTimeout(() => {
 		if (round !== wordRound || activeMode !== 'mole') return;
 		$('wordPop').classList.remove('show');
 		$('popWord').textContent = '';
@@ -313,7 +313,7 @@ function initMole() {
 		moleFinishing = false;
         popMoles();
 		// One repeating timer per target, independent of the short mole waves.
-		wordHintTimer = setInterval(() => {
+		wordHintTimer = timers.setInterval(() => {
 			if (round === wordRound && activeMode === 'mole' &&
 				wordPhase === 'playing' && !document.hidden) {
 				say('Remember, find the word ' + bonusWord + '.');
@@ -378,9 +378,9 @@ function updateLetter() {
 }
 
 function clearGhostTimers() {
-	clearInterval(ghostTimer);
-	clearTimeout(ghostHintTimer);
-	clearTimeout(ghostHintHideTimer);
+	timers.clearInterval(ghostTimer);
+	timers.clearTimeout(ghostHintTimer);
+	timers.clearTimeout(ghostHintHideTimer);
 	ghostTimer = ghostHintTimer = ghostHintHideTimer = null;
 }
 function spawnTargets() {
@@ -450,7 +450,7 @@ function hitWordMole(word, button) {
 	if (word.toLowerCase() !== bonusWord.toLowerCase()) {
 		sounds.wrong();
 		// Wrong hits do not reset the 12-second reminder.
-		moleTimer = setTimeout(() => {
+		moleTimer = timers.setTimeout(() => {
 			if (round !== wordRound || activeMode !== 'mole' || wordPhase !== 'playing') return;
 			moleFinishing = false;
 			popMoles();
@@ -459,7 +459,7 @@ function hitWordMole(word, button) {
 	}
 	wordPhase = 'finishing';
 	bonusRemaining = [];
-	clearInterval(wordHintTimer);
+	timers.clearInterval(wordHintTimer);
 	wordHintTimer = null;
 	sounds.win();
 	const earnedStar = collectCarrot();
@@ -518,9 +518,9 @@ let moleFinishing = false;
 let moleButtons = [];
 
 function stopMoles() {
-	clearTimeout(moleTimer);
+	timers.clearTimeout(moleTimer);
 	moleTimer = null;
-	molePopTimers.forEach(clearTimeout);
+	molePopTimers.forEach((id) => timers.clearTimeout(id));
 	molePopTimers = [];
 }
 
@@ -579,7 +579,7 @@ function popMoles() {
 		label.className = 'mole-word';
 		label.textContent = word;
 		button.replaceChildren(face, label);
-		molePopTimers.push(setTimeout(() => {
+		molePopTimers.push(timers.setTimeout(() => {
 			if (document.hidden || wordPhase !== 'playing' || moleFinishing || activeMode !== 'mole') return;
 			button.disabled = false;
 			button.classList.add('is-up');
@@ -587,12 +587,12 @@ function popMoles() {
 		}, i * 100));
 	});
 
-	moleTimer = setTimeout(() => {
+	moleTimer = timers.setTimeout(() => {
 		moleButtons.forEach(button => {
 			button.disabled = true;
 			button.classList.remove('is-up', 'is-hit');
 		});
-		moleTimer = setTimeout(popMoles, 300);
+		moleTimer = timers.setTimeout(popMoles, 300);
 	}, 1800);
 }
 /*
@@ -630,9 +630,9 @@ document.addEventListener('pointerdown', () => {
 	sounds.click();
 }, { once: true });
 window.addEventListener('pagehide', () => {
-	clearInterval(wordHintTimer);
-	clearTimeout(wordIntroTimer);
-	clearTimeout(wordAwardTimer);
+	timers.clearInterval(wordHintTimer);
+	timers.clearTimeout(wordIntroTimer);
+	timers.clearTimeout(wordAwardTimer);
 });
 updateCarrots();
 $('gamePage').style.display = 'block';
