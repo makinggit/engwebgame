@@ -374,8 +374,11 @@ function render(result = null) {
 		}
 	});
 	letters.replaceChildren();
-	// Show every lowercase letter from a to z, in alphabetical order.
-	for (const ch of "abcdefghijklmnopqrstuvwxyz") {
+	// Show only four possible lowercase letters, in alphabetical order.
+	const correctLetters = [...new Set(blankIndices.map((index) => current.word[index]))];
+	const distractorLetters = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((ch) => !correctLetters.includes(ch))).slice(0, Math.max(0, 4 - correctLetters.length));
+	const letterChoices = [...correctLetters, ...distractorLetters].sort();
+	for (const ch of letterChoices) {
 		const button = document.createElement("button");
 		button.type = "button";
 		button.className = "letter";
