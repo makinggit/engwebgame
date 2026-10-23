@@ -220,21 +220,18 @@ function clearGhostTimers() {
 }
 function spawnTargets() {
 	const area = $("playArea"),
-		required = [...new Set(bonusRemaining)],
-		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => !required.includes(x))).slice(
-			0,
-			Math.max(4, required.length + 1)
-		),
-		choices = shuffle([...required, ...distractors]),
+		wanted = bonusRemaining[0],
+		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted)).slice(0, 3),
+		choices = shuffle([wanted, ...distractors]),
 		positions = [];
-	while (positions.length < 10) {
+	while (positions.length < 4) {
 		const x = 8 + Math.random() * 74;
 		const y = 10 + Math.random() * 68;
 		if (positions.every(([px, py]) => Math.hypot(px - x, py - y) >= 18)) {
 			positions.push([x, y]);
 		}
 	}
-	choices.slice(0, positions.length).forEach((letter, i) => {
+	choices.forEach((letter, i) => {
 		const x = document.createElement("button");
 		x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
 		x.dataset.letter = letter;
