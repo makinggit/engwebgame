@@ -151,10 +151,11 @@ body {
 const { $, getParams, readProgress, buildProgressQuery, say, sounds } = RoboCommon;
 
 const { level, stars } = readProgress();
-const maxStoryNumber = Math.min(level - 1, RoboStory.STORY_PAGES.length - 1);
+const maxStoryNumber = Math.min(level, RoboStory.STORY_PAGES.length);
 let currentStory = RoboStory.getStoryPage(level);
 
-function showStory(pageNumber, speakStory = false) {
+function showStory(storyNumber, speakStory = false) {
+	const pageNumber = Math.min(Math.max(storyNumber - 1, 0), RoboStory.STORY_PAGES.length - 1);
 	currentStory = RoboStory.getStoryPageByNumber(pageNumber) || RoboStory.getStoryPage(1);
 	$("storyTitle").textContent = currentStory.title;
 	$("storyText").textContent = currentStory.text;
@@ -166,13 +167,13 @@ function showStory(pageNumber, speakStory = false) {
 
 $("levelBadge").textContent = "Level " + level;
 const storySelect = $("storySelect");
-for (let pageNumber = 0; pageNumber <= maxStoryNumber; pageNumber += 1) {
+for (let storyNumber = 1; storyNumber <= maxStoryNumber; storyNumber += 1) {
 	const option = document.createElement("option");
-	option.value = String(pageNumber);
-	option.textContent = "Story " + pageNumber;
+	option.value = String(storyNumber);
+	option.textContent = "Story " + storyNumber;
 	storySelect.appendChild(option);
 }
-storySelect.value = String(Math.min(level - 1, maxStoryNumber));
+storySelect.value = String(maxStoryNumber);
 storySelect.onchange = () => showStory(Number(storySelect.value), true);
 
 showStory(Number(storySelect.value));
