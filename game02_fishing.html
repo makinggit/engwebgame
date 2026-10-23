@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="./assets/styles.css">
 <style>
 .target.fish{animation:fishPop .45s ease-out both;}
+.target.fish.penalty{box-shadow:0 0 0 4px #ed645e;}
 @keyframes fishPop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
 </style>
 </head>
@@ -143,7 +144,8 @@ let current,
 	activeMode = "spell",
 	bonusWord = "",
 	bonusRemaining = [],
-	nextMode = "spell";
+	nextMode = "spell",
+	penaltyUntil = 0;
 	
 starsEl.textContent = stars;
 levelEl.textContent = level;
@@ -248,6 +250,7 @@ function spawnTargets() {
 	});
 }
 function bonusClick(letter, el) {
+	if (Date.now() < penaltyUntil) return;
 	const wanted = bonusRemaining[0];
 	if (letter === wanted) {
 		sounds.win();
@@ -269,6 +272,9 @@ function bonusClick(letter, el) {
 			buildBonus();
 		}
 	} else {
+		penaltyUntil = Date.now() + 1000;
+		el.classList.add("penalty");
+		setTimeout(() => el.classList.remove("penalty"), 1000);
 		sounds.wrong();
 		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
 		say("Good try. Find the letter " + wanted + ".");

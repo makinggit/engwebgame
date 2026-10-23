@@ -8,6 +8,9 @@
 <meta name="theme-color" content="#bdeaff">
 <title>Robo-Monster Spelling Academy</title>
 <link rel="stylesheet" href="./assets/styles.css">
+<style>
+.maze-player.penalty{box-shadow:0 0 0 4px #ed645e;}
+</style>
 </head>
 <body>
 <main class="wrap">
@@ -60,13 +63,14 @@
 	</section>
 </main>
 
-<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close sentence card">
 	<div class="word-card">
-		<div class="small">Listen to the word:</div>
-		<div class="bigword" id="popWord">notebook</div>
-		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
+		<div class="small">Listen to the sentence:</div>
+		<div class="bigword" id="popWord">The hill is quiet.</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 5 seconds</div>
 	</div>
 </div>
+
 <div class="levelup" id="levelModal">
 	<div class="level-card">
 		<div class="sparkles">✨ 🏆 ✨</div>
@@ -136,7 +140,8 @@ let current,
 	activeMode = "spell",
 	bonusWord = "",
 	bonusRemaining = [],
-	nextMode = "spell";
+	nextMode = "spell",
+	mazePenaltyUntil = 0;
 
 function startBonusMode(mode) {
 	bonusWord = nextWord().word;
@@ -266,6 +271,7 @@ function validMaze(r, c) {
 	return r >= 0 && r <= 6 && c >= 0 && c <= 8 && mazeLayout[r][c] === "0";
 }
 function moveMaze(dr, dc) {
+	if (Date.now() < mazePenaltyUntil) return;
 	const nr = mazePos.r + dr,
 		nc = mazePos.c + dc;
 	if (!validMaze(nr, nc)) return;
@@ -275,7 +281,7 @@ function moveMaze(dr, dc) {
 	checkGhostCollisions();
 }
 function moveGhosts() {
-	if (activeMode !== "ghost" || ghosts.length !== 3) return;
+	if (activeMode !== "ghost" || ghosts.length !== 3 || Date.now() < mazePenaltyUntil) return;
 	const used = new Set([mazePos.r + "," + mazePos.c]);
 	ghosts.forEach((g) => used.add(g.r + "," + g.c));
 	ghosts.forEach((g) => {
@@ -357,6 +363,12 @@ function showGhostHint() {
 	ghostHintHideTimer = timers.setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
 }
 function wrongMaze() {
+	mazePenaltyUntil = Date.now() + 1000;
+	const robot = $("mazePlayer");
+	if (robot) {
+		robot.classList.add("penalty");
+		setTimeout(() => robot.classList.remove("penalty"), 1000);
+	}
 	sounds.wrong();
 	document.body.classList.add("invert-flash");
 	timers.clearTimeout(flashTimer);
@@ -385,6 +397,7 @@ function spawnTargets() {
 	choices.slice(0, positions.length).forEach((letter, i) => {
 		const x = document.createElement("button");
 		x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
+		x.dataset.letter = letter;
 		x.type = "button";
 		x.textContent = activeMode === "fish" ? "🐟 " + letter : activeMode === "ghost" ? "👻 " + letter : letter;
 		x.style.left = positions[i][0] + "%";
