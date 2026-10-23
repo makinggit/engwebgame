@@ -45,15 +45,6 @@
 			</div>
 		</div>
 
-		<div class="message" id="message"></div>
-		<div class="progress">
-			<div class="bar" id="bar"></div>
-			<div class="progress-content">
-				<span class="star-track" id="starTrack">☆☆☆</span
-				><span id="progressNumber">0 / 3 stars to Level 2</span>
-			</div>
-		</div>
-			
 		<section class="bonus-screen" id="bonusView">
 			<div class="bonus-header">
 				<div class="bonus-title" id="bonusTitle"></div>
@@ -191,9 +182,9 @@ function buildBonus() {
 	spawnTargets();
 }
 function clearGhostTimers() {
-	clearInterval(ghostTimer);
-	clearTimeout(ghostHintTimer);
-	clearTimeout(ghostHintHideTimer);
+	timers.clearInterval(ghostTimer);
+	timers.clearTimeout(ghostHintTimer);
+	timers.clearTimeout(ghostHintHideTimer);
 	ghostTimer = ghostHintTimer = ghostHintHideTimer = null;
 }
 function buildGhostMaze() {
@@ -258,8 +249,8 @@ function buildGhostMaze() {
 	});
 	area.appendChild(controls);
 	positionMaze();
-	ghostTimer = setInterval(moveGhosts, 900);
-	ghostHintTimer = setTimeout(showGhostHint, 20000);
+	ghostTimer = timers.setInterval(moveGhosts, 900);
+	ghostHintTimer = timers.setTimeout(showGhostHint, 20000);
 }
 function positionMaze() {
 	const field = document.querySelector(".ghost-maze-field"),
@@ -311,7 +302,6 @@ function moveGhosts() {
 function checkGhostCollisions() {
 	const robot = $("mazePlayer");
 	if (!robot) return;
-	const a = robot.getBoundingClientRect();
 	ghosts.slice().forEach((g, i) => {
 		if (mazePos.r === g.r && mazePos.c === g.c) resolveGhostCollision(i);
 	});
@@ -335,7 +325,7 @@ function resolveGhostCollision(i) {
 	if (!bonusRemaining.length) {
 		clearGhostTimers();
 		//$("bonusStatus").textContent = "Amazing! You finished the word.";
-		setTimeout(() => awardWin(bonusWord), 900);
+		timers.setTimeout(() => awardWin(bonusWord), 900);
 		return;
 	}
 	
@@ -348,9 +338,9 @@ function resolveGhostCollision(i) {
 	g.r = ghosts[j].r;
 	g.c = ghosts[j].c;
 	positionMaze();
-	clearTimeout(ghostHintTimer);
-	ghostHintTimer = setTimeout(showGhostHint, 20000);
-	setTimeout(() => {g.el.style.transition = "left 0.8s linear,top 0.8s linear"}, 700);
+	timers.clearTimeout(ghostHintTimer);
+	ghostHintTimer = timers.setTimeout(showGhostHint, 20000);
+	timers.setTimeout(() => {g.el.style.transition = "left 0.8s linear,top 0.8s linear"}, 700);
 }
 function renderMiniWord(matchedIndex = -1) {
 	const target = $("miniWord");
@@ -367,15 +357,15 @@ function showGhostHint() {
 	if (!g) return;
 	g.el.classList.add("hint-ghost");
 	say("Hint! The correct ghost is getting bigger. Find the letter " + bonusRemaining[0] + ".");
-	clearTimeout(ghostHintHideTimer);
-	ghostHintHideTimer = setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
+	timers.clearTimeout(ghostHintHideTimer);
+	ghostHintHideTimer = timers.setTimeout(() => g.el.classList.remove("hint-ghost"), 4500);
 }
 function wrongMaze() {
 	sounds.wrong();
 	//$("bonusStatus").textContent = "Move Bolt onto a ghost to check its letter.";
 	document.body.classList.add("invert-flash");
-	clearTimeout(flashTimer);
-	flashTimer = setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
+	timers.clearTimeout(flashTimer);
+	flashTimer = timers.setTimeout(() => document.body.classList.remove("invert-flash"), 1000);
 }
 function spawnTargets() {
 	const area = $("playArea"),
@@ -422,7 +412,7 @@ function bonusClick(letter, el) {
 		}
 		if (!bonusRemaining.length) {
 			//$("bonusStatus").textContent = "Amazing! You finished the word.";
-			setTimeout(() => awardWin(bonusWord), 900);
+			timers.setTimeout(() => awardWin(bonusWord), 900);
 		} else {
 			//$("bonusStatus").textContent = "Correct! Find the next letter: " + bonusRemaining[0];
 			say("Correct! Find the next letter: " + bonusRemaining[0]);
