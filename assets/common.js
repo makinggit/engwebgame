@@ -243,6 +243,9 @@ function showLevelUp() {
 function startNextGame() {
 	goTo(nextGamePath, level, stars);
 }
+function openLevelStory() {
+	goTo('story.html', level, stars);
+}
 
 // Level Up's Start button goes directly to the assigned next game,
 // rather than returning to game_mode.html.
@@ -254,6 +257,28 @@ document.addEventListener('click', (event) => {
 	sounds.hear();
 	startNextGame();
 }, true);
+
+// The Level badge in every game header opens the story for the current level.
+const levelBadge = $('level')?.closest('.badge');
+if (levelBadge) {
+	levelBadge.style.cursor = 'pointer';
+	levelBadge.setAttribute('role', 'button');
+	levelBadge.setAttribute('tabindex', '0');
+	levelBadge.setAttribute('aria-label', 'Open the story for Level ' + level);
+	levelBadge.addEventListener('click', (event) => {
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		sounds.hear();
+		openLevelStory();
+	});
+	levelBadge.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			sounds.hear();
+			openLevelStory();
+		}
+	});
+}
 
 global.RoboCommon = {
 	$,
@@ -277,5 +302,6 @@ global.RoboCommon = {
 	awardWin,
 	showLevelUp,
 	startNextGame,
+	openLevelStory,
 };
 })(window);
