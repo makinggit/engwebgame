@@ -288,7 +288,6 @@ function renderMiniWord(matchedIndex = -1) {
 function initMole() {
 	stopMoles();
 	timers.clearTimeout(wordIntroTimer);
-	timers.clearTimeout(wordAwardTimer);
 	timers.clearInterval(wordHintTimer);
 	wordHintTimer = null;
 	wordRound += 1;
@@ -604,7 +603,6 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', stopMoles);
 
 let wordIntroTimer = null;
-let wordAwardTimer = null;
 let wordHintTimer = null;
 let wordRound = 0;
 let wordPhase = 'idle';
@@ -632,7 +630,6 @@ document.addEventListener('pointerdown', () => {
 window.addEventListener('pagehide', () => {
 	timers.clearInterval(wordHintTimer);
 	timers.clearTimeout(wordIntroTimer);
-	timers.clearTimeout(wordAwardTimer);
 });
 updateCarrots();
 $('gamePage').style.display = 'block';
