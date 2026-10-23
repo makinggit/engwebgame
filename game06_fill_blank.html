@@ -292,7 +292,9 @@ let sentenceAwarded = false;
 let sentenceNextTimer = null;
 
 function makeBlanks(sentence) {
-	const candidates = [...sentence].map((ch, i) => ch === " " ? -1 : i).filter(i => i >= 0);
+	const candidates = [...sentence]
+		.map((ch, i) => /[a-z]/.test(ch) ? i : -1)
+		.filter((i) => i >= 0);
 	return shuffle(candidates).slice(0, Math.min(4, candidates.length)).sort((a, b) => a - b);
 }
 
@@ -309,8 +311,8 @@ function chooseWord() {
 	sentenceAwarded = false;
 	emoji.textContent = "✏️";
 	$("gameHeading").textContent = "Fill in the Blanks";
-	hint.textContent = "Choose letters or punctuation. Capital and small letters are different.";
-	setPrompt("Fill " + blankIndices.length + " blanks. Spaces are already included!");
+	hint.textContent = "Choose the small letters. Capital letters and punctuation are already shown.";
+	setPrompt("Fill " + blankIndices.length + " small letter blanks.");
 	message.textContent = "";
 	randomBg();
 	render();
@@ -362,11 +364,10 @@ function render(result = null) {
 		}
 	});
 	letters.replaceChildren();
-	// Reusable choices allow duplicate answers such as two lower-case e's.
+	// Only small letters need to be chosen. Capital letters and punctuation are fixed.
 	const required = blankIndices.map(i => current.word[i]);
-	const cases = required.filter(ch => /[a-z]/i.test(ch)).map(ch => ch === ch.toUpperCase() ? ch.toLowerCase() : ch.toUpperCase());
-	const extras = shuffle("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!?.,1A".split("")).slice(0, 5);
-	const choices = [...new Set([...required, ...cases, ...extras])];
+	const extras = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((ch) => !required.includes(ch))).slice(0, 5);
+	const choices = [...new Set([...required, ...extras])];
 	// Stable ordering while filling: only shuffle when the sentence is created.
 	if (!current.choices) current.choices = shuffle(choices);
 	current.choices.forEach(ch => {
@@ -403,7 +404,7 @@ function check() {
 	} else {
 		activeBlank = result.findIndex(ok => !ok);
 		render(result);
-		message.textContent = "Good try! Fix the red blanks. Check capitals and punctuation.";
+		message.textContent = "Good try! Fix the red blanks with the correct small letters.";
 		sounds.wrong();
 	}
 }
