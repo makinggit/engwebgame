@@ -6,40 +6,29 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#ffd166">
-<title>Robo-Monster Sticker Book</title>
+<title>Robo-Monster Adventure Map</title>
 <link rel="stylesheet" href="./assets/styles.css">
 <style>
 body {
 	min-height: 100vh;
-	background: linear-gradient(160deg, #7ee8fa, #ffd6f5 55%, #fff3b0);
+	background: linear-gradient(180deg, #a8e6ff, #d9f7d9 45%, #fff3b0);
 }
-.gift-wrap {
-	width: min(820px, calc(100% - 20px));
+.map-wrap {
+	width: min(720px, calc(100% - 18px));
 	margin: 16px auto;
 }
-.gift-card {
-	background: #fff;
-	border: 7px solid #ff5d8f;
+.map-card {
+	background: #fffdf5;
+	border: 7px solid #7c5cff;
 	border-radius: 36px;
-	box-shadow: 0 20px 45px rgba(80, 30, 90, .22);
-	padding: clamp(18px, 4vw, 32px);
+	box-shadow: 0 20px 45px rgba(50, 30, 100, .2);
+	padding: clamp(18px, 4vw, 30px);
 }
-.gift-header {
+.map-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 10px;
-}
-.gift-title {
-	margin: 10px 0 4px;
-	color: #5b2a86;
-	font: 900 clamp(30px, 8vw, 48px)/1.1 "Trebuchet MS", sans-serif;
-	text-shadow: 2px 3px #ffd166;
-}
-.gift-subtitle {
-	margin: 0 0 18px;
-	color: #555;
-	font: 800 clamp(15px, 3.6vw, 21px) "Trebuchet MS", sans-serif;
 }
 .level-badge {
 	background: #5b2a86;
@@ -49,50 +38,96 @@ body {
 	border-radius: 999px;
 	box-shadow: 0 5px 0 #3d1a60;
 }
-.sticker-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-	gap: 14px;
+.map-title {
+	margin: 12px 0 4px;
+	color: #5b2a86;
+	font: 900 clamp(29px, 7.5vw, 46px)/1.1 "Trebuchet MS", sans-serif;
+	text-shadow: 2px 3px #ffd166;
 }
-.sticker {
+.map-subtitle {
+	margin: 0 0 20px;
+	color: #555;
+	font: 800 clamp(15px, 3.6vw, 21px) "Trebuchet MS", sans-serif;
+}
+.adventure-map {
 	position: relative;
-	border: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.map-path {
+	position: absolute;
+	left: 50%;
+	top: 30px;
+	bottom: 30px;
+	width: 8px;
+	transform: translateX(-50%);
+	background-image: linear-gradient(to bottom, #7c5cff 55%, transparent 45%);
+	background-size: 8px 24px;
+	border-radius: 8px;
+	opacity: .45;
+}
+.map-stop {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: min(430px, 100%);
+	border: 5px solid #ffd166;
 	border-radius: 26px;
-	padding: 18px 10px 14px;
-	background: linear-gradient(180deg, #fff, #f2f7ff);
-	box-shadow: 0 8px 0 #d9e2ff;
+	background: #fff;
+	box-shadow: 0 8px 0 #eadfc4;
+	padding: 13px 15px;
+	text-align: left;
 	cursor: pointer;
 	touch-action: manipulation;
-	transition: transform .15s ease;
 }
-.sticker:active { transform: scale(.96); }
-.sticker:focus-visible { outline: 5px solid #ffd166; outline-offset: 3px; }
-.sticker .emoji {
-	display: block;
-	font-size: clamp(38px, 10vw, 58px);
+.map-stop:nth-child(even) { align-self: flex-end; }
+.map-stop:nth-child(odd) { align-self: flex-start; }
+.map-stop .emoji {
+	font-size: clamp(32px, 8vw, 46px);
 	line-height: 1;
 }
-.sticker .name {
-	display: block;
-	margin-top: 8px;
-	color: #333;
-	font: 900 clamp(15px, 3.6vw, 20px) "Trebuchet MS", sans-serif;
+.map-stop .text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
 }
-.sticker.locked {
-	background: #eceff4;
-	box-shadow: 0 8px 0 #cfd6df;
+.map-stop .name {
+	color: #333;
+	font: 900 clamp(16px, 4vw, 22px) "Trebuchet MS", sans-serif;
+}
+.map-stop .task {
+	color: #666;
+	font: 800 clamp(13px, 3.2vw, 17px) "Trebuchet MS", sans-serif;
+}
+.map-stop.locked {
+	border-color: #cfd6df;
+	background: #f1f3f6;
+	box-shadow: 0 8px 0 #d7dde4;
 	filter: grayscale(1);
 }
-.sticker.locked .emoji { opacity: .35; }
-.sticker.locked .name { color: #7a828e; }
-.gift-controls {
+.map-stop.locked .emoji { opacity: .35; }
+.map-stop.current {
+	border-color: #ff5d8f;
+	box-shadow: 0 0 0 5px #ffe0eb, 0 8px 0 #f7b8c9;
+}
+.momo-marker {
+	position: absolute;
+	z-index: 2;
+	font-size: clamp(30px, 7vw, 42px);
+	transform: translate(-50%, -50%);
+	filter: drop-shadow(0 4px 4px rgba(0,0,0,.2));
+}
+.map-controls {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12px;
 	justify-content: center;
 	margin-top: 24px;
 }
-.gift-button {
+.map-button {
 	border: 0;
 	border-radius: 999px;
 	padding: 15px 24px;
@@ -101,11 +136,11 @@ body {
 	cursor: pointer;
 	box-shadow: 0 6px 0 rgba(0,0,0,.16);
 }
-.gift-button.hear { background: #ffd166; }
-.gift-button.games { background: #a0e7ff; }
-.gift-button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,.16); }
-.gift-button:focus-visible { outline: 4px solid #5b2a86; outline-offset: 3px; }
-.gift-footer {
+.map-button.hear { background: #ffd166; }
+.map-button.games { background: #a0e7ff; }
+.map-button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,.16); }
+.map-button:focus-visible { outline: 4px solid #5b2a86; outline-offset: 3px; }
+.map-footer {
 	margin-top: 15px;
 	text-align: center;
 	color: #666;
@@ -114,20 +149,22 @@ body {
 </style>
 </head>
 <body>
-<main class="gift-wrap">
-	<section class="gift-card" aria-labelledby="giftTitle">
-		<div class="gift-header">
+<main class="map-wrap">
+	<section class="map-card" aria-labelledby="mapTitle">
+		<div class="map-header">
 			<div class="level-badge" id="levelBadge">Level 1</div>
-			<div aria-hidden="true" style="font-size: clamp(30px, 8vw, 46px)">🎁🏆👾</div>
+			<div aria-hidden="true" style="font-size: clamp(28px, 7vw, 42px)">🗺️🎁👾</div>
 		</div>
-		<h1 class="gift-title" id="giftTitle">Sticker Book</h1>
-		<p class="gift-subtitle">You have collected <strong id="unlockedCount">0</strong> of 12 awesome stickers!</p>
-		<div class="sticker-grid" id="stickerGrid"></div>
-		<div class="gift-controls">
-			<button class="gift-button hear" id="hearBtn" type="button">🔊 Hear My Stickers</button>
-			<button class="gift-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
+		<h1 class="map-title" id="mapTitle">Help Momo Find It!</h1>
+		<p class="map-subtitle">Momo has found <strong id="foundCount">0</strong> of 12 missing things.</p>
+		<div class="adventure-map" id="adventureMap">
+			<div class="map-path" aria-hidden="true"></div>
 		</div>
-		<p class="gift-footer">Play more games to unlock every sticker!</p>
+		<div class="map-controls">
+			<button class="map-button hear" id="hearBtn" type="button">🔊 Hear My Finds</button>
+			<button class="map-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
+		</div>
+		<p class="map-footer">Play games to help Momo move along the map!</p>
 	</section>
 </main>
 
@@ -136,51 +173,66 @@ body {
 const { $, readProgress, buildProgressQuery, say, sounds } = RoboCommon;
 
 const { level, stars } = readProgress();
-const stickers = [
-	{ emoji: "🦖", name: "T-Rex" },
-	{ emoji: "🤖", name: "Robot" },
-	{ emoji: "🚀", name: "Rocket" },
-	{ emoji: "🏎️", name: "Race Car" },
-	{ emoji: "🥚", name: "Dinosaur Egg" },
-	{ emoji: "🐕‍🦺", name: "Robot Dog" },
-	{ emoji: "👨‍🚀", name: "Astronaut" },
-	{ emoji: "🐉", name: "Dragon" },
-	{ emoji: "⚽", name: "Football" },
-	{ emoji: "⚔️", name: "Brave Sword" },
-	{ emoji: "🥷", name: "Ninja" },
-	{ emoji: "🎁", name: "Treasure Box" },
+const stops = [
+	{ emoji: "🎒", name: "School Bag", task: "Find Momo’s school bag." },
+	{ emoji: "🖍️", name: "Yellow Crayon", task: "Find the yellow crayon." },
+	{ emoji: "📓", name: "Notebook", task: "Find the magic notebook." },
+	{ emoji: "🧽", name: "Eraser", task: "Find the hungry eraser." },
+	{ emoji: "📏", name: "Ruler", task: "Find the long ruler." },
+	{ emoji: "⭐", name: "First Star", task: "Find the first star." },
+	{ emoji: "🐸", name: "Frog Friend", task: "Find the frog with glasses." },
+	{ emoji: "🌙", name: "Paper Moon", task: "Find the paper moon." },
+	{ emoji: "🎵", name: "Music Note", task: "Find the missing music note." },
+	{ emoji: "🔑", name: "Story Key", task: "Find the purple story key." },
+	{ emoji: "🔖", name: "Heart Bookmark", task: "Find the heart bookmark." },
+	{ emoji: "🏅", name: "Explorer Medal", task: "Find the explorer medal." },
 ];
 
-const levelUnlocks = Math.min(level * 4, stickers.length);
-const starUnlocks = Math.min(Math.floor(stars / 3), stickers.length - levelUnlocks);
-const unlockedCount = Math.min(levelUnlocks + starUnlocks, stickers.length);
+const levelUnlocks = Math.min(level * 4, stops.length);
+const starUnlocks = Math.min(Math.floor(stars / 3), stops.length - levelUnlocks);
+const foundCount = Math.min(levelUnlocks + starUnlocks, stops.length);
 
 $("levelBadge").textContent = "Level " + level;
-$("unlockedCount").textContent = unlockedCount;
+$("foundCount").textContent = foundCount;
 
-const grid = $("stickerGrid");
-stickers.forEach((sticker, index) => {
+const map = $("adventureMap");
+stops.forEach((stop, index) => {
+	const found = index < foundCount;
+	const isCurrent = index === foundCount;
 	const button = document.createElement("button");
 	button.type = "button";
-	button.className = "sticker" + (index < unlockedCount ? "" : " locked");
-	button.setAttribute("aria-label", index < unlockedCount
-		? sticker.name + " sticker"
-		: "Locked sticker");
-	button.innerHTML = `<span class="emoji" aria-hidden="true">${index < unlockedCount ? sticker.emoji : "❓"}</span>` +
-		`<span class="name">${index < unlockedCount ? sticker.name : "Locked"}</span>`;
+	button.className = "map-stop" + (found ? "" : " locked") + (isCurrent ? " current" : "");
+	button.setAttribute("aria-label", found
+		? stop.name + ": " + stop.task
+		: "Locked: " + stop.task);
+	button.innerHTML = `
+		<span class="emoji" aria-hidden="true">${found ? stop.emoji : "🔒"}</span>
+		<span class="text">
+			<span class="name">${found ? stop.name : "Mystery Place"}</span>
+			<span class="task">${stop.task}</span>
+		</span>`;
 	button.onclick = () => {
 		sounds.click();
-		say(index < unlockedCount ? sticker.name : "Keep playing to unlock this sticker!");
+		say(found
+			? "You found the " + stop.name + ". " + stop.task
+			: "Help Momo! " + stop.task);
 	};
-	grid.appendChild(button);
+	map.appendChild(button);
+	if (isCurrent) {
+		const marker = document.createElement("div");
+		marker.className = "momo-marker";
+		marker.textContent = "👾";
+		marker.setAttribute("aria-hidden", "true");
+		button.appendChild(marker);
+	}
 });
 
 $("hearBtn").onclick = () => {
 	sounds.hear();
-	const owned = stickers.slice(0, unlockedCount).map((sticker) => sticker.name);
-	say(owned.length
-		? "Your stickers are: " + owned.join(", ") + "."
-		: "Play more games to unlock your first sticker!");
+	const found = stops.slice(0, foundCount).map((stop) => stop.name);
+	say(found.length
+		? "Momo found: " + found.join(", ") + "."
+		: "Help Momo find his first missing thing!");
 };
 $("gamesBtn").onclick = () => {
 	sounds.hear();
