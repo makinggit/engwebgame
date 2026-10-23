@@ -8,6 +8,34 @@
 <meta name="theme-color" content="#bdeaff">
 <title>Robo-Monster Spelling Academy</title>
 <link rel="stylesheet" href="./assets/styles.css">
+<style>
+.extra-links {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 14px;
+	margin-top: 18px;
+}
+.extra-link {
+	border: 0;
+	border-radius: 24px;
+	padding: 18px 16px;
+	font: 900 clamp(18px, 4.5vw, 25px) "Trebuchet MS", sans-serif;
+	color: #333;
+	cursor: pointer;
+	box-shadow: 0 7px 0 rgba(0,0,0,.16);
+	touch-action: manipulation;
+}
+.extra-link small {
+	display: block;
+	margin-top: 5px;
+	font: 800 clamp(13px, 3.2vw, 17px) "Trebuchet MS", sans-serif;
+	color: #555;
+}
+.extra-link.gift { background: linear-gradient(180deg, #fff0b6, #ffd166); }
+.extra-link.story { background: linear-gradient(180deg, #e7dcff, #b39dff); }
+.extra-link:active { transform: translateY(3px); box-shadow: 0 4px 0 rgba(0,0,0,.16); }
+.extra-link:focus-visible { outline: 4px solid #5b2a86; outline-offset: 3px; }
+</style>
 </head>
 <body>
 <main class="wrap">
@@ -33,6 +61,14 @@
 				</button>
 				<button class="mode-btn" data-mode="blank" type="button" id="game06_fill_blank">
 					<span class="mode-icon">🔤🧩</span>Blank Letters<br /><small>Fill in the Blank</small>
+				</button>
+			</div>
+			<div class="extra-links">
+				<button class="extra-link gift" id="gift_page" type="button">
+					🎁 My Sticker Map<br /><small>Help Momo find missing things</small>
+				</button>
+				<button class="extra-link story" id="story_page" type="button">
+					📖 Level Story<br /><small>Read and listen to your story</small>
 				</button>
 			</div>
 		</div>
@@ -84,6 +120,16 @@ Object.keys(modeTargets).forEach((id) => {
 		sounds.hear();
 		goTo(modeTargets[id], level, stars);
 	});
+});
+
+$('gift_page').addEventListener('click', () => {
+	sounds.hear();
+	goTo('./gift.html', level, stars);
+});
+
+$('story_page').addEventListener('click', () => {
+	sounds.hear();
+	goTo('./story.html', level, stars);
 });
 
 $('modeSelect').style.display = 'grid';
