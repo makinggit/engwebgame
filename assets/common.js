@@ -3,20 +3,49 @@
 	'use strict';
 
 const $ = (id) => document.getElementById(id);
+const STORAGE_KEY = 'roboMonsterProgress';
 
 function getParams() {
 	return new URLSearchParams(global.location.search);
 }
 
+function saveProgress(level, stars) {
+	try {
+		global.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+			level: Math.max(1, Math.floor(level)),
+			stars: Math.max(0, Math.floor(stars)),
+		}));
+	} catch (error) {
+		/* localStorage may be unavailable in private browsing. */
+	}
+}
+
 function readProgress() {
 	const params = getParams();
-	const level = Number(params.get('level'));
-	const stars = Number(params.get('stars'));
+	let saved = { level: 1, stars: 0 };
+	try {
+		const raw = global.localStorage.getItem(STORAGE_KEY);
+		if (raw) {
+			const parsed = JSON.parse(raw);
+			if (Number.isFinite(parsed.level) && parsed.level >= 1) saved.level = Math.floor(parsed.level);
+			if (Number.isFinite(parsed.stars) && parsed.stars >= 0) saved.stars = Math.floor(parsed.stars);
+		}
+	} catch (error) {
+		/* Ignore invalid or unavailable saved data. */
+	}
 
-	return {
-		level: Number.isFinite(level) && level >= 1 ? Math.floor(level) : 1,
-		stars: Number.isFinite(stars) && stars >= 0 ? Math.floor(stars) : 0
-	};
+	const urlLevel = Number(params.get('level'));
+	const urlStars = Number(params.get('stars'));
+	const hasUrlLevel = Number.isFinite(urlLevel) && urlLevel >= 1;
+	const hasUrlStars = Number.isFinite(urlStars) && urlStars >= 0;
+
+	if (hasUrlLevel) saved.level = Math.floor(urlLevel);
+	if (hasUrlStars) saved.stars = Math.floor(urlStars);
+
+	// URL values are useful for testing and intentionally overwrite saved progress.
+	if (hasUrlLevel || hasUrlStars) saveProgress(saved.level, saved.stars);
+
+	return { level: saved.level, stars: saved.stars };
 }
 
 function buildProgressQuery(level, stars, extra) {
@@ -213,12 +242,13 @@ function activateMode(mode) {
 }
 function awardWin(word) {
 	stars++;
+	if (stars % 3 === 0) level++;
+	saveProgress(level, stars);
 	starsEl.textContent = stars;
 	updateProgress();
 	message.textContent = '🎉 ZAP! Correct! You spelled ' + word + '.';
 	setPrompt('Hooray! You are a super speller!');
 	if (stars % 3 === 0) {
-		level++;
 		levelEl.textContent = level;
 		managedTimeout(showLevelUp, 950);
 	} else if (activeMode !== 'mole') {
@@ -284,6 +314,7 @@ global.RoboCommon = {
 	$,
 	getParams,
 	readProgress,
+	saveProgress,
 	buildProgressQuery,
 	goTo,
 	tone,
