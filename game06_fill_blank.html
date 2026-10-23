@@ -374,13 +374,8 @@ function render(result = null) {
 		}
 	});
 	letters.replaceChildren();
-	// Only small letters need to be chosen. Capital letters and punctuation are fixed.
-	const required = blankIndices.map(i => current.word[i]);
-	const extras = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((ch) => !required.includes(ch))).slice(0, 5);
-	const choices = [...new Set([...required, ...extras])];
-	// Stable ordering while filling: only shuffle when the sentence is created.
-	if (!current.choices) current.choices = shuffle(choices);
-	current.choices.forEach(ch => {
+	// Show every lowercase letter from a to z, in alphabetical order.
+	for (const ch of "abcdefghijklmnopqrstuvwxyz") {
 		const button = document.createElement("button");
 		button.type = "button";
 		button.className = "letter";
@@ -388,7 +383,7 @@ function render(result = null) {
 		button.disabled = sentenceAwarded;
 		button.onclick = () => pick(ch);
 		letters.appendChild(button);
-	});
+	}
 	$("undoBtn").disabled = !undoHistory.length || sentenceAwarded;
 }
 
