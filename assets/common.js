@@ -152,7 +152,7 @@ function showWordPopup() {
 	$("wordPop").classList.add("show");
 	sounds.hear();
 	say(". " + current.word + ". " + current.word);
-	popupTimer = managedTimeout(closeWordPopup, 8000);
+	popupTimer = managedTimeout(closeWordPopup, 5000);
 }
 function nextWord() {
 	if (!wordDeck.length) wordDeck = shuffle(words);
