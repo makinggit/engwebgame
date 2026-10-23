@@ -50,20 +50,27 @@ function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 	}
 }
 
+function managedTimeout(fn, delay, ...args) {
+	if (typeof timers !== 'undefined' && timers && typeof timers.setTimeout === 'function') {
+		return timers.setTimeout(fn, delay, ...args);
+	}
+	return global.setTimeout(fn, delay, ...args);
+}
+
 const sounds = {
 	click: () => tone(520, 0.06, 'square'),
 	undo: () => tone(280, 0.1, 'triangle'),
 	hear: (text) => {
 		tone(660, 0.08);
 		if (text) say(text);
-		else setTimeout(() => tone(880, 0.1), 85);
+		else managedTimeout(() => tone(880, 0.1), 85);
 	},
 	wrong: () => {
 		tone(190, 0.12, 'sawtooth');
-		setTimeout(() => tone(160, 0.16, 'sawtooth'), 120);
+		managedTimeout(() => tone(160, 0.16, 'sawtooth'), 120);
 	},
-	win: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.13, 'sine', 0.07), i * 110)),
-	level: () => [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.17, 'triangle', 0.08), i * 100)),
+	win: () => [523, 659, 784, 1047].forEach((f, i) => managedTimeout(() => tone(f, 0.13, 'sine', 0.07), i * 110)),
+	level: () => [523, 659, 784, 1047, 1319].forEach((f, i) => managedTimeout(() => tone(f, 0.17, 'triangle', 0.08), i * 100)),
     pop: () => { if (audioCtx && audioCtx.state === "running") tone(740, 0.055, "triangle", 0.035); },
 };
 
@@ -141,7 +148,7 @@ function showWordPopup() {
 	$("wordPop").classList.add("show");
 	sounds.hear();
 	say(". " + current.word + ". " + current.word);
-	popupTimer = timers.setTimeout(closeWordPopup, 8000);
+	popupTimer = managedTimeout(closeWordPopup, 8000);
 }
 function nextWord() {
 	if (!wordDeck.length) wordDeck = shuffle(words);
@@ -198,10 +205,10 @@ function awardWin(word) {
 	if (stars % 3 === 0) {
 		level++;
 		levelEl.textContent = level;
-		setTimeout(showLevelUp, 950);
+		managedTimeout(showLevelUp, 950);
 	} else if (activeMode !== 'mole') {
 		// Mole mode manages its own next-round flow through initMole().
-		setTimeout(() => {
+		managedTimeout(() => {
 			if (activeMode === 'spell') chooseWord();
 			else startBonusMode(activeMode);
 		}, 1650);
@@ -225,6 +232,7 @@ global.RoboCommon = {
 	buildProgressQuery,
 	goTo,
 	tone,
+	managedTimeout,
 	sounds,
 	say,
 	spellWord,
