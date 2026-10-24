@@ -234,6 +234,8 @@ function bonusClick(letter, el) {
 		}
 	} else {
 		sounds.wrong();
+		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
+		say("Good try. Find the letter " + wanted + ".");
 	}
 }
 $("undoBtn").onclick = () => {
@@ -411,6 +413,7 @@ function check() {
 	} else {
 		activeBlank = result.findIndex(ok => !ok);
 		render(result);
+		message.textContent = "Good try! Fix the red blanks with the correct small letters.";
 		sounds.wrong();
 	}
 }
