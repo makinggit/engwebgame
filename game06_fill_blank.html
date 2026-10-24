@@ -31,6 +31,7 @@
 				<div class="badge" id="game_mode">🎮 Mode</div>
 				<div class="badge">🏆 Level <span id="level">1</span></div>
 				<div class="badge">⭐ Stars <span id="stars">0</span></div>
+				<div class="badge" id="hpBadge">❤️ HP <span id="hp">10</span></div>
 			</div>
 		</header>
 		<div id="spellingView">
@@ -285,6 +286,11 @@ let activeBlank = 0;
 let undoHistory = [];
 let sentenceAwarded = false;
 let sentenceNextTimer = null;
+let hp = 10;
+
+function updateHp() {
+	$("hp").textContent = hp;
+}
 
 function makeBlanks(sentence) {
 	const candidates = [...sentence]
@@ -318,6 +324,8 @@ function chooseWord() {
 	undoHistory = [];
 	checking = false;
 	sentenceAwarded = false;
+	hp = 10;
+	updateHp();
 	emoji.textContent = "✏️";
 	$("gameHeading").textContent = "Fill in the Blanks";
 	hint.textContent = "Choose the small letters. Capital letters and punctuation are already shown.";
@@ -415,6 +423,13 @@ function check() {
 		render(result);
 		message.textContent = "Good try! Fix the red blanks with the correct small letters.";
 		sounds.wrong();
+		hp = Math.max(0, hp - 1);
+		updateHp();
+		if (hp === 0) {
+			message.textContent = "Out of HP! Try another sentence.";
+			say("Out of HP! Try another sentence.");
+			setTimeout(chooseWord, 1200);
+		}
 	}
 }
 
