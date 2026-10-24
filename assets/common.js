@@ -385,6 +385,29 @@ if (levelBadge) {
 	});
 }
 
+// The Stars badge in every game header opens the gift page.
+const starsBadge = $('stars')?.closest('.badge');
+if (starsBadge) {
+	starsBadge.style.cursor = 'pointer';
+	starsBadge.setAttribute('role', 'button');
+	starsBadge.setAttribute('tabindex', '0');
+	starsBadge.setAttribute('aria-label', 'Go to gift page');
+	starsBadge.addEventListener('click', (event) => {
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		sounds.hear();
+		goTo('gift.html', level, stars);
+	});
+	starsBadge.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			sounds.hear();
+			goTo('gift.html', level, stars);
+		}
+	});
+}
+
 global.RoboCommon = {
 	$,
 	getParams,
