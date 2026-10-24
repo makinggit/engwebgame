@@ -281,8 +281,6 @@ function bonusClick(letter, el) {
 			$("playArea").classList.remove("penalty");
 		}, 1000);
 		sounds.wrong();
-		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
-		say("Good try. Find the letter " + wanted + ".");
 	}
 }
 $("undoBtn").onclick = () => {
