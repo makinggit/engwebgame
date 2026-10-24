@@ -351,6 +351,35 @@ function startNextGame() {
 function openLevelStory() {
 	goTo('story.html', level, stars);
 }
+function openGiftPage() {
+	goTo('gift.html', level, stars);
+}
+
+// Remove the "Spelling Mission" title from every game page.
+const gameHeading = $('gameHeading');
+if (gameHeading) gameHeading.remove();
+
+// Make the Stars badge open the Gift page.
+const starsBadge = $('stars')?.closest('.badge');
+if (starsBadge) {
+	starsBadge.style.cursor = 'pointer';
+	starsBadge.setAttribute('role', 'button');
+	starsBadge.setAttribute('tabindex', '0');
+	starsBadge.setAttribute('aria-label', 'Open the Gift page');
+	starsBadge.addEventListener('click', (event) => {
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		sounds.hear();
+		openGiftPage();
+	});
+	starsBadge.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			sounds.hear();
+			openGiftPage();
+		}
+	});
+}
 
 // Level Up's Start button goes directly to the assigned next game,
 // rather than returning to game_mode.html.
@@ -409,5 +438,6 @@ global.RoboCommon = {
 	showLevelUp,
 	startNextGame,
 	openLevelStory,
+	openGiftPage,
 };
 })(window);
