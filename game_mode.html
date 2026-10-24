@@ -82,28 +82,18 @@
 'use strict';
 const {
 	$,
-	getParams,
 	readProgress,
-	buildProgressQuery,
 	goTo,
-	tone,
 	sounds,
 	say,
-	spellWord,
-	shuffle,
-	randomBg,
-	updateProgress,
-	setPrompt,
-	closeWordPopup,
-	showWordPopup,
-	nextWord,
-	activateMode,
-	awardWin,
-	showLevelUp,
 } = RoboCommon;
 
-const level = 15; // Testing: start at level 15
-const stars = 47; // Testing: start with 47 stars
+// Use the higher of saved progress and the test starting progress.
+const saved = readProgress();
+const TEST_LEVEL = 15;
+const TEST_STARS = 47;
+const level = Math.max(saved.level, TEST_LEVEL);
+const stars = Math.max(saved.stars, TEST_STARS);
 
 const modeTargets = {
 	game01_spelling: './game01_spelling.html',
@@ -135,7 +125,6 @@ $('story_page').addEventListener('click', () => {
 
 $('modeSelect').style.display = 'grid';
 say('Choose one game mode.');
-//updateProgress(level, stars);
 </script>
 </body>
 </html>
