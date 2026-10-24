@@ -1,1 +1,296 @@
-<fa353d1 版本的 gift.html>
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffd166">
+<title>Robo-Monster Star Map</title>
+<link rel="stylesheet" href="./assets/styles.css">
+<style>
+body {
+	min-height: 100vh;
+	background: linear-gradient(180deg, #a8e6ff, #d9f7d9 45%, #fff3b0);
+	padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.map-wrap {
+	width: min(720px, calc(100% - 18px));
+	margin: 16px auto;
+}
+.map-card {
+	background: #fffdf5;
+	border: 7px solid #7c5cff;
+	border-radius: 36px;
+	box-shadow: 0 20px 45px rgba(50, 30, 100, .2);
+	padding: clamp(18px, 4vw, 30px);
+}
+.map-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+}
+.level-badge {
+	background: #5b2a86;
+	color: #fff;
+	font: 900 clamp(14px, 3.4vw, 20px) "Trebuchet MS", sans-serif;
+	padding: 9px 15px;
+	border-radius: 999px;
+	box-shadow: 0 5px 0 #3d1a60;
+}
+.map-title {
+	margin: 12px 0 4px;
+	color: #5b2a86;
+	font: 900 clamp(29px, 7.5vw, 46px)/1.1 "Trebuchet MS", sans-serif;
+	text-shadow: 2px 3px #ffd166;
+}
+.map-subtitle {
+	margin: 0 0 20px;
+	color: #555;
+	font: 800 clamp(15px, 3.6vw, 21px) "Trebuchet MS", sans-serif;
+}
+.adventure-map {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.map-stop {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	width: min(430px, 100%);
+	min-height: 84px;
+	border: 5px solid #ffd166;
+	border-radius: 26px;
+	background: #fff;
+	box-shadow: 0 8px 0 #eadfc4;
+	padding: 14px 16px;
+	text-align: left;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+.map-stop:nth-child(even) { align-self: flex-end; }
+.map-stop:nth-child(odd) { align-self: flex-start; }
+.map-stop .emoji {
+	font-size: clamp(34px, 8vw, 48px);
+	line-height: 1;
+}
+.map-stop .text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+.map-stop .name {
+	color: #333;
+	font: 900 clamp(17px, 4vw, 23px) "Trebuchet MS", sans-serif;
+}
+.map-stop .task {
+	color: #666;
+	font: 800 clamp(14px, 3.2vw, 18px) "Trebuchet MS", sans-serif;
+}
+.map-stop.locked {
+	border-color: #cfd6df;
+	background: #f1f3f6;
+	box-shadow: 0 8px 0 #d7dde4;
+	filter: grayscale(1);
+}
+.map-stop.locked .emoji { opacity: .35; }
+.map-stop.current {
+	border-color: #ff5d8f;
+	box-shadow: 0 0 0 5px #ffe0eb, 0 8px 0 #f7b8c9;
+}
+.map-stop.special {
+	border-color: #ffb703;
+	background: linear-gradient(180deg, #fffbe6, #fff3b0);
+}
+.momo-marker {
+	position: absolute;
+	z-index: 2;
+	top: -18px;
+	right: -10px;
+	font-size: clamp(30px, 7vw, 40px);
+	line-height: 1;
+	filter: drop-shadow(0 4px 4px rgba(0,0,0,.2));
+}
+.map-controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	justify-content: center;
+	margin-top: 24px;
+}
+.map-button {
+	border: 0;
+	border-radius: 999px;
+	padding: 16px 24px;
+	min-height: 56px;
+	font: 900 clamp(16px, 4vw, 22px) "Trebuchet MS", sans-serif;
+	color: #333;
+	cursor: pointer;
+	box-shadow: 0 6px 0 rgba(0,0,0,.16);
+}
+.map-button:disabled {
+	opacity: .5;
+	cursor: not-allowed;
+	transform: none;
+	box-shadow: 0 6px 0 rgba(0,0,0,.16);
+}
+.map-button.hear { background: #ffd166; }
+.map-button.games { background: #b8f2c9; }
+.map-button:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,.16); }
+.map-button:focus-visible { outline: 4px solid #5b2a86; outline-offset: 3px; }
+.map-footer {
+	margin-top: 15px;
+	text-align: center;
+	color: #666;
+	font: 800 15px "Trebuchet MS", sans-serif;
+}
+@media (min-width: 700px) and (max-width: 834px) {
+	.map-wrap {
+		width: min(680px, calc(100% - 36px));
+		margin-top: 24px;
+	}
+	.map-card {
+		padding: 30px;
+	}
+	.map-stop {
+		width: min(500px, 100%);
+		min-height: 92px;
+		padding: 16px 20px;
+	}
+	.map-stop .emoji {
+		font-size: 52px;
+	}
+	.map-stop .name {
+		font-size: 25px;
+	}
+	.map-stop .task {
+		font-size: 19px;
+	}
+	.map-controls {
+		gap: 14px;
+	}
+	.map-button {
+		min-width: 180px;
+		min-height: 60px;
+		font-size: 22px;
+	}
+}
+</style>
+</head>
+<body>
+<main class="map-wrap">
+	<section class="map-card" aria-labelledby="mapTitle">
+		<div class="map-header">
+			<div class="level-badge" id="levelBadge">Level 1</div>
+			<div aria-hidden="true" style="font-size: clamp(28px, 7vw, 42px)">🗺️⭐👾</div>
+		</div>
+		<h1 class="map-title" id="mapTitle">Momo’s Star Map</h1>
+		<p class="map-subtitle">You have collected <strong id="foundCount">0</strong> stickers. Your newest sticker is at the top!</p>
+		<div class="adventure-map" id="adventureMap"></div>
+		<div class="map-controls">
+			<button class="map-button hear" id="hearBtn" type="button">🔊 Hear My Stickers</button>
+			<button class="map-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
+		</div>
+		<p class="map-footer">Every level helps Momo find a new sticker!</p>
+	</section>
+</main>
+
+<script src="./assets/common.js"></script>
+<script>
+const { $, readProgress, buildProgressQuery, say, sounds } = RoboCommon;
+
+const { level, stars } = readProgress();
+const STICKER_POOL = [
+	{ emoji: "🦖", name: "T-Rex" },
+	{ emoji: "🚀", name: "Rocket" },
+	{ emoji: "🤖", name: "Robot" },
+	{ emoji: "🐉", name: "Dragon" },
+	{ emoji: "🏎️", name: "Race Car" },
+	{ emoji: "🥷", name: "Ninja" },
+	{ emoji: "⚽", name: "Football" },
+	{ emoji: "🏅", name: "Medal" },
+];
+
+function getSticker(levelNumber) {
+	const base = STICKER_POOL[levelNumber % STICKER_POOL.length];
+	if (levelNumber > 0 && levelNumber % 50 === 0) {
+		return { emoji: "👑", name: "Legendary " + base.name, rarity: "Legendary" };
+	}
+	if (levelNumber > 0 && levelNumber % 25 === 0) {
+		return { emoji: "🌈", name: "Rainbow " + base.name, rarity: "Rainbow" };
+	}
+	if (levelNumber > 0 && levelNumber % 10 === 0) {
+		return { emoji: "✨", name: "Golden " + base.name, rarity: "Golden" };
+	}
+	return { ...base, rarity: "" };
+}
+
+function renderMap() {
+	const map = $("adventureMap");
+	map.replaceChildren();
+
+	if (!level) {
+		const empty = document.createElement("p");
+		empty.className = "map-subtitle";
+		empty.textContent = "Reach Level 1 to unlock a sticker!";
+		map.appendChild(empty);
+		return;
+	}
+
+	for (let levelNumber = level; levelNumber >= 1; levelNumber -= 1) {
+		const sticker = getSticker(levelNumber);
+		const latest = levelNumber === level;
+		const button = document.createElement("button");
+		button.type = "button";
+		button.className = "map-stop" + (latest ? " current" : "") +
+			(sticker.rarity ? " special" : "");
+		button.setAttribute("aria-label", "Level " + levelNumber + ": " + sticker.name);
+		button.innerHTML = `
+			<span class="emoji" aria-hidden="true">${sticker.emoji}</span>
+			<span class="text">
+				<span class="name">${sticker.name}</span>
+				<span class="task">Level ${levelNumber} reward</span>
+			</span>`;
+		button.onclick = () => {
+			sounds.click();
+			say("Level " + levelNumber + ". You found the " + sticker.name + ".");
+		};
+		map.appendChild(button);
+
+		if (latest) {
+			const marker = document.createElement("div");
+			marker.className = "momo-marker";
+			marker.textContent = "👾";
+			marker.setAttribute("aria-hidden", "true");
+			button.appendChild(marker);
+		}
+	}
+}
+
+$("levelBadge").textContent = "Level " + level;
+$("foundCount").textContent = level;
+renderMap();
+
+$("hearBtn").onclick = () => {
+	sounds.hear();
+	const recent = [];
+	for (let levelNumber = Math.max(1, level - 4); levelNumber <= level; levelNumber += 1) {
+		recent.push(getSticker(levelNumber).name);
+	}
+	say(recent.length
+		? "Your latest stickers are: " + recent.join(", ") + "."
+		: "Reach Level 1 to unlock a sticker!");
+};
+$("gamesBtn").onclick = () => {
+	sounds.hear();
+	window.location.assign("./game_mode.html?" + buildProgressQuery(level, stars));
+};
+</script>
+</body>
+</html>
