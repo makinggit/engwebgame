@@ -124,6 +124,14 @@ body {
 </head>
 <body>
 <main class="story-wrap">
+	<header>
+		<h1 id="gameHeading"></h1>
+		<div class="badges">
+			<div class="badge" id="game_mode_badge">🎮 Mode</div>
+			<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+			<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
+		</div>
+	</header>
 	<section class="story-card" aria-labelledby="storyTitle">
 		<div class="story-header">
 			<div class="level-badge" id="levelBadge">Level 1</div>
@@ -139,9 +147,7 @@ body {
 		</article>
 		<div class="story-controls">
 			<button class="story-button listen" id="listenBtn" type="button">🔊 Listen to the Story</button>
-			<button class="story-button games" id="gamesBtn" type="button">🎮 Back to Games</button>
 		</div>
-		<p class="story-footer">Choose a story, then tap the yellow button to hear it!</p>
 	</section>
 </main>
 
@@ -153,6 +159,12 @@ const { $, getParams, readProgress, buildProgressQuery, say, sounds } = RoboComm
 const { level, stars } = readProgress();
 const maxStoryNumber = Math.min(level, RoboStory.STORY_PAGES.length);
 let currentStory = RoboStory.getStoryPage(level);
+
+const starsEl = $("stars"),
+	levelEl = $("level");
+	
+starsEl.textContent = stars;
+levelEl.textContent = level;
 
 function showStory(storyNumber, speakStory = false) {
 	const pageNumber = Math.min(Math.max(storyNumber - 1, 0), RoboStory.STORY_PAGES.length - 1);
@@ -181,10 +193,6 @@ showStory(Number(storySelect.value));
 $("listenBtn").onclick = () => {
 	sounds.hear();
 	say(currentStory.title + ". " + currentStory.text);
-};
-$("gamesBtn").onclick = () => {
-	sounds.hear();
-	window.location.assign("./game_mode.html?" + buildProgressQuery(level, stars));
 };
 </script>
 </body>

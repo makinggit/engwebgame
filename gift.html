@@ -24,6 +24,7 @@ body {
 	border-radius: 36px;
 	box-shadow: 0 20px 45px rgba(50, 30, 100, .2);
 	padding: clamp(18px, 4vw, 30px);
+	margin: 16px auto;
 }
 .map-header {
 	display: flex;
@@ -185,6 +186,14 @@ body {
 </head>
 <body>
 <main class="map-wrap">
+	<header>
+		<h1 id="gameHeading"></h1>
+		<div class="badges">
+			<div class="badge" id="game_mode_badge">🎮 Mode</div>
+			<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+			<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
+		</div>
+	</header>
 	<section class="map-card" aria-labelledby="mapTitle">
 		<div class="map-header">
 			<div class="level-badge" id="levelBadge">Level 1</div>
@@ -216,6 +225,11 @@ const STICKER_POOL = [
 	{ emoji: "⚽", name: "Football" },
 	{ emoji: "🏅", name: "Medal" },
 ];
+const starsEl = $("stars"),
+	levelEl = $("level");
+	
+starsEl.textContent = stars;
+levelEl.textContent = level;
 
 function getSticker(levelNumber) {
 	const base = STICKER_POOL[levelNumber % STICKER_POOL.length];

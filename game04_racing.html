@@ -225,12 +225,12 @@ body > main.wrap {
 	</div>
 </div>
 <main id="racingApp">
-		<header class="racing-header">
-			<h1 id="gameHeading">Spelling Mission</h1>
+		<header>
+			<h1 id="gameHeading"></h1>
 			<div class="badges">
-				<button class="badge" id="game_mode" type="button" aria-label="Choose game mode">🎮 Mode</button>
-				<div class="badge">🏆 Level <span id="level">1</span></div>
-				<div class="badge">⭐ Stars <span id="stars">0</span></div>
+				<div class="badge" id="game_mode_badge">🎮 Mode</div>
+				<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
 			</div>
 		</header>
 	<div id="emoji"></div>
@@ -636,10 +636,6 @@ $("hearLevelStoryBtn").onclick = () => {
 $("miniHearBtn").onclick = () => {
 	sounds.hear();
 	say("The word is " + spellWord(bonusWord));
-};
-$("game_mode").onclick = () => {
-	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();

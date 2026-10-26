@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -39,40 +39,42 @@
 </head>
 <body>
 <main class="wrap">
-	<div class="mode-select" id="modeSelect">
-		<div class="mode-card">
-			<h2>Choose One Game Mode</h2>
-			<p>Select one adventure to begin. After every level-up, the game will switch to a random mode automatically.</p>
-			<div class="mode-grid">
-				<button class="mode-btn" data-mode="spell" type="button" id="game01_spelling">
-					<span class="mode-icon">🧩🔤</span>Spelling Mission<br /><small>Build the whole word</small>
-				</button>
-				<button class="mode-btn" data-mode="fish" type="button" id="game02_fishing">
-					<span class="mode-icon">🐟🎣</span>Fish for Letters<br /><small>Help a poor dock</small>
-				</button>
-				<button class="mode-btn" data-mode="ghost" type="button" id="game03_ghost_maze">
-					<span class="mode-icon">👻🎯</span>Ghost Letter Zap<br /><small>Zap the right letters</small>
-				</button>
-				<button class="mode-btn" data-mode="race" type="button" id="game04_racing">
-					<span class="mode-icon">🏃💨</span>Race and Chase<br /><small>Catch the word</small>
-				</button>
-				<button class="mode-btn" data-mode="mole" type="button" id="game05_whack_a_mole">
-					<span class="mode-icon">🐹🔨</span>Whack-a-mole<br /><small>Moles in the hole</small>
-				</button>
-				<button class="mode-btn" data-mode="blank" type="button" id="game06_fill_blank">
-					<span class="mode-icon">🔤🧩</span>Blank Letters<br /><small>Fill in the Blank</small>
-				</button>
+	<section>
+		<header>
+			<h1 id="gameHeading"></h1>
+			<div class="badges">
+				<div class="badge" id="game_mode_badge">🎮 Mode</div>
+				<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
 			</div>
-			<div class="extra-links">
-				<button class="extra-link gift" id="gift_page" type="button">
-					🎁 My Sticker Map<br /><small>Help Momo find missing things</small>
-				</button>
-				<button class="extra-link story" id="story_page" type="button">
-					📖 Level Story<br /><small>Read and listen to your story</small>
-				</button>
+		</header>
+		<div class="mode-select" id="modeSelect">
+			<div class="mode-card">
+				<h2>Choose One Game Mode</h2>
+				<p>Select one adventure to begin. After every level-up, the game will switch to a random mode automatically.</p>
+				<div class="mode-grid">
+					<button class="mode-btn" data-mode="spell" type="button" id="game01_spelling">
+						<span class="mode-icon">🧩🔤</span>Spelling Mission<br /><small>Build the whole word</small>
+					</button>
+					<button class="mode-btn" data-mode="fish" type="button" id="game02_fishing">
+						<span class="mode-icon">🐟🎣</span>Fish for Letters<br /><small>Help a poor dock</small>
+					</button>
+					<button class="mode-btn" data-mode="ghost" type="button" id="game03_ghost_maze">
+						<span class="mode-icon">👻🎯</span>Ghost Letter Zap<br /><small>Zap the right letters</small>
+					</button>
+					<button class="mode-btn" data-mode="race" type="button" id="game04_racing">
+						<span class="mode-icon">🏃💨</span>Race and Chase<br /><small>Catch the word</small>
+					</button>
+					<button class="mode-btn" data-mode="mole" type="button" id="game05_whack_a_mole">
+						<span class="mode-icon">🐹🔨</span>Whack-a-mole<br /><small>Moles in the hole</small>
+					</button>
+					<button class="mode-btn" data-mode="blank" type="button" id="game06_fill_blank">
+						<span class="mode-icon">🔤🧩</span>Blank Letters<br /><small>Fill in the Blank</small>
+					</button>
+				</div>
 			</div>
 		</div>
-	</div>
+	</section>
 </main>
 
 <script src="./assets/common.js"></script>
@@ -104,6 +106,12 @@ const modeTargets = {
 	game06_fill_blank: './game06_fill_blank.html'
 };
 
+const starsEl = $("stars"),
+	levelEl = $("level");
+
+starsEl.textContent = stars;
+levelEl.textContent = level;
+
 Object.keys(modeTargets).forEach((id) => {
 	const button = $(id);
 	if (!button) return;
@@ -111,16 +119,6 @@ Object.keys(modeTargets).forEach((id) => {
 		sounds.hear();
 		goTo(modeTargets[id], level, stars);
 	});
-});
-
-$('gift_page').addEventListener('click', () => {
-	sounds.hear();
-	goTo('./gift.html', level, stars);
-});
-
-$('story_page').addEventListener('click', () => {
-	sounds.hear();
-	goTo('./story.html', level, stars);
 });
 
 $('modeSelect').style.display = 'grid';

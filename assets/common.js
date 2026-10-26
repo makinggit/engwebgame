@@ -1,4 +1,4 @@
-/* Robo-Monster Spelling Academy - shared utilities */
+﻿/* Robo-Monster Spelling Academy - shared utilities */
 (function (global) {
 	'use strict';
 
@@ -218,7 +218,7 @@ function showWordPopup() {
 	$("popWord").textContent = current.word;
 	$("wordPop").classList.add("show");
 	tone(660, 0.08);
-	say(current.word + ". " + current.word);
+	say(spellWord(current.word));
 	popupTimer = managedTimeout(closeWordPopup, 5000);
 }
 function nextWord() {
@@ -249,7 +249,7 @@ function startBonusMode(mode) {
 	console.log("modeStories[mode]:" + modeStories[mode]);
     renderMiniWord(-1);
     $("bonusStatus").textContent = "Find the first letter: " + bonusRemaining[0];
-    say($("bonusTitle").textContent + ". The word is " + bonusWord + ".");
+    say(spellWord(bonusWord));
     console.log($("bonusTitle").textContent + ". The word is " + bonusWord + ".")
     buildBonus();
 }
@@ -363,50 +363,24 @@ document.addEventListener('click', (event) => {
 	startNextGame();
 }, true);
 
-// The Level badge in every game header opens the story for the current level.
-const levelBadge = $('level')?.closest('.badge');
-if (levelBadge) {
-	levelBadge.style.cursor = 'pointer';
-	levelBadge.setAttribute('role', 'button');
-	levelBadge.setAttribute('tabindex', '0');
-	levelBadge.setAttribute('aria-label', 'Open the story for Level ' + level);
-	levelBadge.addEventListener('click', (event) => {
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		sounds.hear();
-		openLevelStory();
-	});
-	levelBadge.addEventListener('keydown', (event) => {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			sounds.hear();
-			openLevelStory();
-		}
-	});
-}
-
-// The Stars badge in every game header opens the gift page.
-const starsBadge = $('stars')?.closest('.badge');
-if (starsBadge) {
-	starsBadge.style.cursor = 'pointer';
-	starsBadge.setAttribute('role', 'button');
-	starsBadge.setAttribute('tabindex', '0');
-	starsBadge.setAttribute('aria-label', 'Go to gift page');
-	starsBadge.addEventListener('click', (event) => {
-		event.preventDefault();
-		event.stopImmediatePropagation();
-		sounds.hear();
-		goTo('gift.html', level, stars);
-	});
-	starsBadge.addEventListener('keydown', (event) => {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			event.stopImmediatePropagation();
-			sounds.hear();
-			goTo('gift.html', level, stars);
-		}
-	});
-}
+$('game_mode_badge').addEventListener('click', () => {
+	event.preventDefault();
+	event.stopImmediatePropagation();
+	sounds.hear();
+	goTo('./game_mode.html', level, stars);
+});
+$('level_badge').addEventListener('click', () => {
+	event.preventDefault();
+	event.stopImmediatePropagation();
+	sounds.hear();
+	goTo('./story.html', level, stars);
+});
+$('gift_badge').addEventListener('click', () => {
+	event.preventDefault();
+	event.stopImmediatePropagation();
+	sounds.hear();
+	goTo('./gift.html', level, stars);
+});
 
 global.RoboCommon = {
 	$,

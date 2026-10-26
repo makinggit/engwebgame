@@ -30,11 +30,11 @@
 <main class="wrap">
 	<section class="panel game" id="gamePage">
 		<header>
-			<h1 id="gameHeading">Spelling Mission</h1>
+			<h1 id="gameHeading"></h1>
 			<div class="badges">
-				<div class="badge" id="game_mode">🎮 Mode</div>
-				<div class="badge">🏆 Level <span id="level">1</span></div>
-				<div class="badge">⭐ Stars <span id="stars">0</span></div>
+				<div class="badge" id="game_mode_badge">🎮 Mode</div>
+				<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
 			</div>
 		</header>
 		<div id="spellingView">
@@ -166,6 +166,9 @@ let current,
 	bonusRemaining = [],
 	nextMode = "spell";
 	
+starsEl.textContent = stars;
+levelEl.textContent = level;
+	
 function buildBonus() {
 	const area = $("playArea");
 	if (activeMode === "ghost") {
@@ -276,10 +279,6 @@ $("hearLevelStoryBtn").onclick = () => {
 $("miniHearBtn").onclick = () => {
 	sounds.hear();
 	say("The word is " + bonusWord + ". " + bonusWord);
-};
-$("game_mode").onclick = () => {
-	sounds.hear();
-	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();
