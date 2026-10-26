@@ -9,10 +9,10 @@
 <title>Robo-Monster Spelling Academy</title>
 <link rel="stylesheet" href="./assets/styles.css">
 <style>
-.target.fish{animation:fishPop .45s ease-out both;}
+.target.fish{animation:fishFade .45s ease-out both,swim 16s ease-in-out infinite alternate;}
 .target.fish.penalty{box-shadow:0 0 0 4px #ed645e;}
 #playArea.penalty .target.fish{pointer-events:none;}
-@keyframes fishPop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes fishFade{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 <body>
