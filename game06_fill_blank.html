@@ -408,12 +408,29 @@ function render(result = null) {
 function pick(ch) {
 	if (sentenceAwarded) return;
 	sounds.click();
-	undoHistory.push({ index: activeBlank, value: sentenceAnswers[activeBlank] });
-	sentenceAnswers[activeBlank] = ch;
+	const filledIndex = activeBlank;
+	undoHistory.push({ index: filledIndex, value: sentenceAnswers[filledIndex] });
+	sentenceAnswers[filledIndex] = ch;
 	const result = blankIndices.map((position, i) => sentenceAnswers[i] ? current.word[position] === sentenceAnswers[i] : null);
 	const empty = sentenceAnswers.findIndex(value => !value);
 	if (empty >= 0) activeBlank = empty;
 	render(result);
+
+	const isCorrect = current.word[blankIndices[filledIndex]] === ch;
+	if (!isCorrect) {
+		hp = Math.max(0, hp - 1);
+		updateHp();
+		message.textContent = "Good try! That letter is not correct. Fix the red blank.";
+		sounds.wrong();
+
+		if (hp === 0) {
+			message.textContent = "Out of HP! Try another sentence.";
+			say("Out of HP! Try another sentence.");
+			setTimeout(chooseWord, 1200);
+			return;
+		}
+	}
+
 	if (sentenceAnswers.every(Boolean)) check();
 }
 
