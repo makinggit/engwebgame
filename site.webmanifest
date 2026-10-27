@@ -2,25 +2,25 @@
   "name": "Robo-Monster Spelling Academy",
   "short_name": "Robo Spelling",
   "description": "A fun spelling adventure for young children.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#d8f7ff",
   "theme_color": "#bdeaff",
   "icons": [
     {
-      "src": "/apple-touch-icon.png",
+      "src": "./apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     },
     {
-      "src": "/favicon-32x32.png",
+      "src": "./favicon-32x32.png",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/favicon-16x16.png",
+      "src": "./favicon-16x16.png",
       "sizes": "16x16",
       "type": "image/png"
     }
