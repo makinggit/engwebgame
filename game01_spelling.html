@@ -8,6 +8,12 @@
 <meta name="theme-color" content="#bdeaff">
 <title>Robo-Monster Spelling Academy</title>
 <link rel="stylesheet" href="./assets/styles.css">
+<style>
+.hp-bar { display:flex; align-items:center; gap:8px; margin:10px auto 0; max-width:420px; }
+.hp-heart { font-size:22px; }
+.hp-track { flex:1; height:12px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+.hp-fill { height:100%; width:100%; background:#3b82f6; transition:width .3s; }
+</style>
 </head>
 <body>
 <main class="wrap">
@@ -47,6 +53,10 @@
 					<span class="star-track" id="starTrack">☆☆☆</span
 					><span id="progressNumber">0 / 3 stars to Level 2</span>
 				</div>
+			</div>
+			<div class="hp-bar" id="hpBar">
+				<span class="hp-heart">💙</span>
+				<div class="hp-track"><div class="hp-fill" id="hpFill"></div></div>
 			</div>
 		</div>
 
@@ -142,10 +152,16 @@ let current,
 	activeMode = "spell",
 	bonusWord = "",
 	bonusRemaining = [],
-	nextMode = "spell";
+	nextMode = "spell",
+	hp = 5;
 	
 starsEl.textContent = stars;
 levelEl.textContent = level;
+
+function updateHp() {
+	const pct = (hp / 5) * 100;
+	$("hpFill").style.width = pct + "%";
+}
 
 function chooseWord() {
 	if (activeMode !== "spell") return;
@@ -161,6 +177,8 @@ function chooseWord() {
 	emoji.textContent = current.emoji;
 	hint.textContent = current.clue;
 	message.textContent = "";
+	hp = 5;
+	updateHp();
 	setPrompt(robotMode ? "BEEP! Robo Bolt has a word for you!" : "Momo has a new spelling mission!");
 	render();
 	timers.setTimeout(showWordPopup, 420);
@@ -202,11 +220,19 @@ function check() {
 		awardWin(current.word);
 	} else {
 		sounds.wrong();
+		hp = Math.max(0, hp - 1);
+		updateHp();
 		const t = "Good try. Green letters are correct. Red letters need fixing. Press Undo and try again.";
 		message.textContent = t;
 		setPrompt(t);
 		checking = false;
 		render(r);
+
+		if (hp === 0) {
+			message.textContent = "Out of HP! Try another word.";
+			say("Out of HP! Try another word.");
+			timers.setTimeout(chooseWord, 1200);
+		}
 	}
 }
 function startBonusMode(mode) {
