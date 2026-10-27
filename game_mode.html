@@ -99,18 +99,23 @@
 'use strict';
 const {
 	$,
+	getParams,
 	readProgress,
 	goTo,
 	sounds,
 	say,
 } = RoboCommon;
 
-// Use the higher of saved progress and the test starting progress.
+// URL progress is used for testing and takes priority over saved progress.
+// Without URL progress, use the higher of saved progress and test starting values.
+const params = getParams();
 const saved = readProgress();
 const TEST_LEVEL = 15;
 const TEST_STARS = 47;
-const level = Math.max(saved.level, TEST_LEVEL);
-const stars = Math.max(saved.stars, TEST_STARS);
+const hasUrlLevel = params.has('level');
+const hasUrlStars = params.has('stars');
+const level = hasUrlLevel ? saved.level : Math.max(saved.level, TEST_LEVEL);
+const stars = hasUrlStars ? saved.stars : Math.max(saved.stars, TEST_STARS);
 
 const modeTargets = {
 	game01_spelling: './game01_spelling.html',
