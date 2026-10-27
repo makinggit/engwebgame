@@ -39,8 +39,8 @@ function readProgress() {
 	const hasUrlLevel = Number.isFinite(urlLevel) && urlLevel >= 1;
 	const hasUrlStars = Number.isFinite(urlStars) && urlStars >= 0;
 
-	if (hasUrlLevel) saved.level = Math.floor(urlLevel);
-	if (hasUrlStars) saved.stars = Math.floor(urlStars);
+	if (hasUrlLevel) saved.level = Math.max(saved.level, Math.floor(urlLevel));
+	if (hasUrlStars) saved.stars = Math.max(saved.stars, Math.floor(urlStars));
 
 	// URL values are useful for testing and intentionally overwrite saved progress.
 	if (hasUrlLevel || hasUrlStars) saveProgress(saved.level, saved.stars);
@@ -131,7 +131,7 @@ function speak(text, stop = true) {
 }
 
 function spellWord(word) {
-	return word + '. ' + word.split('').join(',') + ' . ' + word + '. ';
+	return word + '. ' + word.split('').join('-') + ' . ' + word + '. ';
 }
 
 function shuffle(items) {
@@ -250,7 +250,7 @@ function startBonusMode(mode) {
     renderMiniWord(-1);
     $("bonusStatus").textContent = "Find the first letter: " + bonusRemaining[0];
     say(spellWord(bonusWord));
-    console.log($("bonusTitle").textContent + ". The word is " + bonusWord + ".")
+    console.log(spellWord(bonusWord))
     buildBonus();
 }
 function activateMode(mode) {
