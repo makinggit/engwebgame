@@ -1,1 +1,710 @@
-FULL_UPDATED_GAME04_HP_FILL_DISPLAY
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#bdeaff">
+<title>Robo-Monster Spelling Academy</title>
+<link rel="stylesheet" href="./assets/styles.css">
+<style>
+button {
+	min-height: 52px;
+	padding: 8px 18px;
+	border: 3px solid #202452;
+	border-radius: 16px;
+	background: #ffdf6d;
+	color: inherit;
+	font: bold 18px system-ui;
+	touch-action: manipulation;
+}
+button:active {
+	transform: scale(0.96);
+}
+#jump {
+	flex: 1;
+	background: #b6f49b;
+}
+#word {
+	text-align: center;
+	font-size: 28px;
+	font-weight: bold;
+	letter-spacing: 3px;
+	overflow-wrap: anywhere;
+}
+.done {
+	color: #087e39;
+}
+#hint {
+	text-align: center;
+	min-height: 24px;
+	font-size: 14px;
+}
+.hp-bar { display:flex; align-items:center; gap:8px; margin:2px auto; width:min(420px,100%); }
+.hp-heart { font-size:20px; }
+.hp-track { flex:1; height:12px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+.hp-fill { display:block; height:100%; min-height:12px; width:100%; background:#3b82f6; transition:width .3s; }
+#stage {
+	flex: 1;
+	min-height: 0;
+	border: 3px solid #202452;
+	border-radius: 20px;
+	overflow: hidden;
+	isolation: isolate;
+}
+canvas {
+	width: 100%;
+	height: 100%;
+	display: block;
+	touch-action: none;
+	will-change: transform;
+}
+dialog {
+	max-width: min(540px, 92vw);
+	border: 4px solid #202452;
+	border-radius: 22px;
+	text-align: center;
+}
+dialog::backdrop {
+	background: #20245299;
+}
+
+/* The racing header must not live inside the hidden legacy .game panel. */
+html, body {
+	height: 100%;
+	overflow: hidden;
+	overscroll-behavior: none;
+}
+body > main.wrap {
+	display: none;
+}
+#racingApp {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100vh;
+	height: 100dvh;
+	min-height: 0;
+	gap: 6px;
+	padding: 8px;
+}
+#racingApp > .racing-header {
+	display: flex;
+	position: relative;
+	z-index: 2;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 4px;
+}
+#gameHeading {
+	display: block;
+	margin: 0;
+	font-size: clamp(18px, 3vw, 28px);
+	line-height: 1.2;
+	flex: 1 1 180px;
+}
+.racing-header .badges {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.racing-header .badge {
+	font: 800 14px "Trebuchet MS", Arial, sans-serif;
+	padding: 7px 10px;
+	white-space: nowrap;
+}
+#game_mode {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+#game_mode:focus-visible {
+	outline: 3px solid var(--purple);
+	outline-offset: 3px;
+}
+#racingApp > .hp-bar {
+	flex: 0 0 auto;
+}
+#racingApp > #stage {
+	flex: 1 1 0;
+	min-height: 0;
+	overflow: hidden;
+}
+#racingApp > footer,
+#racingApp > #word,
+#racingApp > #hint {
+	flex: 0 0 auto;
+}
+@media (max-width: 480px) {
+	#gameHeading {
+		flex-basis: 100%;
+		font-size: 20px;
+	}
+	.racing-header .badges {
+		width: 100%;
+		justify-content: space-between;
+	}
+}
+@media (max-height: 480px) and (min-width: 481px) {
+	#gameHeading { font-size: 18px; flex-basis: auto; }
+	#racingApp { gap: 2px; padding: 4px; }
+}
+</style>
+</head>
+<body>
+	
+<main class="wrap">
+	<section class="panel game" id="gamePage">
+
+		<div id="spellingView">
+			<div class="top">
+				<div class="speech" id="speech">Listen first, then build the word!</div>
+				<div class="friend monster" id="monster">
+					<i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
+					><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
+				</div>
+				<div class="friend robot" id="robot"><div class="screen">^_^</div></div>
+			</div>
+			<div class="word-box">
+				<div class="emoji" id="emoji2">📓</div>
+				<div class="hint" id="hint"></div>
+				<div class="slots" id="slots"></div>
+			</div>
+			<div class="letters" id="letters"></div>
+			<div class="controls">
+				<button class="control purple" id="undoBtn" type="button">↩ Undo</button
+				><button class="control yellow" id="hearBtn" type="button">🔊 Hear the Word</button
+				><!--<button class="control yellow" id="newBtn" type="button">🎲 New Word</button>-->
+			</div>
+			<div class="message" id="message"></div>
+			<div class="progress">
+				<div class="bar" id="bar"></div>
+				<div class="progress-content">
+					<span class="star-track" id="starTrack">☆☆☆</span
+					><span id="progressNumber">0 / 3 stars to Level 2</span>
+				</div>
+			</div>
+		</div>
+
+		<section class="bonus-screen" id="bonusView">
+			<div class="bonus-header">
+				<div class="bonus-title" id="bonusTitle"></div>
+				<div class="bonus-story" id="bonusStory"></div>
+			</div>
+			<div class="mini-word" id="miniWord"></div>
+			<div class="bonus-status" id="bonusStatus"></div>
+			<div class="play-area" id="playArea"></div>
+			<div class="controls">
+				<button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Word</button>
+			</div>
+		</section>
+	</section>
+</main>
+
+<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+	<div class="word-card">
+		<div class="small">Listen to the word:</div>
+		<div class="emoji" id="emoji"></div>
+		<div class="bigword" id="popWord">notebook</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
+		<button class="control" id="next" type="button">Start</button>
+	</div>
+</div>
+	
+<div class="levelup" id="levelModal">
+	<div class="level-card">
+		<div class="sparkles">✨ 🏆 ✨</div>
+		<h2>Level Up!</h2>
+		<p id="levelMessage"></p>
+		<article class="level-story" id="levelStory"></article>
+		<p id="nextModeMessage"></p>
+		<div class="controls">
+			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
+			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
+		</div>
+	</div>
+</div>
+<main id="racingApp">
+		<header>
+			<h1 id="gameHeading"></h1>
+			<div class="badges">
+				<div class="badge" id="game_mode_badge">🎮 Mode</div>
+				<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
+			</div>
+		</header>
+	<div id="emoji"></div>
+	<div id="word"></div>
+	<div id="hint" aria-live="polite"></div>
+	<div class="hp-bar" id="hpBar">
+		<span class="hp-heart">💙</span>
+		<div class="hp-track"><div class="hp-fill" id="hpFill" style="width:100%;"></div></div>
+	</div>
+	<section id="stage"><canvas id="game" aria-label="Tap to jump and collect letters"></canvas></section>
+	<footer><button id="hear">🔊 Hear</button><button id="pause">⏸</button><button id="jump">⬆ Jump</button></footer>
+</main>
+
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script src="./assets/game-lifecycle.js"></script>
+<script>const {
+	$,
+	getParams,
+	readProgress,
+	buildProgressQuery,
+	goTo,
+	tone,
+	sounds,
+	say,
+	spellWord,
+	shuffle,
+	randomBg,
+	updateProgress,
+	setPrompt,
+	closeWordPopup,
+	showWordPopup,
+	nextWord,
+	activateMode,
+	awardWin,
+	showLevelUp,
+} = RoboCommon;
+
+let { level, stars } = readProgress();
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.getWordsByChapter((level<5) ? 1 : 2);
+
+const speech = $("speech"),
+	emoji = $("emoji"),
+	hint = $("hint"),
+	slots = $("slots"),
+	//letters = $("letters"),
+	message = $("message"),
+	starsEl = $("stars"),
+	levelEl = $("level"),
+	bar = $("bar"),
+	progressNumber = $("progressNumber"),
+	starTrack = $("starTrack"),
+	monster = $("monster"),
+	robot = $("robot");
+	
+const canvas = $("game");
+const ctx = canvas.getContext("2d", { alpha: false });
+const JUMP_SPEED = 720;
+const GRAVITY = 1024;
+const SPEED = 96;
+//const ZOOM = 1.5;
+const MAX_FRAME_TIME = 0.05;
+const PHYSICS_STEP = 1 / 120;
+const LETTER_RADIUS = 30;
+const RABBIT_FONT_SIZE = 64;
+
+let activeMode = "spell";
+let nextMode = "spell";
+let audioCtx;
+let current, previousWord, player, letters, platforms, worldWidth;
+let index = 0;
+let state = "intro";
+let clock = 0;
+let trappedUntil = 0;
+let jumpQueued = false;
+let lastTime = null;
+let accumulator = 0;
+let castleX = null;
+let celebrationUntil = 0;
+let viewWidth = 640;
+let cameraX = 0;
+let cameraY = 0;
+let canvasWidth = 0;
+let canvasHeight = 0;
+let deviceScale = 1;
+let wrongAttempt = 0;
+let popupTimer;
+let hp = 8;
+
+function unlockAudio() {
+	try {
+		audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+		if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+	} catch (error) {}
+}
+
+function speak(text) {
+	say(text)
+}
+
+function updateHp() {
+	const pct = (hp / 8) * 100;
+	$("hpFill").style.width = pct + "%";
+}
+
+function sync() {
+	$("level").textContent = level;
+	$("stars").textContent = stars;
+	//$("stats").textContent = "Lv " + level + " · ⭐ " + stars;
+	$("emoji").textContent = current.emoji;
+	$("word").replaceChildren(
+		...[...current.word].map((letter, i) => {
+			const span = document.createElement("span");
+			span.textContent = letter;
+			span.className = i < index ? "done" : "";
+			return span;
+		})
+	);
+}
+
+function addChoices(start) {
+	const wanted = current.word[index].toLowerCase();
+	// One current target and one distractor per pair, in random order.
+	const pair = Math.random() < 0.5 ? [true, false] : [false, true];
+	pair.forEach((correct, i) => {
+		const x = start + i * 170;
+		const raised = 1; //Math.random() < 0.5;
+		const surface = raised ? 330 : 480;
+		const alphabet = "abcdefghijklmnopqrstuvwxyz".split("").filter((ch) => ch !== wanted);
+		letters.push({
+			x,
+			y: surface - 24,
+			letter: correct ? wanted : alphabet[Math.floor(Math.random() * alphabet.length)],
+			used: false,
+		});
+		if (Math.random() < 0.1) platforms.push({ x: x - 95, y: surface, width: 190 });
+	});
+}
+
+function startWord(first = false) {
+	const pool = words.filter((item) => item.word !== previousWord);
+	current = pool[Math.floor(Math.random() * pool.length)] || words[0];
+	previousWord = current.word;
+	// Reset all per-round state, especially timestamps and the previous trap.
+	index = 0;
+	clock = 0;
+	trappedUntil = 0;
+	celebrationUntil = 0;
+	castleX = null;
+	jumpQueued = false;
+	lastTime = null;
+	accumulator = 0;
+	hp = 8;
+	updateHp();
+	player = { x: 60, y: 436, vy: 0, grounded: true };
+	letters = [];
+	platforms = [];
+	worldWidth = Math.max(24000, current.word.length * 2500 + 5000);
+	for (let x = 320; x < worldWidth; x += 760) {
+		platforms.push({ x, y: 350, width: 180 });
+		platforms.push({ x: x + 220, y: 230, width: 170 });
+	}
+	addChoices(320);
+	addChoices(720);
+	state = "running";
+	$("pause").textContent = "⏸";
+	$("hint").textContent = current.emoji + " " + current.clue + " · Find " + current.word[index];
+	sync();
+}
+
+function completeWord() {
+	if (state !== "running") return;
+	state = "celebrating";
+	trappedUntil = 0;
+	castleX = player.x + Math.min(230, viewWidth - 130);
+	celebrationUntil = clock + 2.5;
+	stars += 1;
+	level = Math.floor(stars/3.0) + 1;
+	sync();
+	sounds.click();
+	$("hint").textContent = "🏰 Well done! " + current.word;
+}
+function update(dt) {
+	if (state !== "running" && state !== "celebrating") return;
+	clock += dt;
+	if (state === "celebrating") {
+		player.x = Math.min(castleX - 45, player.x + SPEED * dt);
+		player.y = 436;
+		if (clock >= celebrationUntil) {
+			state = "result";
+			if (stars % 3 === 0) {
+				levelEl.textContent = level;
+				setTimeout(showLevelUp, 950);
+			} else {
+				setTimeout(startWord, 950);
+				setTimeout(showWordPopup, 960);
+			}
+		}
+		return;
+	}
+	if (clock < trappedUntil) {
+		jumpQueued = false;
+		return;
+	}
+	player.x += SPEED * dt;
+	if (jumpQueued && player.grounded) {
+		player.vy = -JUMP_SPEED;
+		player.grounded = false;
+	}
+	jumpQueued = false;
+	const previousBottom = player.y + 44;
+	player.vy += GRAVITY * dt;
+	player.y += player.vy * dt;
+	let landing = 480;
+	if (player.vy >= 0) {
+		for (const platform of platforms) {
+			if (
+				previousBottom <= platform.y + 1 &&
+				player.y + 44 >= platform.y &&
+				player.x + 36 > platform.x &&
+				player.x < platform.x + platform.width
+			) {
+				landing = Math.min(landing, platform.y);
+			}
+		}
+	}
+	player.grounded = false;
+	if (player.vy >= 0 && player.y + 44 >= landing) {
+		player.y = landing - 44;
+		player.vy = 0;
+		player.grounded = true;
+	}
+	const wanted = current.word[index].toLowerCase();
+	for (const item of letters) {
+		if (item.used) continue;
+		if (
+			player.x + 36 > item.x - LETTER_RADIUS &&
+			player.x < item.x + LETTER_RADIUS &&
+			player.y + 44 > item.y - LETTER_RADIUS &&
+			player.y < item.y + LETTER_RADIUS
+		) {
+			item.used = true;
+			if (item.letter === wanted) {
+				wrongAttempt = 0;
+				index += 1;
+				sounds.win();
+				sync();
+				if (index === current.word.length) {
+					completeWord();
+					return;
+				}
+				// Remove stale choices so they cannot trap the next letter's progress.
+				letters = letters.filter((letter) => letter.x < player.x - 100);
+				addChoices(player.x + 260);
+				addChoices(player.x + 660);
+				$("hint").textContent = "Correct! Find " + current.word[index];
+			} else {
+				wrongAttempt++;
+				if (wrongAttempt > 2) {
+					setTimeout(say, 1000, "Try again! The word is " + spellWord(current.word));
+				}
+				trappedUntil = clock + 1;
+				$("hint").textContent = "Try again! Find " + current.word[index];
+				sounds.wrong();
+				hp = Math.max(0, hp - 1);
+				updateHp();
+				if (hp === 0) {
+					$("hint").textContent = "Out of HP! Try this word again.";
+					say("Out of HP! Try this word again.");
+					setTimeout(startWord, 1200);
+					return;
+				}
+			}
+			break;
+		}
+	}
+	// Missed targets reappear ahead: automatic movement can never strand a word.
+	const ahead = letters.filter((item) => !item.used && item.x > player.x + 60);
+	if (!ahead.some((item) => item.letter === current.word[index].toLowerCase())) {
+		addChoices(player.x + 350);
+	}
+	worldWidth = Math.max(worldWidth, player.x + 1400);
+	letters = letters.filter((item) => item.x > player.x - 250);
+}
+
+function drawCastle(x) {
+	ctx.fillStyle = "#9b8ae0";
+	ctx.fillRect(x - 40, 385, 90, 95);
+	ctx.fillRect(x - 60, 350, 28, 130);
+	ctx.fillRect(x + 42, 350, 28, 130);
+	ctx.fillStyle = "#6548ab";
+	for (const towerX of [x - 60, x + 42]) {
+		ctx.beginPath();
+		ctx.moveTo(towerX - 5, 350);
+		ctx.lineTo(towerX + 14, 320);
+		ctx.lineTo(towerX + 33, 350);
+		ctx.fill();
+	}
+	ctx.fillStyle = "#3d285c";
+	ctx.fillRect(x - 10, 435, 30, 45);
+	ctx.font = "28px system-ui";
+	ctx.fillText("🚩", x, 380);
+}
+
+function draw() {
+	const bounds = canvas.getBoundingClientRect();
+	const dpr = Math.min(devicePixelRatio || 1, 2);
+	const width = Math.max(1, Math.round(bounds.width * dpr));
+	const height = Math.max(1, Math.round(bounds.height * dpr));
+	if (canvas.width !== width || canvas.height !== height) {
+		canvas.width = width;
+		canvas.height = height;
+	}
+	// 150% of the previous fit-to-960x540 world scale.
+	const scale = Math.min(width / 960, height / 540);
+	viewWidth = width / scale;
+	const viewHeight = height / scale;
+	cameraX = player.x - 36;
+	cameraY = Math.min(500 - viewHeight, player.y - 70);
+	ctx.setTransform(1, 0, 0, 1, 0, 0);
+	ctx.fillStyle = "#bdeaff";
+	ctx.fillRect(0, 0, width, height);
+	ctx.setTransform(scale, 0, 0, scale, -cameraX * scale, -cameraY * scale);
+	ctx.fillStyle = "#fff";
+	for (let i = -1; i < viewWidth / 240 + 2; i += 1) {
+		const x = cameraX + i * 240 - ((player.x * 0.15) % 240);
+		ctx.beginPath();
+		ctx.ellipse(x, 140, 50, 20, 0, 0, Math.PI * 2);
+		ctx.fill();
+	}
+	ctx.fillStyle = "#6acb62";
+	ctx.fillRect(cameraX, 480, viewWidth, Math.max(80, viewHeight));
+	ctx.fillStyle = "#a87145";
+	ctx.fillRect(cameraX, 496, viewWidth, Math.max(80, viewHeight));
+	for (const platform of platforms) {
+		if (platform.x + platform.width < cameraX || platform.x > cameraX + viewWidth) continue;
+		ctx.fillStyle = "#b67d43";
+		ctx.fillRect(platform.x, platform.y, platform.width, 24);
+		ctx.fillStyle = "#70bb67";
+		ctx.fillRect(platform.x, platform.y, platform.width, 6);
+	}
+	for (const item of letters) {
+		if (item.used) continue;
+		ctx.fillStyle = "#ffa27c";
+		ctx.beginPath();
+		ctx.arc(item.x, item.y, LETTER_RADIUS, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.fillStyle = "#202452";
+		ctx.font = "bold 40px system-ui";
+		ctx.textAlign = "center";
+		ctx.fillText(item.letter, item.x, item.y + 14);
+	}
+	if (castleX !== null) drawCastle(castleX);
+	ctx.textAlign = "left";
+	ctx.font = RABBIT_FONT_SIZE + "px system-ui";
+	ctx.fillText("🐰", player.x, player.y + 47);
+	if (clock < trappedUntil) {
+		ctx.strokeStyle = "#ed645e";
+		ctx.lineWidth = 4;
+		ctx.strokeRect(player.x - 5, player.y - 5, 46, 54);
+	}
+}
+
+function jump() {
+	unlockAudio();
+	sounds.click();
+	if (state === "running") jumpQueued = true;
+}
+$("jump").addEventListener("pointerdown", (event) => {
+	event.preventDefault();
+	jump();
+});
+canvas.addEventListener("pointerdown", (event) => {
+	event.preventDefault();
+	jump();
+});
+$("jump").addEventListener("click", (event) => {
+	if (event.detail === 0) jump();
+});
+$("hear").onclick = () => {
+	unlockAudio();
+	speak(current.word + ", the word is " + spellWord(current.word));
+};
+$("pause").onclick = () => {
+	if (state === "running") {
+		state = "paused";
+		$("pause").textContent = "▶";
+	} else if (state === "paused") {
+		state = "running";
+		lastTime = null;
+		accumulator = 0;
+		$("pause").textContent = "⏸";
+	}
+};
+$("next").onclick = () => {
+	unlockAudio();
+	//$("modal").close();
+	closeWordPopup();
+};
+
+
+$("hearBtn").onclick = showWordPopup;
+/*
+$("newBtn").onclick = () => {
+	sounds.click();
+	chooseWord();
+};
+$("wordPop").onclick = closeWordPopup;
+$("wordPop").onkeydown = (e) => {
+	if (e.key === "Enter" || e.key === " ") closeWordPopup();
+};
+$("hearStoryBtn").onclick = () => {
+	sounds.hear();
+	say($("storyText").innerText);
+};
+*/
+$("hearLevelStoryBtn").onclick = () => {
+	sounds.hear();
+	say($("levelStory").textContent);
+};
+$("miniHearBtn").onclick = () => {
+	sounds.hear();
+	say(bonusWord, ", the word is " + spellWord(bonusWord));
+};
+$("game_mode_next").onclick = () => {
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+};
+
+//$("modal").addEventListener("cancel", (event) => event.preventDefault());
+document.addEventListener("contextmenu", (event) => event.preventDefault());
+document.addEventListener("selectstart", (event) => event.preventDefault());
+document.addEventListener("keydown", (event) => {
+	if (event.code === "Space" || event.code === "ArrowUp") {
+		if (event.target.tagName === "BUTTON") return;
+		event.preventDefault();
+		if (!event.repeat) jump();
+	}
+});
+document.addEventListener("visibilitychange", () => {
+	lastTime = null;
+	accumulator = 0;
+	jumpQueued = false;
+});
+
+function frame(time) {
+	// Use a fixed-timestep accumulator: physics is stable while rendering stays
+	// tied to the display refresh rate.
+	if (lastTime === null) {
+		lastTime = time;
+	} else {
+		let frameTime = Math.min((time - lastTime) / 1000, MAX_FRAME_TIME);
+		lastTime = time;
+		accumulator += frameTime;
+		while (accumulator >= PHYSICS_STEP) {
+			update(PHYSICS_STEP);
+			accumulator -= PHYSICS_STEP;
+		}
+	}
+	draw();
+	requestAnimationFrame(frame);
+}
+startWord(true);
+showWordPopup();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
