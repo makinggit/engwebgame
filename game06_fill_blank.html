@@ -292,10 +292,10 @@ let activeBlank = 0;
 let undoHistory = [];
 let sentenceAwarded = false;
 let sentenceNextTimer = null;
-let hp = 10;
+let hp = 5;
 
 function updateHp() {
-	const pct = (hp / 10) * 100;
+	const pct = (hp / 5) * 100;
 	$("hpFill").style.width = pct + "%";
 }
 
@@ -331,7 +331,7 @@ function chooseWord() {
 	undoHistory = [];
 	checking = false;
 	sentenceAwarded = false;
-	hp = 10;
+	hp = 5;
 	updateHp();
 	emoji.textContent = "✏️";
 	$("gameHeading").textContent = "Fill in the Blanks";
