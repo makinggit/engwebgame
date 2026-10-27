@@ -42,9 +42,7 @@
 			</div>
 			<div class="letters" id="letters"></div>
 			<div class="controls">
-				<button class="control purple" id="undoBtn" type="button">↩ Undo</button
-				><button class="control yellow" id="hearBtn" type="button">🔊 Hear the Word</button
-				><button class="control yellow" id="newBtn" type="button">🎲 New Word</button>
+				<button class="control yellow" id="hearBtn" type="button">🔊 Hear the Word</button>
 			</div>
 			<div class="message" id="message"></div>
 			<div class="progress">
@@ -218,12 +216,6 @@ function updateLetter() {
 	ensureTargetFish();
 }
 
-function clearGhostTimers() {
-	clearInterval(ghostTimer);
-	clearTimeout(ghostHintTimer);
-	clearTimeout(ghostHintHideTimer);
-	ghostTimer = ghostHintTimer = ghostHintHideTimer = null;
-}
 function spawnTargets() {
 	const area = $("playArea"),
 		wanted = bonusRemaining[0],
