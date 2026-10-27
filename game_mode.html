@@ -114,8 +114,8 @@ const TEST_LEVEL = 15;
 const TEST_STARS = 47;
 const hasUrlLevel = params.has('level');
 const hasUrlStars = params.has('stars');
-const level = hasUrlLevel ? saved.level : Math.max(saved.level, TEST_LEVEL);
-const stars = hasUrlStars ? saved.stars : Math.max(saved.stars, TEST_STARS);
+const level = hasUrlLevel ? Math.max(saved.level, TEST_LEVEL) : TEST_LEVEL;
+const stars = hasUrlStars ? Math.max(saved.stars, TEST_STARS) : TEST_STARS;
 
 const modeTargets = {
 	game01_spelling: './game01_spelling.html',

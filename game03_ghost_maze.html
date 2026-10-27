@@ -434,7 +434,7 @@ function bonusClick(letter, el) {
 }
 $("miniHearBtn").onclick = () => {
 	sounds.hear();
-	say("The word is " + spellWord(bonusWord));
+	say(bonusWord +", the word is " + spellWord(bonusWord));
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();

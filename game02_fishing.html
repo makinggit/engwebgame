@@ -267,7 +267,7 @@ function bonusClick(letter, el) {
 			setTimeout(() => awardWin(bonusWord), 900);
 		} else {
 			$("bonusStatus").textContent = "Correct!";
-			say("Correct! The word is " + spellWord(bonusWord));
+			//say("Correct! " + spellWord(bonusWord));
 			//updateLetter();
 			buildBonus();
 		}
@@ -281,7 +281,7 @@ function bonusClick(letter, el) {
 		}, 1000);
 		sounds.wrong();
 		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
-		say("Good try. Find the letter " + wanted + ".");
+		//say("Good try. Find the letter " + wanted + ".");
 	}
 }
 $("undoBtn").onclick = () => {
@@ -310,7 +310,7 @@ $("hearLevelStoryBtn").onclick = () => {
 };
 $("miniHearBtn").onclick = () => {
 	sounds.hear();
-	say("The word is " + spellWord(bonusWord));
+	say(spellWord(bonusWord));
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();

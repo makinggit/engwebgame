@@ -594,7 +594,7 @@ $("jump").addEventListener("click", (event) => {
 });
 $("hear").onclick = () => {
 	unlockAudio();
-	speak("The word is " + spellWord(current.word));
+	speak(current.word + ", the word is " + spellWord(current.word));
 };
 $("pause").onclick = () => {
 	if (state === "running") {
@@ -635,7 +635,7 @@ $("hearLevelStoryBtn").onclick = () => {
 };
 $("miniHearBtn").onclick = () => {
 	sounds.hear();
-	say("The word is " + spellWord(bonusWord));
+	say(bonusWord, ", the word is " + spellWord(bonusWord));
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();
