@@ -12,6 +12,30 @@
 <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
 <link rel="manifest" href="./site.webmanifest">
 <link rel="stylesheet" href="./assets/styles.css">
+<style>
+.install-card {
+  margin-top: 18px;
+  padding: 16px;
+  border: 3px dashed #7652de;
+  border-radius: 20px;
+  background: #fff8cf;
+  text-align: left;
+}
+.install-card h2 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+.install-card p {
+  margin: 0 0 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.install-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+</style>
 </head>
 <body>
 <main class="wrap">
@@ -24,6 +48,13 @@
         </div>
         <div class="controls">
             <button class="control" id="startGameBtn" type="button">🎮 Start Game</button>
+        </div>
+        <div class="install-card" id="installCard" hidden>
+            <h2>📱 Add Robo Spelling to Home Screen</h2>
+            <p>In Safari, tap <strong>Share</strong>, then choose <strong>Add to Home Screen</strong>. The game will open like an app.</p>
+            <div class="install-actions">
+                <button class="control" id="dismissInstallBtn" type="button">✖ Don’t show again</button>
+            </div>
         </div>
         <div style="display:none">
             <div class="badge" id="game_mode_badge"></div>
@@ -79,6 +110,31 @@
         sounds.hear();
         goTo('./game_mode.html', level, stars);
     });
+
+    // Show Add to Home Screen guidance on iOS Safari only.
+    const installCard = $('installCard');
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+    const dismissed = localStorage.getItem('roboInstallGuidanceDismissed') === '1';
+
+    if (isIOS && !isStandalone && !dismissed) {
+        installCard.hidden = false;
+    }
+
+    $('dismissInstallBtn').addEventListener('click', () => {
+        sounds.click();
+        localStorage.setItem('roboInstallGuidanceDismissed', '1');
+        installCard.hidden = true;
+    });
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+                console.warn('Service worker registration failed:', error);
+            });
+        });
+    }
 
     $('startPage').style.display = 'block';
 })();
