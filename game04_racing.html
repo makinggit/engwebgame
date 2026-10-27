@@ -41,6 +41,10 @@ button:active {
 	min-height: 24px;
 	font-size: 14px;
 }
+.hp-bar { display:flex; align-items:center; gap:8px; margin:4px auto 0; max-width:420px; }
+.hp-heart { font-size:20px; }
+.hp-track { flex:1; height:10px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+.hp-fill { height:100%; width:100%; background:#3b82f6; transition:width .3s; }
 #stage {
 	flex: 1;
 	min-height: 0;
@@ -236,6 +240,10 @@ body > main.wrap {
 	<div id="emoji"></div>
 	<div id="word"></div>
 	<div id="hint" aria-live="polite"></div>
+	<div class="hp-bar" id="hpBar">
+		<span class="hp-heart">💙</span>
+		<div class="hp-track"><div class="hp-fill" id="hpFill"></div></div>
+	</div>
 	<section id="stage"><canvas id="game" aria-label="Tap to jump and collect letters"></canvas></section>
 	<footer><button id="hear">🔊 Hear</button><button id="pause">⏸</button><button id="jump">⬆ Jump</button></footer>
 </main>
@@ -316,6 +324,7 @@ let canvasHeight = 0;
 let deviceScale = 1;
 let wrongAttempt = 0;
 let popupTimer;
+let hp = 8;
 
 function unlockAudio() {
 	try {
@@ -326,6 +335,11 @@ function unlockAudio() {
 
 function speak(text) {
 	say(text)
+}
+
+function updateHp() {
+	const pct = (hp / 8) * 100;
+	$("hpFill").style.width = pct + "%";
 }
 
 function sync() {
@@ -375,6 +389,8 @@ function startWord(first = false) {
 	jumpQueued = false;
 	lastTime = null;
 	accumulator = 0;
+	hp = 8;
+	updateHp();
 	player = { x: 60, y: 436, vy: 0, grounded: true };
 	letters = [];
 	platforms = [];
@@ -485,6 +501,14 @@ function update(dt) {
 				trappedUntil = clock + 1;
 				$("hint").textContent = "Try again! Find " + current.word[index];
 				sounds.wrong();
+				hp = Math.max(0, hp - 1);
+				updateHp();
+				if (hp === 0) {
+					$("hint").textContent = "Out of HP! Try this word again.";
+					say("Out of HP! Try this word again.");
+					setTimeout(startWord, 1200);
+					return;
+				}
 			}
 			break;
 		}
