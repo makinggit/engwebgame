@@ -256,7 +256,7 @@ function bonusClick(letter, el) {
 		}
 		if (!bonusRemaining.length) {
 			$("bonusStatus").textContent = "Amazing! You finished the word.";
-			setTimeout(() => awardWin(bonusWord), 900);
+			timers.setTimeout(() => awardWin(bonusWord), 900);
 		} else {
 			$("bonusStatus").textContent = "Correct!";
 			//say("Correct! " + spellWord(bonusWord));
@@ -267,7 +267,7 @@ function bonusClick(letter, el) {
 		penaltyUntil = Date.now() + 1000;
 		el.classList.add("penalty");
 		$("playArea").classList.add("penalty");
-		setTimeout(() => {
+		timers.setTimeout(() => {
 			el.classList.remove("penalty");
 			$("playArea").classList.remove("penalty");
 		}, 1000);
