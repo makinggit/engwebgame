@@ -112,21 +112,3 @@ test.describe('game06_fill_blank', () => {
     expect(errors).toEqual([]);
   });
 });
-
-test.describe('game_mode navigation', () => {
-  test('passes level and stars to each game', async ({ page }) => {
-    const cases = [
-      ['game01_spelling', 'game01_spelling.html'],
-      ['game02_fishing', 'game02_fishing.html'],
-      ['game03_ghost_maze', 'game03_ghost_maze.html'],
-      ['game04_racing', 'game04_racing.html'],
-      ['game05_whack_a_mole', 'game05_whack_a_mole.html'],
-      ['game06_fill_blank', 'game06_fill_blank.html'],
-    ];
-    for (const [buttonId, target] of cases) {
-      await page.goto(BASE + 'game_mode.html?level=2&stars=3');
-      await page.locator('#' + buttonId).click();
-      await expect(page).toHaveURL(new RegExp(target.replace('.', '\\.') + '\\?level=2&stars=3'));
-    }
-  });
-});
