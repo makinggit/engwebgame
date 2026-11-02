@@ -85,29 +85,6 @@ html, body {
 	color: #b9c9ee;
 	min-height: 20px;
 }
-#boostBtn {
-	position: fixed;
-	right: 14px;
-	bottom: 18px;
-	z-index: 3;
-	min-height: 62px;
-	min-width: 112px;
-	border: 4px solid #64e0ff;
-	border-radius: 22px;
-	background: linear-gradient(180deg, #123a63, #0a1f38);
-	color: #d9f6ff;
-	font: 900 20px "Trebuchet MS", system-ui;
-	cursor: pointer;
-	touch-action: manipulation;
-	box-shadow: 0 0 22px rgba(80, 190, 255, .45);
-}
-#boostBtn.active {
-	background: linear-gradient(180deg, #1c6ea3, #0b2c4d);
-	box-shadow: 0 0 32px rgba(100, 224, 255, .8);
-}
-#boostBtn:active {
-	transform: scale(.96);
-}
 #flash {
 	position: fixed;
 	inset: 0;
@@ -235,7 +212,6 @@ html, body {
 	<div id="hint"></div>
 </div>
 
-<button id="boostBtn" type="button">🚀 Boost</button>
 <div id="flash"></div>
 
 <div id="celebration">
@@ -655,11 +631,15 @@ html, body {
 		lasers.push({ x: shipX, y: startY, startY, range });
 	}
 
+	function activateBoost() {
+		if (gameState !== 'playing') return;
+		sounds.click();
+		boostUntil = Math.max(boostUntil, clock + BOOST_SECONDS);
+	}
+
 	function update(dt) {
 		const boosting = clock < boostUntil;
 		const speed = boosting ? HIGH_SPEED : NORMAL_SPEED;
-
-		$('boostBtn').classList.toggle('active', boosting);
 
 		// User control is locked once the word is won.
 		if (gameState === 'playing') {
@@ -702,8 +682,6 @@ html, body {
 		}
 
 		if (gameState !== 'playing') return;
-
-		$('boostBtn').classList.toggle('active', boosting);
 
 		if (!isBusy) {
 			laserTimer += dt;
@@ -924,21 +902,54 @@ html, body {
 			ctx.stroke();
 		});
 
+		// Cyber-style spaceship.
 		ctx.save();
 		ctx.translate(shipX, shipY);
 
-		if (clock < boostUntil || gameState === 'enteringBase') {
-			ctx.fillStyle = '#64e0ff';
-			ctx.beginPath();
-			ctx.moveTo(-10, SHIP_HEIGHT / 2);
-			ctx.lineTo(10, SHIP_HEIGHT / 2);
-			ctx.lineTo(0, SHIP_HEIGHT / 2 + 38 + Math.random() * 14);
-			ctx.closePath();
-			ctx.fill();
-		}
+		// Engine glow
+		const engineGlow = ctx.createRadialGradient(0, SHIP_HEIGHT / 2 + 10, 2, 0, SHIP_HEIGHT / 2 + 10, 40);
+		engineGlow.addColorStop(0, boosting ? 'rgba(255, 80, 80, .85)' : 'rgba(0, 229, 255, .55)');
+		engineGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+		ctx.fillStyle = engineGlow;
+		ctx.beginPath();
+		ctx.arc(0, SHIP_HEIGHT / 2 + 10, 40, 0, Math.PI * 2);
+		ctx.fill();
 
-		ctx.fillStyle = '#d9f6ff';
-		ctx.strokeStyle = '#64e0ff';
+		// Engine flame
+		ctx.fillStyle = boosting ? '#ff5a5a' : '#00e5ff';
+		ctx.beginPath();
+		ctx.moveTo(-9, SHIP_HEIGHT / 2);
+		ctx.lineTo(9, SHIP_HEIGHT / 2);
+		ctx.lineTo(0, SHIP_HEIGHT / 2 + 30 + Math.random() * 16);
+		ctx.closePath();
+		ctx.fill();
+
+		// Wings
+		ctx.fillStyle = '#12233f';
+		ctx.strokeStyle = '#ff2fd0';
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.moveTo(-14, 6);
+		ctx.lineTo(-34, 22);
+		ctx.lineTo(-12, 22);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(14, 6);
+		ctx.lineTo(34, 22);
+		ctx.lineTo(12, 22);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+
+		// Main hull
+		const hull = ctx.createLinearGradient(0, -SHIP_HEIGHT / 2, 0, SHIP_HEIGHT / 2);
+		hull.addColorStop(0, '#e6f7ff');
+		hull.addColorStop(.55, '#39c6e8');
+		hull.addColorStop(1, '#0d2b4d');
+		ctx.fillStyle = hull;
+		ctx.strokeStyle = '#00e5ff';
 		ctx.lineWidth = 3;
 		ctx.beginPath();
 		ctx.moveTo(0, -SHIP_HEIGHT / 2);
@@ -948,10 +959,24 @@ html, body {
 		ctx.fill();
 		ctx.stroke();
 
-		ctx.fillStyle = '#0a1f3d';
+		// Neon centre stripe
+		ctx.strokeStyle = '#ff2fd0';
+		ctx.lineWidth = 2;
 		ctx.beginPath();
-		ctx.arc(0, -4, 8, 0, Math.PI * 2);
+		ctx.moveTo(0, -SHIP_HEIGHT / 2 + 8);
+		ctx.lineTo(0, SHIP_HEIGHT / 2 - 6);
+		ctx.stroke();
+
+		// Glowing cockpit
+		const cockpit = ctx.createRadialGradient(0, -6, 1, 0, -6, 10);
+		cockpit.addColorStop(0, '#ffffff');
+		cockpit.addColorStop(.5, '#7df9ff');
+		cockpit.addColorStop(1, 'rgba(0, 229, 255, 0)');
+		ctx.fillStyle = cockpit;
+		ctx.beginPath();
+		ctx.arc(0, -6, 10, 0, Math.PI * 2);
 		ctx.fill();
+
 		ctx.restore();
 	}
 
@@ -973,11 +998,26 @@ html, body {
 	}
 
 	canvas.addEventListener('pointermove', (event) => moveShip(event.clientX));
-	canvas.addEventListener('pointerdown', (event) => moveShip(event.clientX));
+	canvas.addEventListener('pointerdown', (event) => {
+		const x = event.clientX;
+		const y = event.clientY;
 
-	$('boostBtn').addEventListener('click', () => {
-		sounds.click();
-		boostUntil = Math.max(boostUntil, clock + BOOST_SECONDS);
+		// Tap the spaceship to boost.
+		if (Math.hypot(x - shipX, y - shipY) < 70) {
+			activateBoost();
+			return;
+		}
+
+		// Tap any falling letter to boost.
+		for (let i = 0; i < fallingLetters.length; i++) {
+			const item = fallingLetters[i];
+			if (Math.hypot(x - item.x, y - item.y) < LETTER_RADIUS + 12) {
+				activateBoost();
+				return;
+			}
+		}
+
+		moveShip(x);
 	});
 
 	$('game_mode_badge').addEventListener('click', () => {
@@ -1041,6 +1081,7 @@ html, body {
 	window.RoboSpaceship = {
 		fireLaser,
 		spawnAsteroid,
+		activateBoost,
 		getState: () => ({
 			hp,
 			clock,
