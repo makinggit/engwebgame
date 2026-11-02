@@ -310,7 +310,7 @@ html, body {
 	const LETTER_RADIUS = 30;
 	const ASTEROID_RADIUS = 26;
 	const STAR_SPEED = 130;
-	const LASER_SPEED = 310;
+	const LASER_SPEED = 155;
 	const LASER_FIRE_INTERVAL = .35;
 	const WORD_POPUP_SECONDS = 8;
 	const DOCK_SPEED = 2600;
@@ -343,6 +343,7 @@ html, body {
 	let celebrationTimer = null;
 	let nextWordTimer = null;
 	let wordLaneParity = 0;
+	let levelUpFlight = false;
 	const keys = { left: false, right: false };
 
 	window.current = null;
@@ -560,6 +561,7 @@ html, body {
 		gameState = 'enteringBase';
 
 		const willLevelUp = (stars_ + 1) % 3 === 0;
+		levelUpFlight = willLevelUp;
 		clearTimeout(celebrationTimer);
 
 		if (willLevelUp) {
@@ -850,8 +852,8 @@ html, body {
 		});
 		ctx.globalAlpha = 1;
 
-		// The space base is hidden during normal play and appears only after a win.
-		if (gameState === 'enteringBase' || gameState === 'docked') {
+		// The space base appears only during a level-up flight.
+		if (levelUpFlight && (gameState === 'enteringBase' || gameState === 'docked')) {
 			drawSpaceBase();
 		}
 
