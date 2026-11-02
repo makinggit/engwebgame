@@ -306,6 +306,7 @@ html, body {
 	const LASER_SPEED = 620;
 	const LASER_FIRE_INTERVAL = .35;
 	const WORD_POPUP_SECONDS = 8;
+	const DOCK_SPEED = 260;
 
 	let hp = 5;
 	let current = null;
@@ -318,6 +319,7 @@ html, body {
 	let asteroidTimer = 0;
 	let laserTimer = 0;
 	let shipX = 0;
+	let shipY = 0;
 	let targetShipX = 0;
 	let boostUntil = 0;
 	let clock = 0;
@@ -397,6 +399,7 @@ html, body {
 
 		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX || canvasWidth / 2));
 		targetShipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, targetShipX || shipX));
+		shipY = canvasHeight - 90;
 
 		if (previousWidth && canvasWidth !== previousWidth) {
 			fallingLetters.forEach((item) => {
@@ -443,7 +446,7 @@ html, body {
 		fallingLetters = choices.map((letter, index) => ({
 			letter,
 			x: (positions[index] + .5) * (canvasWidth / 3),
-			y: -40 - positions[index] * 45,
+			y: 210 - positions[index] * 45,
 			vy: LETTER_FALL_SPEED
 		}));
 	}
@@ -451,7 +454,7 @@ html, body {
 	function spawnAsteroid(asteroidX, asteroidY) {
 		asteroids.push({
 			x: Number.isFinite(asteroidX) ? asteroidX : ASTEROID_RADIUS + Math.random() * (canvasWidth - ASTEROID_RADIUS * 2),
-			y: Number.isFinite(asteroidY) ? asteroidY : -ASTEROID_RADIUS * 2,
+			y: Number.isFinite(asteroidY) ? asteroidY : 260,
 			vy: ASTEROID_FALL_SPEED,
 			spin: Math.random() * Math.PI * 2,
 			shape: Array.from({ length: 8 }, () => .75 + Math.random() * .45)
@@ -484,6 +487,7 @@ html, body {
 		asteroidTimer = 0;
 		laserTimer = 0;
 		gameState = 'playing';
+		shipY = canvasHeight - 90;
 
 		$('emoji').textContent = current.emoji;
 		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
@@ -517,8 +521,8 @@ html, body {
 		asteroids = [];
 		lasers = [];
 		gameState = 'enteringBase';
-		$('hint').textContent = 'Returning to the Super Space Base!';
-		say('Well done! ' + current.word + '. Returning to the Super Space Base.');
+		$('hint').textContent = 'Flying up to the Super Space Base!';
+		say('Well done! ' + current.word + '. Flying up to the Super Space Base.');
 	}
 
 	function collectLetter(item) {
@@ -554,7 +558,7 @@ html, body {
 	function fireLaser() {
 		if (gameState !== 'playing') return;
 		sounds.click();
-		lasers.push({ x: shipX, y: canvasHeight - 115 });
+		lasers.push({ x: shipX, y: shipY - 25 });
 	}
 
 	function update(dt) {
@@ -580,17 +584,20 @@ html, body {
 		});
 
 		if (gameState === 'enteringBase') {
-			const baseX = canvasWidth - 95;
-			const baseY = canvasHeight - 170;
-			const dx = baseX - shipX;
-			const dy = baseY - (canvasHeight - 90);
+			const dockX = canvasWidth / 2;
+			const dockY = 235;
+			const dx = dockX - shipX;
+			const dy = dockY - shipY;
 			const distance = Math.hypot(dx, dy);
 
-			if (distance < 12) {
+			if (distance < 14) {
 				gameState = 'awarding';
+				shipX = dockX;
+				shipY = dockY;
 				awardWin(current.word);
 			} else {
-				shipX += (dx / distance) * 220 * dt;
+				shipX += (dx / distance) * DOCK_SPEED * dt;
+				shipY += (dy / distance) * DOCK_SPEED * dt;
 			}
 
 			return;
@@ -635,7 +642,7 @@ html, body {
 				});
 			});
 
-			lasers = lasers.filter((laser) => !laser.hit && laser.y > -20);
+			lasers = lasers.filter((laser) => !laser.hit && laser.y > 180);
 			asteroids = asteroids.filter((item) => !item.hit && item.y < canvasHeight + ASTEROID_RADIUS * 2);
 			fallingLetters = fallingLetters.filter((item) => !item.collected && item.y < canvasHeight + 60);
 
@@ -652,6 +659,112 @@ html, body {
 				spawnLetters();
 			}
 		}
+	}
+
+	function drawSpaceBase() {
+		const x = canvasWidth / 2;
+		const y = 150;
+
+		ctx.save();
+
+		// Glow
+		const glow = ctx.createRadialGradient(x, y, 10, x, y, 115);
+		glow.addColorStop(0, 'rgba(100, 224, 255, .28)');
+		glow.addColorStop(1, 'rgba(100, 224, 255, 0)');
+		ctx.fillStyle = glow;
+		ctx.beginPath();
+		ctx.arc(x, y, 115, 0, Math.PI * 2);
+		ctx.fill();
+
+		// Solar panels
+		ctx.fillStyle = '#1b3f77';
+		ctx.strokeStyle = '#64e0ff';
+		ctx.lineWidth = 3;
+		[-105, 105].forEach((offset) => {
+			ctx.beginPath();
+			ctx.roundRect(x + offset - 38, y - 16, 76, 32, 6);
+			ctx.fill();
+			ctx.stroke();
+		});
+
+		ctx.strokeStyle = 'rgba(100, 224, 255, .55)';
+		ctx.lineWidth = 2;
+		[-105, 105].forEach((offset) => {
+			for (let i = 1; i < 4; i++) {
+				ctx.beginPath();
+				ctx.moveTo(x + offset - 38 + i * 19, y - 16);
+				ctx.lineTo(x + offset - 38 + i * 19, y + 16);
+				ctx.stroke();
+			}
+		});
+
+		// Connecting arms
+		ctx.strokeStyle = '#7f9dd6';
+		ctx.lineWidth = 8;
+		ctx.beginPath();
+		ctx.moveTo(x - 68, y);
+		ctx.lineTo(x - 30, y);
+		ctx.moveTo(x + 30, y);
+		ctx.lineTo(x + 68, y);
+		ctx.stroke();
+
+		// Main station body
+		const body = ctx.createLinearGradient(x, y - 42, x, y + 42);
+		body.addColorStop(0, '#dceaff');
+		body.addColorStop(.5, '#8fb4e8');
+		body.addColorStop(1, '#40618f');
+		ctx.fillStyle = body;
+		ctx.strokeStyle = '#64e0ff';
+		ctx.lineWidth = 4;
+		ctx.beginPath();
+		ctx.roundRect(x - 34, y - 34, 68, 68, 18);
+		ctx.fill();
+		ctx.stroke();
+
+		// Windows
+		ctx.fillStyle = '#7dff9d';
+		[-16, 0, 16].forEach((offset) => {
+			ctx.beginPath();
+			ctx.arc(x + offset, y - 8, 6, 0, Math.PI * 2);
+			ctx.fill();
+		});
+		ctx.fillStyle = '#ffd166';
+		[-16, 0, 16].forEach((offset) => {
+			ctx.beginPath();
+			ctx.arc(x + offset, y + 12, 5, 0, Math.PI * 2);
+			ctx.fill();
+		});
+
+		// Antenna
+		ctx.strokeStyle = '#dceaff';
+		ctx.lineWidth = 4;
+		ctx.beginPath();
+		ctx.moveTo(x, y - 34);
+		ctx.lineTo(x, y - 56);
+		ctx.stroke();
+		ctx.fillStyle = '#ff6b81';
+		ctx.beginPath();
+		ctx.arc(x, y - 60, 5 + Math.sin(clock * 5) * 1.5, 0, Math.PI * 2);
+		ctx.fill();
+
+		// Docking ring / bay
+		ctx.strokeStyle = '#7dff9d';
+		ctx.lineWidth = 5;
+		ctx.beginPath();
+		ctx.arc(x, y + 52, 24, 0, Math.PI * 2);
+		ctx.stroke();
+		ctx.fillStyle = 'rgba(125, 255, 157, .18)';
+		ctx.beginPath();
+		ctx.arc(x, y + 52, 19, 0, Math.PI * 2);
+		ctx.fill();
+
+		// Label below the station
+		ctx.fillStyle = '#7dff9d';
+		ctx.font = '900 15px system-ui';
+		ctx.textAlign = 'center';
+		ctx.fillText('SUPER SPACE BASE', x, y + 100);
+
+		ctx.restore();
 	}
 
 	function draw() {
@@ -672,23 +785,7 @@ html, body {
 		});
 		ctx.globalAlpha = 1;
 
-		if (gameState === 'enteringBase' || gameState === 'awarding') {
-			const baseX = canvasWidth - 95;
-			const baseY = canvasHeight - 170;
-
-			ctx.fillStyle = '#1d2c55';
-			ctx.strokeStyle = '#64e0ff';
-			ctx.lineWidth = 4;
-			ctx.beginPath();
-			ctx.arc(baseX, baseY, 62, 0, Math.PI * 2);
-			ctx.fill();
-			ctx.stroke();
-
-			ctx.fillStyle = '#7dff9d';
-			ctx.font = '900 16px system-ui';
-			ctx.textAlign = 'center';
-			ctx.fillText('SUPER SPACE BASE', baseX, baseY + 92);
-		}
+		drawSpaceBase();
 
 		asteroids.forEach((item) => {
 			ctx.save();
@@ -736,11 +833,10 @@ html, body {
 			ctx.stroke();
 		});
 
-		const shipY = canvasHeight - 90;
 		ctx.save();
 		ctx.translate(shipX, shipY);
 
-		if (clock < boostUntil) {
+		if (clock < boostUntil || gameState === 'enteringBase') {
 			ctx.fillStyle = '#64e0ff';
 			ctx.beginPath();
 			ctx.moveTo(-10, SHIP_HEIGHT / 2);
@@ -845,6 +941,7 @@ html, body {
 	$('stars').textContent = stars_;
 	shipX = canvasWidth / 2;
 	targetShipX = shipX;
+	shipY = canvasHeight - 90;
 	startWord();
 	requestAnimationFrame(frame);
 
@@ -856,6 +953,7 @@ html, body {
 			clock,
 			boostUntil,
 			shipX,
+			shipY,
 			lasers: lasers.length,
 			asteroids: asteroids.length,
 			letterIndex,
