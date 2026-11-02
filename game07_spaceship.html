@@ -160,18 +160,24 @@ html, body {
 	z-index: 15;
 	display: none;
 	place-items: center;
-	background: rgba(3, 8, 20, .65);
+	background: rgba(3, 8, 20, .55);
 	pointer-events: none;
 }
 #celebration.show {
 	display: grid;
 }
 #celebration div {
-	font: 900 34px "Trebuchet MS", system-ui;
+	font: 900 40px "Trebuchet MS", system-ui;
 	color: #7dff9d;
-	text-shadow: 0 0 18px rgba(125, 255, 157, .6);
+	text-shadow: 0 0 22px rgba(125, 255, 157, .7);
 	text-align: center;
 	padding: 0 20px;
+	animation: popIn .5s ease-out;
+}
+@keyframes popIn {
+	0% { transform: scale(.4); opacity: 0; }
+	60% { transform: scale(1.15); opacity: 1; }
+	100% { transform: scale(1); opacity: 1; }
 }
 .hidden-legacy {
 	display: none;
@@ -233,7 +239,7 @@ html, body {
 <div id="flash"></div>
 
 <div id="celebration">
-	<div>🎉 Well done!<br><span id="celebrationWord"></span></div>
+	<div id="celebrationText">🎉 Well done!</div>
 </div>
 
 <div id="wordPop" role="button" tabindex="0" aria-label="Close word card">
@@ -332,6 +338,7 @@ html, body {
 	let gameState = 'playing';
 	let isBusy = false;
 	let wordPopupTimer = null;
+	let celebrationTimer = null;
 	const keys = { left: false, right: false };
 
 	window.current = null;
@@ -523,8 +530,23 @@ html, body {
 		asteroids = [];
 		lasers = [];
 		gameState = 'enteringBase';
+
+		const willLevelUp = (stars_ + 1) % 3 === 0;
+		clearTimeout(celebrationTimer);
+
+		if (willLevelUp) {
+			$('celebrationText').textContent = '🎉 Level Up!';
+			$('celebration').classList.add('show');
+			sounds.level();
+			say('Level up! Well done! ' + current.word + '.');
+		} else {
+			$('celebrationText').textContent = '🎉 Well done!';
+			$('celebration').classList.add('show');
+			sounds.win();
+			say('Well done! ' + current.word + '.');
+		}
+
 		$('hint').textContent = 'Well done!';
-		say('Well done! ' + current.word + '.');
 	}
 
 	function collectLetter(item) {
@@ -596,7 +618,13 @@ html, body {
 				gameState = 'awarding';
 				shipX = dockX;
 				shipY = dockY;
+
+				// awardWin increments stars/level and shows the Sticker Popup on level-up.
 				awardWin(current.word);
+
+				celebrationTimer = setTimeout(() => {
+					$('celebration').classList.remove('show');
+				}, 2600);
 			} else {
 				shipX += (dx / distance) * DOCK_SPEED * dt;
 				shipY += (dy / distance) * DOCK_SPEED * dt;
