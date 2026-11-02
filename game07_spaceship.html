@@ -121,6 +121,60 @@ html, body {
 .hidden-badges {
 	display: none;
 }
+#wordPop {
+	position: fixed;
+	inset: 0;
+	z-index: 20;
+	display: none;
+	place-items: center;
+	background: rgba(3, 8, 20, .78);
+	padding: 18px;
+	cursor: pointer;
+}
+#wordPop.show {
+	display: grid;
+}
+.word-card {
+	width: min(420px, 94vw);
+	background: #fffdf5;
+	color: #202452;
+	border: 5px solid #64e0ff;
+	border-radius: 26px;
+	padding: 22px;
+	text-align: center;
+}
+.word-card .small {
+	font: 800 15px system-ui;
+	color: #5b6b8c;
+}
+.word-card .bigword {
+	margin: 10px 0;
+	font: 900 34px "Trebuchet MS", system-ui;
+	letter-spacing: 2px;
+}
+.word-card .close-note {
+	font: 700 13px system-ui;
+	color: #5b6b8c;
+}
+#celebration {
+	position: fixed;
+	inset: 0;
+	z-index: 15;
+	display: none;
+	place-items: center;
+	background: rgba(3, 8, 20, .65);
+	pointer-events: none;
+}
+#celebration.show {
+	display: grid;
+}
+#celebration div {
+	font: 900 34px "Trebuchet MS", system-ui;
+	color: #7dff9d;
+	text-shadow: 0 0 18px rgba(125, 255, 157, .6);
+	text-align: center;
+	padding: 0 20px;
+}
 </style>
 </head>
 <body>
@@ -148,6 +202,18 @@ html, body {
 <button id="boostBtn" type="button">🚀 Boost</button>
 <div id="flash"></div>
 
+<div id="celebration">
+	<div>🎉 Well done!<br><span id="celebrationWord"></span></div>
+</div>
+
+<div id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+	<div class="word-card">
+		<div class="small">Listen to the word:</div>
+		<div class="bigword" id="popWord">rocket</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 5 seconds</div>
+	</div>
+</div>
+
 <script src="./assets/common.js"></script>
 <script src="./assets/words.js"></script>
 <script src="./assets/story.js"></script>
@@ -159,14 +225,12 @@ html, body {
 		$,
 		readProgress,
 		saveProgress,
-		goTo,
 		sounds,
 		say,
 		spellWord,
 		shuffle,
 		getLetterPositions,
 		getChapterForLevel,
-		awardWin,
 		showWordPopup,
 		closeWordPopup,
 	} = RoboCommon;
@@ -199,6 +263,7 @@ html, body {
 	let canvasWidth = 0;
 	let canvasHeight = 0;
 	let starfield = [];
+	let isBusy = false;
 
 	function readParentSettings() {
 		try {
@@ -300,6 +365,7 @@ html, body {
 		letterIndex = 0;
 		hp = 5;
 		boostUntil = 0;
+		isBusy = false;
 
 		$('emoji').textContent = current.emoji;
 		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
@@ -309,7 +375,28 @@ html, body {
 		showWordPopup();
 	}
 
+	function awardWord() {
+		stars_ += 1;
+		const levelUp = stars_ % 3 === 0;
+		if (levelUp) level_ += 1;
+
+		saveProgress(level_, stars_);
+		$('stars').textContent = stars_;
+		$('level').textContent = level_;
+		sounds.star();
+
+		$('celebrationWord').textContent = current.word + (levelUp ? ' · Level ' + level_ + '!' : '');
+		$('celebration').classList.add('show');
+
+		setTimeout(() => {
+			$('celebration').classList.remove('show');
+			startWord();
+		}, 1600);
+	}
+
 	function collectLetter(item) {
+		if (isBusy) return;
+
 		const wanted = currentTargetLetter();
 
 		if (item.letter === wanted) {
@@ -320,13 +407,11 @@ html, body {
 			renderWord();
 
 			if (letterIndex >= letterPositions.length) {
+				isBusy = true;
+				fallingLetters = [];
 				$('hint').textContent = 'Well done! ' + current.word;
 				say('Well done! ' + current.word);
-				setTimeout(() => {
-					awardWin(current.word);
-					startWord();
-				}, 1400);
-				fallingLetters = [];
+				setTimeout(awardWord, 900);
 				return;
 			}
 
@@ -341,10 +426,11 @@ html, body {
 			setTimeout(() => $('flash').classList.remove('on'), 180);
 
 			if (hp === 0) {
+				isBusy = true;
+				fallingLetters = [];
 				$('hint').textContent = 'Try this word again.';
 				say('Try this word again. The word is ' + spellWord(current.word));
 				setTimeout(startWord, 1500);
-				fallingLetters = [];
 				return;
 			}
 
@@ -355,9 +441,8 @@ html, body {
 
 	function update(dt) {
 		const boosting = clock < boostUntil;
-		const speed = boosting ? HIGH_SPEED : NORMAL_SPEED;
 
-		$('boostBtn').classList.toggle('boosting', boosting);
+		$('boostBtn').classList.toggle('active', boosting);
 
 		shipX += (targetShipX - shipX) * Math.min(1, dt * (boosting ? 14 : 9));
 		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX));
@@ -370,24 +455,26 @@ html, body {
 			}
 		});
 
-		fallingLetters.forEach((item) => {
-			item.y += item.vy * dt;
-			item.spin = (item.spin || 0) + dt;
+		if (!isBusy) {
+			fallingLetters.forEach((item) => {
+				item.y += item.vy * dt;
+				item.spin = (item.spin || 0) + dt;
 
-			const shipTop = canvasHeight - 90;
-			const dx = item.x - shipX;
-			const dy = item.y - (shipTop + SHIP_HEIGHT / 2);
+				const shipTop = canvasHeight - 90;
+				const dx = item.x - shipX;
+				const dy = item.y - (shipTop + SHIP_HEIGHT / 2);
 
-			if (Math.abs(dx) < LETTER_RADIUS + SHIP_WIDTH / 2 && Math.abs(dy) < LETTER_RADIUS + SHIP_HEIGHT / 2) {
-				item.collected = true;
-				collectLetter(item);
+				if (Math.abs(dx) < LETTER_RADIUS + SHIP_WIDTH / 2 && Math.abs(dy) < LETTER_RADIUS + SHIP_HEIGHT / 2) {
+					item.collected = true;
+					collectLetter(item);
+				}
+			});
+
+			fallingLetters = fallingLetters.filter((item) => !item.collected && item.y < canvasHeight + 60);
+
+			if (!fallingLetters.length && letterIndex < letterPositions.length) {
+				spawnLetters();
 			}
-		});
-
-		fallingLetters = fallingLetters.filter((item) => !item.collected && item.y < canvasHeight + 60);
-
-		if (!fallingLetters.length && letterIndex < letterPositions.length) {
-			spawnLetters();
 		}
 	}
 
@@ -478,6 +565,11 @@ html, body {
 	$('boostBtn').addEventListener('click', () => {
 		sounds.click();
 		boostUntil = Math.max(boostUntil, clock + BOOST_SECONDS);
+	});
+
+	$('wordPop').addEventListener('click', closeWordPopup);
+	$('wordPop').addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') closeWordPopup();
 	});
 
 	window.addEventListener('resize', resize);
