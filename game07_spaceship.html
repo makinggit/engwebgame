@@ -374,10 +374,10 @@ html, body {
 		}));
 	}
 
-	function spawnAsteroid() {
+	function spawnAsteroid(asteroidX, asteroidY) {
 		asteroids.push({
-			x: ASTEROID_RADIUS + Math.random() * (canvasWidth - ASTEROID_RADIUS * 2),
-			y: -ASTEROID_RADIUS * 2,
+			x: Number.isFinite(asteroidX) ? asteroidX : ASTEROID_RADIUS + Math.random() * (canvasWidth - ASTEROID_RADIUS * 2),
+			y: Number.isFinite(asteroidY) ? asteroidY : -ASTEROID_RADIUS * 2,
 			vy: ASTEROID_FALL_SPEED,
 			spin: Math.random() * Math.PI * 2,
 			shape: Array.from({ length: 8 }, () => .75 + Math.random() * .45)
@@ -730,6 +730,21 @@ html, body {
 	targetShipX = shipX;
 	startWord();
 	requestAnimationFrame(frame);
+
+	window.RoboSpaceship = {
+		fireLaser,
+		spawnAsteroid,
+		getState: () => ({
+			hp,
+			clock,
+			boostUntil,
+			shipX,
+			lasers: lasers.length,
+			asteroids: asteroids.length,
+			letterIndex,
+			word: current ? current.word : ''
+		})
+	};
 })();
 </script>
 </body>
