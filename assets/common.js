@@ -71,6 +71,23 @@ function getLetterPositions(word) {
 		.filter((item) => item.letter !== ' ');
 }
 
+const CHAPTER_START_LEVELS = { 1: 1, 2: 2, 3: 5 };
+
+function getChapterForLevel(level, chapterStartLevels = CHAPTER_START_LEVELS) {
+	const currentLevel = Math.max(1, Math.floor(Number(level) || 1));
+	const chapters = Object.keys(chapterStartLevels)
+		.map(Number)
+		.filter((chapter) => Number.isFinite(chapter) && chapter >= 1)
+		.sort((a, b) => b - a);
+
+	for (const chapter of chapters) {
+		const start = Math.max(1, Math.floor(Number(chapterStartLevels[chapter]) || 1));
+		if (currentLevel >= start) return chapter;
+	}
+
+	return chapters.length ? Math.min(...chapters) : 1;
+}
+
 function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 	try {
 		audioCtx ||= new (global.AudioContext || global.webkitAudioContext)();
@@ -394,6 +411,8 @@ global.RoboCommon = {
 	tone,
 	managedTimeout,
 	getLetterPositions,
+	CHAPTER_START_LEVELS,
+	getChapterForLevel,
 	sounds,
 	say,
 	spellWord,
