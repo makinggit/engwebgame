@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#050914">
+<title>Robo-Monster Spelling Academy</title>
+<link rel="stylesheet" href="./assets/styles.css">
+<style>
+html, body {
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+	background: #050914;
+	color: #eaf2ff;
+	font-family: "Trebuchet MS", system-ui, sans-serif;
+	overscroll-behavior: none;
+}
+#game {
+	position: fixed;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	touch-action: none;
+}
+#hud {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 2;
+	padding: 10px 12px;
+	pointer-events: none;
+}
+#topRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+.badge {
+	padding: 7px 10px;
+	border: 2px solid #3d5a99;
+	border-radius: 999px;
+	background: rgba(9, 16, 34, .82);
+	font: 800 14px system-ui;
+	white-space: nowrap;
+}
+#wordRow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 8px;
+}
+#emoji {
+	font-size: 30px;
+}
+#word {
+	display: flex;
+	gap: 4px;
+	font: 900 28px system-ui;
+	letter-spacing: 2px;
+}
+#word span {
+	min-width: 22px;
+	text-align: center;
+	color: #7fd4ff;
+}
+#word span.done {
+	color: #7dff9d;
+}
+#word span.space {
+	min-width: 14px;
+}
+#hint {
+	margin-top: 6px;
+	text-align: center;
+	font: 800 15px system-ui;
+	color: #b9c9ee;
+	min-height: 20px;
+}
+#boostBtn {
+	position: fixed;
+	right: 14px;
+	bottom: 18px;
+	z-index: 3;
+	min-height: 62px;
+	min-width: 112px;
+	border: 4px solid #64e0ff;
+	border-radius: 22px;
+	background: linear-gradient(180deg, #123a63, #0a1f38);
+	color: #d9f6ff;
+	font: 900 20px "Trebuchet MS", system-ui;
+	cursor: pointer;
+	touch-action: manipulation;
+	box-shadow: 0 0 22px rgba(80, 190, 255, .45);
+}
+#boostBtn.active {
+	background: linear-gradient(180deg, #1c6ea3, #0b2c4d);
+	box-shadow: 0 0 32px rgba(100, 224, 255, .8);
+}
+#boostBtn:active {
+	transform: scale(.96);
+}
+#flash {
+	position: fixed;
+	inset: 0;
+	z-index: 4;
+	pointer-events: none;
+	background: rgba(255, 70, 70, .22);
+	opacity: 0;
+	transition: opacity .18s;
+}
+#flash.on {
+	opacity: 1;
+}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Move the spaceship to collect the correct letter"></canvas>
+
+<div id="hud">
+	<div id="topRow">
+		<div class="badge">🚀 Level <span id="level">1</span></div>
+		<div class="badge">⭐ <span id="stars">0</span></div>
+		<div class="badge">💙 <span id="hp">5</span></div>
+	</div>
+	<div id="wordRow">
+		<div id="emoji">🚀</div>
+		<div id="word"></div>
+	</div>
+	<div id="hint"></div>
+</div>
+
+<button id="boostBtn" type="button">🚀 Boost</button>
+<div id="flash"></div>
+
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script>
+(function () {
+	'use strict';
+
+	const {
+		$,
+		readProgress,
+		saveProgress,
+		goTo,
+		sounds,
+		say,
+		spellWord,
+		shuffle,
+		getLetterPositions,
+		getChapterForLevel,
+		awardWin,
+		showWordPopup,
+		closeWordPopup,
+	} = RoboCommon;
+
+	let { level, stars } = readProgress();
+	const canvas = $("game");
+	const ctx = canvas.getContext("2d");
+	const PARENT_SETTINGS_KEY = 'roboParentSettings';
+	const NORMAL_SPEED = 110;
+	const HIGH_SPEED = 230;
+	const LETTER_FALL_SPEED = 65;
+	const BOOST_SECONDS = 3;
+	const SHIP_WIDTH = 54;
+	const SHIP_HEIGHT = 46;
+	const LETTER_RADIUS = 30;
+
+	let hp = 5;
+	let current = null;
+	let letterPositions = [];
+	let letterIndex = 0;
+	let previousWord = '';
+	let fallingLetters = [];
+	let shipX = 0;
+	let targetShipX = 0;
+	let boostUntil = 0;
+	let clock = 0;
+	let lastTime = null;
+	let stars_ = stars;
+	let level_ = level;
+	let canvasWidth = 0;
+	let canvasHeight = 0;
+	let starfield = [];
+
+	function readParentSettings() {
+		try {
+			const raw = localStorage.getItem(PARENT_SETTINGS_KEY);
+			if (!raw) return { chapterStartLevels: { 1: 1, 2: 2, 3: 5 }, stats: {} };
+			const parsed = JSON.parse(raw);
+			return {
+				chapterStartLevels: parsed.chapterStartLevels || { 1: 1, 2: 2, 3: 5 },
+				stats: parsed.stats || {}
+			};
+		} catch (error) {
+			return { chapterStartLevels: { 1: 1, 2: 2, 3: 5 }, stats: {} };
+		}
+	}
+
+	function saveWordStatistic(word, wasCorrect) {
+		try {
+			const settings = readParentSettings();
+			const item = settings.stats[word] || { correct: 0, attempts: 0, lastPlayed: '' };
+			item.attempts += 1;
+			if (wasCorrect) item.correct += 1;
+			item.lastPlayed = new Date().toISOString().slice(0, 10);
+			settings.stats[word] = item;
+			localStorage.setItem(PARENT_SETTINGS_KEY, JSON.stringify(settings));
+		} catch (error) {
+			/* Statistics are optional. */
+		}
+	}
+
+	function resize() {
+		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		canvasWidth = canvas.clientWidth;
+		canvasHeight = canvas.clientHeight;
+		canvas.width = Math.round(canvasWidth * dpr);
+		canvas.height = Math.round(canvasHeight * dpr);
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+		if (!starfield.length) {
+			for (let i = 0; i < 90; i++) {
+				starfield.push({
+					x: Math.random() * canvasWidth,
+					y: Math.random() * canvasHeight,
+					r: Math.random() * 1.6 + .5,
+					speed: Math.random() * 35 + 15
+				});
+			}
+		}
+	}
+
+	function currentTargetLetter() {
+		if (letterIndex >= letterPositions.length) return '';
+		return letterPositions[letterIndex].letter.toLowerCase();
+	}
+
+	function renderWord() {
+		const word = current.word;
+		const doneCount = letterIndex;
+		let seen = 0;
+
+		$('word').replaceChildren(...[...word].map((letter) => {
+			const span = document.createElement('span');
+
+			if (letter === ' ') {
+				span.className = 'space';
+				span.textContent = ' ';
+			} else {
+				span.className = seen < doneCount ? 'done' : '';
+				span.textContent = letter;
+				seen += 1;
+			}
+
+			return span;
+		}));
+	}
+
+	function spawnLetters() {
+		const wanted = currentTargetLetter();
+		const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('').filter((letter) => letter !== wanted);
+		const choices = shuffle([wanted, ...shuffle(alphabet).slice(0, 2)]);
+		const positions = shuffle([0, 1, 2]);
+
+		fallingLetters = choices.map((letter, index) => ({
+			letter,
+				x: (positions[index] + .5) * (canvasWidth / 3),
+				y: -40 - positions[index] * 45,
+				vy: LETTER_FALL_SPEED,
+				spin: Math.random() * Math.PI * 2
+			}));
+	}
+
+	function startWord() {
+		const chapter = getChapterForLevel(level_);
+		const words = RoboWords.getWordsByChapter(chapter);
+		const pool = words.filter((item) => item.word !== previousWord);
+		current = pool[Math.floor(Math.random() * pool.length)] || words[0];
+		previousWord = current.word;
+		letterPositions = getLetterPositions(current.word);
+		letterIndex = 0;
+		hp = 5;
+		boostUntil = 0;
+
+		$('emoji').textContent = current.emoji;
+		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
+		$('hp').textContent = hp;
+		renderWord();
+		spawnLetters();
+		showWordPopup();
+	}
+
+	function collectLetter(item) {
+		const wanted = currentTargetLetter();
+
+		if (item.letter === wanted) {
+			sounds.win();
+			saveWordStatistic(current.word, true);
+			boostUntil = clock + BOOST_SECONDS;
+			letterIndex += 1;
+			renderWord();
+
+			if (letterIndex >= letterPositions.length) {
+				$('hint').textContent = 'Well done! ' + current.word;
+				say('Well done! ' + current.word);
+				setTimeout(() => {
+					awardWin(current.word);
+					startWord();
+				}, 1400);
+				fallingLetters = [];
+				return;
+			}
+
+			$('hint').textContent = 'Great! Find ' + currentTargetLetter().toUpperCase();
+			spawnLetters();
+		} else {
+			sounds.wrong();
+			saveWordStatistic(current.word, false);
+			hp = Math.max(0, hp - 1);
+			$('hp').textContent = hp;
+			$('flash').classList.add('on');
+			setTimeout(() => $('flash').classList.remove('on'), 180);
+
+			if (hp === 0) {
+				$('hint').textContent = 'Try this word again.';
+				say('Try this word again. The word is ' + spellWord(current.word));
+				setTimeout(startWord, 1500);
+				fallingLetters = [];
+				return;
+			}
+
+			$('hint').textContent = 'Try again. Find ' + wanted.toUpperCase();
+			say('Try again. Find ' + wanted);
+		}
+	}
+
+	function update(dt) {
+		const boosting = clock < boostUntil;
+		const speed = boosting ? HIGH_SPEED : NORMAL_SPEED;
+
+		$('boostBtn').classList.toggle('boosting', boosting);
+
+		shipX += (targetShipX - shipX) * Math.min(1, dt * (boosting ? 14 : 9));
+		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX));
+
+		starfield.forEach((star) => {
+			star.y += star.speed * (boosting ? 3.2 : 1) * dt;
+			if (star.y > canvasHeight) {
+				star.y = -4;
+				star.x = Math.random() * canvasWidth;
+			}
+		});
+
+		fallingLetters.forEach((item) => {
+			item.y += item.vy * dt;
+			item.spin = (item.spin || 0) + dt;
+
+			const shipTop = canvasHeight - 90;
+			const dx = item.x - shipX;
+			const dy = item.y - (shipTop + SHIP_HEIGHT / 2);
+
+			if (Math.abs(dx) < LETTER_RADIUS + SHIP_WIDTH / 2 && Math.abs(dy) < LETTER_RADIUS + SHIP_HEIGHT / 2) {
+				item.collected = true;
+				collectLetter(item);
+			}
+		});
+
+		fallingLetters = fallingLetters.filter((item) => !item.collected && item.y < canvasHeight + 60);
+
+		if (!fallingLetters.length && letterIndex < letterPositions.length) {
+			spawnLetters();
+		}
+	}
+
+	function draw() {
+		const boosting = clock < boostUntil;
+		const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+		gradient.addColorStop(0, '#050914');
+		gradient.addColorStop(1, boosting ? '#123a63' : '#101a33');
+
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+		ctx.fillStyle = '#cfe6ff';
+		starfield.forEach((star) => {
+			ctx.globalAlpha = boosting ? .95 : .65;
+			ctx.beginPath();
+			ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2);
+			ctx.fill();
+		});
+		ctx.globalAlpha = 1;
+
+		fallingLetters.forEach((item) => {
+			ctx.fillStyle = '#182c52';
+			ctx.strokeStyle = '#64e0ff';
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			ctx.arc(item.x, item.y, LETTER_RADIUS, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.stroke();
+
+			ctx.fillStyle = '#eaf2ff';
+			ctx.font = '900 34px system-ui';
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			ctx.fillText(item.letter.toUpperCase(), item.x, item.y + 2);
+		});
+
+		const shipY = canvasHeight - 90;
+		ctx.save();
+		ctx.translate(shipX, shipY);
+
+		if (clock < boostUntil) {
+			ctx.fillStyle = '#64e0ff';
+			ctx.beginPath();
+			ctx.moveTo(-10, SHIP_HEIGHT / 2);
+			ctx.lineTo(10, SHIP_HEIGHT / 2);
+			ctx.lineTo(0, SHIP_HEIGHT / 2 + 34 + Math.random() * 12);
+			ctx.closePath();
+			ctx.fill();
+		}
+
+		ctx.fillStyle = '#d9f6ff';
+		ctx.strokeStyle = '#64e0ff';
+		ctx.lineWidth = 3;
+		ctx.beginPath();
+		ctx.moveTo(0, -SHIP_HEIGHT / 2);
+		ctx.lineTo(SHIP_WIDTH / 2, SHIP_HEIGHT / 2);
+		ctx.lineTo(-SHIP_WIDTH / 2, SHIP_HEIGHT / 2);
+		ctx.closePath();
+		ctx.fill();
+		ctx.stroke();
+
+		ctx.fillStyle = '#0a1f3d';
+		ctx.beginPath();
+		ctx.arc(0, -4, 8, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.restore();
+	}
+
+	function frame(time) {
+		if (lastTime === null) lastTime = time;
+		const dt = Math.min((time - lastTime) / 1000, .05);
+		lastTime = time;
+		clock += dt;
+
+		update(dt);
+		draw();
+		requestAnimationFrame(frame);
+	}
+
+	function moveShip(clientX) {
+		targetShipX = clientX;
+	}
+
+	canvas.addEventListener('pointermove', (event) => moveShip(event.clientX));
+	canvas.addEventListener('pointerdown', (event) => moveShip(event.clientX));
+
+	$('boostBtn').addEventListener('click', () => {
+		sounds.click();
+		boostUntil = Math.max(boostUntil, clock + BOOST_SECONDS);
+	});
+
+	window.addEventListener('resize', resize);
+	resize();
+
+	$('level').textContent = level_;
+	$('stars').textContent = stars_;
+	shipX = canvasWidth / 2;
+	targetShipX = shipX;
+	startWord();
+	requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
