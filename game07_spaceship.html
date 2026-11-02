@@ -595,12 +595,14 @@ html, body {
 	function collectLetter(item) {
 		if (isBusy || gameState !== 'playing') return;
 
+		// Hitting any letter ends the boost immediately.
+		boostUntil = 0;
+
 		const wanted = currentTargetLetter();
 
 		if (item.letter === wanted) {
 			sounds.win();
 			saveWordStatistic(current.word, true);
-			boostUntil = clock + BOOST_SECONDS;
 			letterIndex += 1;
 			renderWord();
 
