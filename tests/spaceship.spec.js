@@ -8,20 +8,29 @@ function trackErrors(page) {
   return errors;
 }
 
+async function startMission(page) {
+  await page.locator('#startMissionBtn').click();
+  await expect(page.locator('#startOverlay')).not.toHaveClass(/show/);
+}
+
 test.describe('spaceship spelling game', () => {
-  test('loads without errors', async ({ page }) => {
+  test('loads and starts without errors', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
 
     await expect(page.locator('#boostBtn')).toBeVisible();
+    await startMission(page);
+
     const state = await page.evaluate(() => RoboSpaceship.getState());
     expect(state.word).not.toBe('');
+    expect(state.state).toBe('playing');
     expect(errors).toEqual([]);
   });
 
   test('automatically fires a laser', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
+    await startMission(page);
 
     await page.waitForTimeout(500);
     const state = await page.evaluate(() => RoboSpaceship.getState());
@@ -33,6 +42,7 @@ test.describe('spaceship spelling game', () => {
   test('boost button activates a three-second boost', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
+    await startMission(page);
 
     await page.locator('#boostBtn').click();
     const state = await page.evaluate(() => RoboSpaceship.getState());
@@ -45,6 +55,7 @@ test.describe('spaceship spelling game', () => {
   test('laser destroys an asteroid without losing HP', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
+    await startMission(page);
 
     await page.evaluate(() => {
       const state = RoboSpaceship.getState();
@@ -64,6 +75,7 @@ test.describe('spaceship spelling game', () => {
   test('arrow keys move the spaceship', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
+    await startMission(page);
 
     const before = await page.evaluate(() => RoboSpaceship.getState().shipX);
     await page.keyboard.down('ArrowRight');

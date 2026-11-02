@@ -197,9 +197,6 @@ html, body {
 	background: rgba(3, 8, 20, .82);
 	padding: 18px;
 }
-#levelModal[style*="grid"] {
-	display: grid;
-}
 .level-card {
 	width: min(460px, 94vw);
 	background: #fffdf5;
@@ -564,7 +561,7 @@ html, body {
 	}
 
 	function fireLaser() {
-		if (isBusy || gameState !== 'playing') return;
+		if (gameState !== 'playing') return;
 		sounds.click();
 		lasers.push({ x: shipX, y: canvasHeight - 115 });
 	}
