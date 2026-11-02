@@ -65,8 +65,11 @@ test.describe('chapter alignment', () => {
     await page.locator('#settingsBtn').click();
 
     const question = await page.locator('#gateQuestion').textContent();
-    const [left, right] = question.split('×').map((value) => Number(value.trim()));
-    await page.locator('#gateAnswer').fill(String(left * right));
+    const match = question.match(/(\d+)\s*\u00d7\s*(\d+)/);
+    expect(match).not.toBeNull();
+
+    const answer = Number(match[1]) * Number(match[2]);
+    await page.locator('#gateAnswer').fill(String(answer));
     await page.locator('#gateCheckBtn').click();
 
     await expect(page.locator('#parentSettings')).toBeVisible();

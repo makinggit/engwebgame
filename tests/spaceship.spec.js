@@ -19,13 +19,14 @@ test.describe('spaceship spelling game', () => {
     expect(errors).toEqual([]);
   });
 
-  test('space key fires a laser', async ({ page }) => {
+  test('automatically fires a laser', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
 
-    await page.keyboard.press('Space');
+    await page.waitForTimeout(500);
     const state = await page.evaluate(() => RoboSpaceship.getState());
-    expect(state.lasers).toBe(1);
+
+    expect(state.lasers).toBeGreaterThanOrEqual(1);
     expect(errors).toEqual([]);
   });
 
