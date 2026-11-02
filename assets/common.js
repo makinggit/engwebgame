@@ -1,4 +1,4 @@
-﻿/* Robo-Monster Spelling Academy - shared utilities */
+/* Robo-Monster Spelling Academy - shared utilities */
 (function (global) {
 	'use strict';
 
@@ -63,6 +63,13 @@ function goTo(path, level, stars, extra) {
 }
 
 let audioCtx;
+let popupTimer;
+
+function getLetterPositions(word) {
+	return [...String(word)]
+		.map((letter, index) => ({ letter, index }))
+		.filter((item) => item.letter !== ' ');
+}
 
 function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 	try {
@@ -106,8 +113,8 @@ const sounds = {
 	win: () => [523, 659, 784, 1047].forEach((f, i) => managedTimeout(() => tone(f, 0.13, 'sine', 0.07), i * 110)),
 	level: () => [523, 659, 784, 1047, 1319].forEach((f, i) => managedTimeout(() => tone(f, 0.17, 'triangle', 0.08), i * 100)),
     pop: () => { if (audioCtx && audioCtx.state === "running") tone(740, 0.055, "triangle", 0.035); },
-	star: () => [880, 1175, 1568].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'triangle', 0.06), i * 90)),
-	sticker: () => [660, 880, 1100].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'triangle', 0.06), i * 90)),
+	star: () => [880, 1175, 1568].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'sine', 0.07), i * 90)),
+	sticker: () => [660, 880, 1100].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'triangle', 0.08), i * 90)),
 };
 
 function say(text, stop = true) {
@@ -238,7 +245,7 @@ function renderMiniWord(matchedIndex = -1) {
 function startBonusMode(mode) {
     console.log('common startBonusMode 00:' + mode);
     bonusWord = nextWord().word;
-    bonusRemaining = bonusWord.split("");
+    bonusRemaining = bonusWord.split("").filter((letter) => letter !== " ");
     $("bonusTitle").textContent = {
         fish: "🐟 Fish for Letters",
         ghost: "👻 Ghost Letter Zap",
@@ -288,12 +295,7 @@ function showStickerPopup(sticker, levelNumber) {
 	overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:10000;';
 	const card = document.createElement('div');
 	card.style.cssText = 'background:#fffdf5;border:6px solid #7c5cff;border-radius:28px;padding:24px;text-align:center;box-shadow:0 20px 45px rgba(0,0,0,.25);max-width:min(92vw,360px);';
-	card.innerHTML = `
-		<div style="font-size:72px;line-height:1;">${sticker.emoji}</div>
-		<div style="font:900 24px 'Trebuchet MS',sans-serif;color:#5b2a86;margin-top:8px;">${sticker.name}</div>
-		<div style="font:800 16px 'Trebuchet MS',sans-serif;color:#666;margin-top:4px;">Level ${levelNumber} reward</div>
-		<button id="stickerGiftBtn" type="button" style="margin-top:16px;border:0;border-radius:999px;padding:14px 22px;font:900 18px 'Trebuchet MS',sans-serif;background:#ffd166;color:#333;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.16);">🎁 Go to Gift Page</button>
-	`;
+	card.innerHTML = `\n		<div style="font-size:72px;line-height:1;">${sticker.emoji}</div>\n		<div style="font:900 24px 'Trebuchet MS',sans-serif;color:#5b2a86;margin-top:8px;">${sticker.name}</div>\n		<div style="font:800 16px 'Trebuchet MS',sans-serif;color:#666;margin-top:4px;">Level ${levelNumber} reward</div>\n		<button id="stickerGiftBtn" type="button" style="margin-top:16px;border:0;border-radius:999px;padding:14px 22px;font:900 18px 'Trebuchet MS',sans-serif;background:#ffd166;color:#333;cursor:pointer;box-shadow:0 6px 0 rgba(0,0,0,.16);">🎁 Go to Gift Page</button>\n	`;
 	overlay.appendChild(card);
 	document.body.appendChild(overlay);
 	if (card.animate) {
@@ -391,6 +393,7 @@ global.RoboCommon = {
 	goTo,
 	tone,
 	managedTimeout,
+	getLetterPositions,
 	sounds,
 	say,
 	spellWord,

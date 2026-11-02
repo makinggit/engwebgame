@@ -1,4 +1,4 @@
-﻿/* Robo-Monster Spelling Academy - central word list */
+/* Robo-Monster Spelling Academy - central word list */
 (function (global) {
 	'use strict';
 
@@ -31,6 +31,29 @@
 		{ chapter: 2, difficulty: 1, word: 'uncle', emoji: '👨‍🦰', clue: ''},
 		{ chapter: 2, difficulty: 1, word: 'parents', emoji: '👪', clue: ''},
 		{ chapter: 2, difficulty: 1, word: 'son', emoji: '👨‍👦', clue: ''},
+		{ chapter: 3, difficulty: 1, word: 'glue stick', emoji: '🧴', clue: 'You use it to stick paper together.'},
+		{ chapter: 3, difficulty: 1, word: 'highlighter', emoji: '🖊️', clue: 'You use it to mark important words.'},
+		{ chapter: 3, difficulty: 1, word: 'ball', emoji: '⚽', clue: 'You can throw, kick or bounce it.'},
+		{ chapter: 3, difficulty: 1, word: 'balloon', emoji: '🎈', clue: 'It is filled with air and can float.'},
+		{ chapter: 3, difficulty: 1, word: 'bicycle', emoji: '🚲', clue: 'It has two wheels and you pedal it.'},
+		{ chapter: 3, difficulty: 1, word: 'doll', emoji: '🪆', clue: 'It is a small toy that looks like a person.'},
+		{ chapter: 3, difficulty: 1, word: 'kite', emoji: '🪁', clue: 'You fly it in the wind with a string.'},
+		{ chapter: 3, difficulty: 1, word: 'robot', emoji: '🤖', clue: 'It is a machine that can move and work.'},
+		{ chapter: 3, difficulty: 1, word: 'teddy bear', emoji: '🧸', clue: 'It is a soft toy bear for cuddling.'},
+		{ chapter: 3, difficulty: 1, word: 'toy', emoji: '🧸', clue: 'Children play with it.'},
+		{ chapter: 3, difficulty: 1, word: 'car', emoji: '🚗', clue: 'It has four wheels and drives on roads.'},
+		{ chapter: 3, difficulty: 1, word: 'plane', emoji: '✈️', clue: 'It flies in the sky and carries people.'},
+		{ chapter: 3, difficulty: 1, word: 'one', emoji: '1️⃣', clue: 'It is the number after zero.'},
+		{ chapter: 3, difficulty: 1, word: 'two', emoji: '2️⃣', clue: 'It is the number after one.'},
+		{ chapter: 3, difficulty: 1, word: 'three', emoji: '3️⃣', clue: 'It is the number after two.'},
+		{ chapter: 3, difficulty: 1, word: 'four', emoji: '4️⃣', clue: 'It is the number after three.'},
+		{ chapter: 3, difficulty: 1, word: 'five', emoji: '5️⃣', clue: 'It is the number after four.'},
+		{ chapter: 3, difficulty: 1, word: 'six', emoji: '6️⃣', clue: 'It is the number after five.'},
+		{ chapter: 3, difficulty: 1, word: 'seven', emoji: '7️⃣', clue: 'It is the number after six.'},
+		{ chapter: 3, difficulty: 1, word: 'eight', emoji: '8️⃣', clue: 'It is the number after seven.'},
+		{ chapter: 3, difficulty: 1, word: 'nine', emoji: '9️⃣', clue: 'It is the number after eight.'},
+		{ chapter: 3, difficulty: 1, word: 'ten', emoji: '🔟', clue: 'It is the number after nine.'},
+		{ chapter: 3, difficulty: 1, word: 'zero', emoji: '0️⃣', clue: 'It means no things or nothing.'},
 	];
 	
 	const SENTENCE_LIST = [
