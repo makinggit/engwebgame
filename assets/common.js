@@ -64,6 +64,9 @@ function goTo(path, level, stars, extra) {
 
 let audioCtx;
 let popupTimer;
+let nextMode = 'spell';
+let bonusWord = '';
+let bonusRemaining = [];
 
 function getLetterPositions(word) {
 	return [...String(word)]
@@ -129,7 +132,7 @@ const sounds = {
 	},
 	win: () => [523, 659, 784, 1047].forEach((f, i) => managedTimeout(() => tone(f, 0.13, 'sine', 0.07), i * 110)),
 	level: () => [523, 659, 784, 1047, 1319].forEach((f, i) => managedTimeout(() => tone(f, 0.17, 'triangle', 0.08), i * 100)),
-    pop: () => { if (audioCtx && audioCtx.state === "running") tone(740, 0.055, "triangle", 0.035); },
+	pop: () => { if (audioCtx && audioCtx.state === "running") tone(740, 0.055, "triangle", 0.035); },
 	star: () => [880, 1175, 1568].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'sine', 0.07), i * 90)),
 	sticker: () => [660, 880, 1100].forEach((f, i) => managedTimeout(() => tone(f, 0.12, 'triangle', 0.08), i * 90)),
 };
@@ -158,10 +161,12 @@ function spellWord(word) {
 	return word + '. ' + word.split('').join('-') + ' . ' + word + '. ';
 }
 
+// Unbiased Fisher-Yates shuffle: every permutation is equally likely,
+// so the correct letter can appear in any lane.
 function shuffle(items) {
 	const copy = [...items];
 	for (let i = copy.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (copy.length - i));
+		const j = Math.floor(Math.random() * (i + 1));
 		[copy[i], copy[j]] = [copy[j], copy[i]];
 	}
 	return copy;
@@ -252,35 +257,30 @@ function nextWord() {
 	return wordDeck.pop();
 }
 function renderMiniWord(matchedIndex = -1) {
-    const target = $("miniWord");
-    target.innerHTML = "";
-    [...bonusWord].forEach((letter, i) => {
-        const span = document.createElement("span");
-        span.textContent = letter;
-        span.className = i <= matchedIndex ? "matched-letter" : "";
-        target.appendChild(span);
-    });
+	const target = $("miniWord");
+	target.innerHTML = "";
+	[...bonusWord].forEach((letter, i) => {
+		const span = document.createElement("span");
+		span.textContent = letter;
+		span.className = i <= matchedIndex ? "matched-letter" : "";
+		target.appendChild(span);
+	});
 }
 function startBonusMode(mode) {
-    console.log('common startBonusMode 00:' + mode);
-    bonusWord = nextWord().word;
-    bonusRemaining = bonusWord.split("").filter((letter) => letter !== " ");
-    $("bonusTitle").textContent = {
-        fish: "🐟 Fish for Letters",
-        ghost: "👻 Ghost Letter Zap",
-        race: "🏃 Rainbow Race and Chase",
-    }[mode];
-	console.log("mode:" + mode);
-    $("bonusStory").textContent = modeStories[mode];
-	console.log("modeStories[mode]:" + modeStories[mode]);
-    renderMiniWord(-1);
-    $("bonusStatus").textContent = "Find the first letter: " + bonusRemaining[0];
-    say(spellWord(bonusWord));
-    console.log(spellWord(bonusWord))
-    buildBonus();
+	bonusWord = nextWord().word;
+	bonusRemaining = bonusWord.split("").filter((letter) => letter !== " ");
+	$("bonusTitle").textContent = {
+		fish: "🐟 Fish for Letters",
+		ghost: "👻 Ghost Letter Zap",
+		race: "🏃 Rainbow Race and Chase",
+	}[mode];
+	$("bonusStory").textContent = modeStories[mode];
+	renderMiniWord(-1);
+	$("bonusStatus").textContent = "Find the first letter: " + bonusRemaining[0];
+	say(spellWord(bonusWord));
+	buildBonus();
 }
 function activateMode(mode) {
-	console.log('activateMode ' + mode);
 	if (typeof timers !== 'undefined' && timers && typeof timers.clearAll === 'function') {
 		timers.clearAll();
 	}
