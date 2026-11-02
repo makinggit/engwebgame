@@ -120,24 +120,18 @@ html, body {
 #flash.on {
 	opacity: 1;
 }
-#startOverlay,
 #wordPop {
 	position: fixed;
 	inset: 0;
 	z-index: 20;
 	display: none;
 	place-items: center;
-	background: rgba(3, 8, 20, .82);
+	background: rgba(3, 8, 20, .55);
 	padding: 18px;
 }
-#startOverlay.show,
 #wordPop.show {
 	display: grid;
 }
-#startOverlay {
-	cursor: pointer;
-}
-.start-card,
 .word-card {
 	width: min(440px, 94vw);
 	background: #fffdf5;
@@ -147,24 +141,18 @@ html, body {
 	padding: 22px;
 	text-align: center;
 }
-.start-card h2,
 .word-card .bigword {
 	margin: 8px 0;
+	font: 900 42px "Trebuchet MS", system-ui;
 }
-.start-card p,
 .word-card .small {
 	font: 800 15px system-ui;
 	color: #5b6b8c;
 }
-.start-card button {
-	min-height: 56px;
-	min-width: 200px;
-	border: 4px solid #64e0ff;
-	border-radius: 20px;
-	background: linear-gradient(180deg, #1c6ea3, #0b2c4d);
-	color: #d9f6ff;
-	font: 900 20px "Trebuchet MS", system-ui;
-	cursor: pointer;
+.word-card .close-note {
+	margin-top: 10px;
+	font: 800 13px system-ui;
+	color: #7b879c;
 }
 #celebration {
 	position: fixed;
@@ -225,7 +213,7 @@ html, body {
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Choose a position, then shoot the correct letters"></canvas>
+<canvas id="game" aria-label="Shoot the correct letters"></canvas>
 
 <div id="hud">
 	<div id="topRow">
@@ -244,14 +232,6 @@ html, body {
 <button id="boostBtn" type="button">🚀 Boost</button>
 <div id="flash"></div>
 
-<div id="startOverlay" class="show">
-	<div class="start-card">
-		<h2>🚀 Choose Your Position</h2>
-		<p>Drag anywhere to move your spaceship to a safe starting position. Then press Start Mission to begin.</p>
-		<button id="startMissionBtn" type="button">Start Mission</button>
-	</div>
-</div>
-
 <div id="celebration">
 	<div>🎉 Well done!<br><span id="celebrationWord"></span></div>
 </div>
@@ -260,7 +240,7 @@ html, body {
 	<div class="word-card">
 		<div class="small">Listen to the word:</div>
 		<div class="bigword" id="popWord">rocket</div>
-		<div class="close-note">Tap anywhere to close • closes automatically in 5 seconds</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
 	</div>
 </div>
 
@@ -305,7 +285,6 @@ html, body {
 		getLetterPositions,
 		getChapterForLevel,
 		awardWin,
-		showWordPopup,
 		closeWordPopup,
 	} = RoboCommon;
 
@@ -326,6 +305,7 @@ html, body {
 	const STAR_SPEED = 130;
 	const LASER_SPEED = 620;
 	const LASER_FIRE_INTERVAL = .35;
+	const WORD_POPUP_SECONDS = 8;
 
 	let hp = 5;
 	let current = null;
@@ -347,7 +327,9 @@ html, body {
 	let canvasWidth = 0;
 	let canvasHeight = 0;
 	let starfield = [];
-	let gameState = 'positioning';
+	let gameState = 'playing';
+	let isBusy = false;
+	let wordPopupTimer = null;
 	const keys = { left: false, right: false };
 
 	window.current = null;
@@ -476,6 +458,15 @@ html, body {
 		});
 	}
 
+	function showTargetWordPopup() {
+		clearTimeout(wordPopupTimer);
+		$('popWord').textContent = current.word;
+		$('wordPop').classList.add('show');
+		sounds.hear();
+		say(spellWord(current.word));
+		wordPopupTimer = setTimeout(closeWordPopup, WORD_POPUP_SECONDS * 1000);
+	}
+
 	function startWord() {
 		const chapter = getChapterForLevel(level_);
 		const words = RoboWords.getWordsByChapter(chapter);
@@ -499,7 +490,7 @@ html, body {
 		$('hp').textContent = hp;
 		renderWord();
 		spawnLetters();
-		showWordPopup();
+		showTargetWordPopup();
 	}
 
 	function damageShip() {
@@ -815,15 +806,16 @@ html, body {
 		goTo('./gift.html', level_, stars_);
 	});
 
-	$('wordPop').addEventListener('click', closeWordPopup);
-	$('wordPop').addEventListener('keydown', (event) => {
-		if (event.key === 'Enter' || event.key === ' ') closeWordPopup();
+	$('wordPop').addEventListener('click', () => {
+		clearTimeout(wordPopupTimer);
+		closeWordPopup();
 	});
 
-	$('startMissionBtn').addEventListener('click', () => {
-		sounds.hear();
-		$('startOverlay').classList.remove('show');
-		startWord();
+	$('wordPop').addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			clearTimeout(wordPopupTimer);
+			closeWordPopup();
+		}
 	});
 
 	document.addEventListener('keydown', (event) => {
@@ -853,6 +845,7 @@ html, body {
 	$('stars').textContent = stars_;
 	shipX = canvasWidth / 2;
 	targetShipX = shipX;
+	startWord();
 	requestAnimationFrame(frame);
 
 	window.RoboSpaceship = {
