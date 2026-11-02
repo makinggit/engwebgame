@@ -294,6 +294,7 @@ html, body {
 		const words = RoboWords.getWordsByChapter(chapter);
 		const pool = words.filter((item) => item.word !== previousWord);
 		current = pool[Math.floor(Math.random() * pool.length)] || words[0];
+		window.current = current;
 		previousWord = current.word;
 		letterPositions = getLetterPositions(current.word);
 		letterIndex = 0;
