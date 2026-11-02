@@ -298,6 +298,7 @@ html, body {
 	const canvas = $("game");
 	const ctx = canvas.getContext("2d");
 	const PARENT_SETTINGS_KEY = 'roboParentSettings';
+	const LANE_COUNT = 6;
 	const NORMAL_SPEED = 110;
 	const HIGH_SPEED = 330;
 	const LETTER_FALL_SPEED = 65;
@@ -341,6 +342,7 @@ html, body {
 	let wordPopupTimer = null;
 	let celebrationTimer = null;
 	let nextWordTimer = null;
+	let wordLaneParity = 0;
 	const keys = { left: false, right: false };
 
 	window.current = null;
@@ -408,7 +410,8 @@ html, body {
 			});
 		}
 
-		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX || canvasWidth / 3));
+		// Start between lane 0 and lane 1 so the ship is not aligned with a letter lane.
+		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX || canvasWidth / 6));
 		targetShipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, targetShipX || shipX));
 		shipY = canvasHeight - 90;
 
@@ -452,12 +455,16 @@ html, body {
 		const wanted = currentTargetLetter();
 		const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('').filter((letter) => letter !== wanted);
 		const choices = shuffle([wanted, ...shuffle(alphabet).slice(0, 2)]);
-		const positions = shuffle([0, 1, 2]);
+
+		// Alternate between even lanes (0,2,4) and odd lanes (1,3,5) for each word,
+		// so the next word's letters never line up with the ship's previous lane.
+		const laneSet = wordLaneParity === 0 ? [0, 2, 4] : [1, 3, 5];
+		const lanes = shuffle(laneSet);
 
 		fallingLetters = choices.map((letter, index) => ({
 			letter,
-			x: (positions[index] + .5) * (canvasWidth / 3),
-			y: 260 - positions[index] * 45,
+			x: (lanes[index] + .5) * (canvasWidth / LANE_COUNT),
+			y: 260 - index * 45,
 			vy: LETTER_FALL_SPEED
 		}));
 	}
@@ -499,6 +506,9 @@ html, body {
 		laserTimer = 0;
 		gameState = 'playing';
 		shipY = canvasHeight - 90;
+
+		// Alternate lane parity for each new word.
+		wordLaneParity = 1 - wordLaneParity;
 
 		$('emoji').textContent = current.emoji;
 		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
@@ -981,7 +991,7 @@ html, body {
 
 	$('level').textContent = level_;
 	$('stars').textContent = stars_;
-	shipX = canvasWidth / 3;
+	shipX = canvasWidth / 6;
 	targetShipX = shipX;
 	shipY = canvasHeight - 90;
 	startWord();

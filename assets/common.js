@@ -67,6 +67,7 @@ let popupTimer;
 let nextMode = 'spell';
 let bonusWord = '';
 let bonusRemaining = [];
+let currentLevelStory = '';
 
 function getLetterPositions(word) {
 	return [...String(word)]
@@ -358,6 +359,7 @@ function awardWin(word) {
 function showLevelUp() {
 	sounds.level();
 	const story = RoboStory.getStoryPage(level).text;
+	currentLevelStory = story;
 	nextMode = ['spell', 'fish', 'ghost', 'race', 'mole', 'blank', 'spaceship'][Math.floor(Math.random() * 7)];
 	nextGamePath = gamePaths[nextMode];
 	$('levelMessage').textContent = 'You collected 3 stars and reached Level ' + level + '!';
@@ -372,6 +374,16 @@ function startNextGame() {
 function openLevelStory() {
 	goTo('story.html', level, stars);
 }
+function hearLevelStory() {
+	sounds.hear();
+	if (currentLevelStory) {
+		say(currentLevelStory);
+	} else {
+		const story = RoboStory.getStoryPage(level).text;
+		currentLevelStory = story;
+		say(story);
+	}
+}
 
 // Level Up's Start button goes directly to the assigned next game,
 // rather than returning to game_mode.html.
@@ -383,6 +395,11 @@ document.addEventListener('click', (event) => {
 	sounds.hear();
 	startNextGame();
 }, true);
+
+const hearLevelStoryBtn = $('hearLevelStoryBtn');
+if (hearLevelStoryBtn) {
+	hearLevelStoryBtn.addEventListener('click', hearLevelStory);
+}
 
 const gameModeBadge = $('game_mode_badge');
 if (gameModeBadge) {
@@ -441,5 +458,6 @@ global.RoboCommon = {
 	showLevelUp,
 	startNextGame,
 	openLevelStory,
+	hearLevelStory,
 };
 })(window);
