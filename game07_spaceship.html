@@ -310,7 +310,7 @@ html, body {
 	const LETTER_RADIUS = 30;
 	const ASTEROID_RADIUS = 26;
 	const STAR_SPEED = 130;
-	const LASER_SPEED = 620;
+	const LASER_SPEED = 310;
 	const LASER_FIRE_INTERVAL = .35;
 	const WORD_POPUP_SECONDS = 8;
 	const DOCK_SPEED = 2600;
@@ -357,6 +357,22 @@ html, body {
 	window.wordDeck = [];
 	window.stars = stars_;
 	window.level = level_;
+
+	// Safari-compatible rounded rectangle path (ctx.roundRect is unavailable
+	// in older Safari versions and would throw during draw).
+	function roundRectPath(c, x, y, w, h, r) {
+		c.beginPath();
+		c.moveTo(x + r, y);
+		c.lineTo(x + w - r, y);
+		c.arcTo(x + w, y, x + w, y + r, r);
+		c.lineTo(x + w, y + h - r);
+		c.arcTo(x + w, y + h, x + w - r, y + h, r);
+		c.lineTo(x + r, y + h);
+		c.arcTo(x, y + h, x, y + h - r, r);
+		c.lineTo(x, y + r);
+		c.arcTo(x, y, x + r, y, r);
+		c.closePath();
+	}
 
 	function readParentSettings() {
 		try {
@@ -743,8 +759,7 @@ html, body {
 		ctx.strokeStyle = '#64e0ff';
 		ctx.lineWidth = 3;
 		[-125, 125].forEach((offset) => {
-			ctx.beginPath();
-			ctx.roundRect(offset - 52, -22, 104, 44, 8);
+			roundRectPath(ctx, offset - 52, -22, 104, 44, 8);
 			ctx.fill();
 			ctx.stroke();
 		});
@@ -776,8 +791,7 @@ html, body {
 		ctx.fillStyle = body;
 		ctx.strokeStyle = '#64e0ff';
 		ctx.lineWidth = 5;
-		ctx.beginPath();
-		ctx.roundRect(-44, -44, 88, 88, 24);
+		roundRectPath(ctx, -44, -44, 88, 88, 24);
 		ctx.fill();
 		ctx.stroke();
 

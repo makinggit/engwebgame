@@ -94,7 +94,9 @@ function getChapterForLevel(level, chapterStartLevels = CHAPTER_START_LEVELS) {
 
 function tone(f = 440, d = 0.08, t = 'sine', v = 0.05) {
 	try {
-		audioCtx ||= new (global.AudioContext || global.webkitAudioContext)();
+		if (!audioCtx) {
+			audioCtx = new (global.AudioContext || global.webkitAudioContext)();
+		}
 		if (audioCtx.state === 'suspended') audioCtx.resume();
 		const o = audioCtx.createOscillator();
 		const g = audioCtx.createGain();
