@@ -48,6 +48,8 @@ html, body {
 	background: rgba(9, 16, 34, .82);
 	font: 800 14px system-ui;
 	white-space: nowrap;
+	pointer-events: auto;
+	cursor: pointer;
 }
 #wordRow {
 	display: flex;
@@ -118,9 +120,6 @@ html, body {
 #flash.on {
 	opacity: 1;
 }
-.hidden-badges {
-	display: none;
-}
 #wordPop {
 	position: fixed;
 	inset: 0;
@@ -178,18 +177,13 @@ html, body {
 </style>
 </head>
 <body>
-<div class="hidden-badges">
-	<div class="badge" id="game_mode_badge"></div>
-	<div class="badge" id="level_badge"></div>
-	<div class="badge" id="gift_badge"></div>
-</div>
-
 <canvas id="game" aria-label="Move the spaceship to collect the correct letter"></canvas>
 
 <div id="hud">
 	<div id="topRow">
-		<div class="badge">🚀 Level <span id="level">1</span></div>
-		<div class="badge">⭐ <span id="stars">0</span></div>
+		<div class="badge" id="game_mode_badge">🎮 Mode</div>
+		<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+		<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
 		<div class="badge">💙 <span id="hp">5</span></div>
 	</div>
 	<div id="wordRow">
@@ -225,6 +219,7 @@ html, body {
 		$,
 		readProgress,
 		saveProgress,
+		goTo,
 		sounds,
 		say,
 		spellWord,
@@ -240,12 +235,16 @@ html, body {
 	const ctx = canvas.getContext("2d");
 	const PARENT_SETTINGS_KEY = 'roboParentSettings';
 	const NORMAL_SPEED = 110;
-	const HIGH_SPEED = 230;
+	const HIGH_SPEED = 320;
 	const LETTER_FALL_SPEED = 65;
+	const ASTEROID_FALL_SPEED = 95;
+	const ASTEROID_SPAWN_INTERVAL = 2.2;
 	const BOOST_SECONDS = 3;
 	const SHIP_WIDTH = 54;
 	const SHIP_HEIGHT = 46;
 	const LETTER_RADIUS = 30;
+	const ASTEROID_RADIUS = 26;
+	const STAR_SPEED = 130;
 
 	let hp = 5;
 	let current = null;
@@ -253,6 +252,8 @@ html, body {
 	let letterIndex = 0;
 	let previousWord = '';
 	let fallingLetters = [];
+	let asteroids = [];
+	let asteroidTimer = 0;
 	let shipX = 0;
 	let targetShipX = 0;
 	let boostUntil = 0;
@@ -264,6 +265,7 @@ html, body {
 	let canvasHeight = 0;
 	let starfield = [];
 	let isBusy = false;
+	const keys = { left: false, right: false };
 
 	function readParentSettings() {
 		try {
@@ -295,6 +297,7 @@ html, body {
 
 	function resize() {
 		const dpr = Math.min(window.devicePixelRatio || 1, 2);
+		const previousWidth = canvasWidth;
 		canvasWidth = canvas.clientWidth;
 		canvasHeight = canvas.clientHeight;
 		canvas.width = Math.round(canvasWidth * dpr);
@@ -302,14 +305,30 @@ html, body {
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 		if (!starfield.length) {
-			for (let i = 0; i < 90; i++) {
+			for (let i = 0; i < 110; i++) {
 				starfield.push({
 					x: Math.random() * canvasWidth,
 					y: Math.random() * canvasHeight,
-					r: Math.random() * 1.6 + .5,
-					speed: Math.random() * 35 + 15
+					r: Math.random() * 1.4 + .6
 				});
 			}
+		} else {
+			starfield.forEach((star) => {
+				star.x = Math.min(star.x, canvasWidth);
+				star.y = Math.min(star.y, canvasHeight);
+			});
+		}
+
+		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX || canvasWidth / 2));
+		targetShipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, targetShipX || shipX));
+
+		if (previousWidth && canvasWidth !== previousWidth) {
+			fallingLetters.forEach((item) => {
+				item.x = Math.min(item.x, canvasWidth - LETTER_RADIUS);
+			});
+			asteroids.forEach((item) => {
+				item.x = Math.min(item.x, canvasWidth - ASTEROID_RADIUS);
+			});
 		}
 	}
 
@@ -349,9 +368,18 @@ html, body {
 			letter,
 			x: (positions[index] + .5) * (canvasWidth / 3),
 			y: -40 - positions[index] * 45,
-			vy: LETTER_FALL_SPEED,
-			spin: Math.random() * Math.PI * 2
+			vy: LETTER_FALL_SPEED
 		}));
+	}
+
+	function spawnAsteroid() {
+		asteroids.push({
+			x: ASTEROID_RADIUS + Math.random() * (canvasWidth - ASTEROID_RADIUS * 2),
+			y: -ASTEROID_RADIUS * 2,
+			vy: ASTEROID_FALL_SPEED,
+			spin: Math.random() * Math.PI * 2,
+			shape: Array.from({ length: 8 }, () => .75 + Math.random() * .45)
+		});
 	}
 
 	function startWord() {
@@ -366,6 +394,8 @@ html, body {
 		hp = 5;
 		boostUntil = 0;
 		isBusy = false;
+		asteroids = [];
+		asteroidTimer = 0;
 
 		$('emoji').textContent = current.emoji;
 		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
@@ -373,6 +403,23 @@ html, body {
 		renderWord();
 		spawnLetters();
 		showWordPopup();
+	}
+
+	function damageShip() {
+		sounds.wrong();
+		hp = Math.max(0, hp - 1);
+		$('hp').textContent = hp;
+		$('flash').classList.add('on');
+		setTimeout(() => $('flash').classList.remove('on'), 180);
+
+		if (hp === 0) {
+			isBusy = true;
+			fallingLetters = [];
+			asteroids = [];
+			$('hint').textContent = 'Try this word again.';
+			say('Try this word again. The word is ' + spellWord(current.word));
+			setTimeout(startWord, 1500);
+		}
 	}
 
 	function awardWord() {
@@ -409,6 +456,7 @@ html, body {
 			if (letterIndex >= letterPositions.length) {
 				isBusy = true;
 				fallingLetters = [];
+				asteroids = [];
 				$('hint').textContent = 'Well done! ' + current.word;
 				say('Well done! ' + current.word);
 				setTimeout(awardWord, 900);
@@ -418,37 +466,32 @@ html, body {
 			$('hint').textContent = 'Great! Find ' + currentTargetLetter().toUpperCase();
 			spawnLetters();
 		} else {
-			sounds.wrong();
 			saveWordStatistic(current.word, false);
-			hp = Math.max(0, hp - 1);
-			$('hp').textContent = hp;
-			$('flash').classList.add('on');
-			setTimeout(() => $('flash').classList.remove('on'), 180);
+			damageShip();
 
-			if (hp === 0) {
-				isBusy = true;
-				fallingLetters = [];
-				$('hint').textContent = 'Try this word again.';
-				say('Try this word again. The word is ' + spellWord(current.word));
-				setTimeout(startWord, 1500);
-				return;
+			if (!isBusy) {
+				$('hint').textContent = 'Try again. Find ' + wanted.toUpperCase();
+				say('Try again. Find ' + wanted);
 			}
-
-			$('hint').textContent = 'Try again. Find ' + wanted.toUpperCase();
-			say('Try again. Find ' + wanted);
 		}
 	}
 
 	function update(dt) {
 		const boosting = clock < boostUntil;
+		const speed = boosting ? HIGH_SPEED : NORMAL_SPEED;
 
 		$('boostBtn').classList.toggle('active', boosting);
 
-		shipX += (targetShipX - shipX) * Math.min(1, dt * (boosting ? 14 : 9));
+		if (keys.left) targetShipX -= speed * dt;
+		if (keys.right) targetShipX += speed * dt;
+
+		targetShipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, targetShipX));
+		shipX += (targetShipX - shipX) * Math.min(1, dt * (boosting ? 16 : 10));
 		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX));
 
+		const starSpeed = STAR_SPEED * (boosting ? 3.2 : 1);
 		starfield.forEach((star) => {
-			star.y += star.speed * (boosting ? 3.2 : 1) * dt;
+			star.y += starSpeed * dt;
 			if (star.y > canvasHeight) {
 				star.y = -4;
 				star.x = Math.random() * canvasWidth;
@@ -456,9 +499,30 @@ html, body {
 		});
 
 		if (!isBusy) {
+			asteroidTimer += dt;
+			if (asteroidTimer >= ASTEROID_SPAWN_INTERVAL) {
+				asteroidTimer = 0;
+				spawnAsteroid();
+			}
+
+			asteroids.forEach((item) => {
+				item.y += item.vy * dt;
+				item.spin += dt;
+
+				const shipTop = canvasHeight - 90;
+				const dx = item.x - shipX;
+				const dy = item.y - (shipTop + SHIP_HEIGHT / 2);
+
+				if (!item.hit && Math.abs(dx) < ASTEROID_RADIUS + SHIP_WIDTH / 2 && Math.abs(dy) < ASTEROID_RADIUS + SHIP_HEIGHT / 2) {
+					item.hit = true;
+					damageShip();
+				}
+			});
+
+			asteroids = asteroids.filter((item) => !item.hit && item.y < canvasHeight + ASTEROID_RADIUS * 2);
+
 			fallingLetters.forEach((item) => {
 				item.y += item.vy * dt;
-				item.spin = (item.spin || 0) + dt;
 
 				const shipTop = canvasHeight - 90;
 				const dx = item.x - shipX;
@@ -496,6 +560,27 @@ html, body {
 		});
 		ctx.globalAlpha = 1;
 
+		asteroids.forEach((item) => {
+			ctx.save();
+			ctx.translate(item.x, item.y);
+			ctx.rotate(item.spin);
+			ctx.fillStyle = '#4b4438';
+			ctx.strokeStyle = '#8a7a5e';
+			ctx.lineWidth = 3;
+			ctx.beginPath();
+			item.shape.forEach((scale, index) => {
+				const angle = (index / item.shape.length) * Math.PI * 2;
+				const x = Math.cos(angle) * ASTEROID_RADIUS * scale;
+				const y = Math.sin(angle) * ASTEROID_RADIUS * scale;
+				if (index === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+			});
+			ctx.closePath();
+			ctx.fill();
+			ctx.stroke();
+			ctx.restore();
+		});
+
 		fallingLetters.forEach((item) => {
 			ctx.fillStyle = '#182c52';
 			ctx.strokeStyle = '#64e0ff';
@@ -521,7 +606,7 @@ html, body {
 			ctx.beginPath();
 			ctx.moveTo(-10, SHIP_HEIGHT / 2);
 			ctx.lineTo(10, SHIP_HEIGHT / 2);
-			ctx.lineTo(0, SHIP_HEIGHT / 2 + 34 + Math.random() * 12);
+			ctx.lineTo(0, SHIP_HEIGHT / 2 + 38 + Math.random() * 14);
 			ctx.closePath();
 			ctx.fill();
 		}
@@ -567,12 +652,52 @@ html, body {
 		boostUntil = Math.max(boostUntil, clock + BOOST_SECONDS);
 	});
 
+	$('game_mode_badge').addEventListener('click', () => {
+		sounds.hear();
+		goTo('./game_mode.html', level_, stars_);
+	});
+
+	$('level_badge').addEventListener('click', () => {
+		sounds.hear();
+		goTo('./story.html', level_, stars_);
+	});
+
+	$('gift_badge').addEventListener('click', () => {
+		sounds.hear();
+		goTo('./gift.html', level_, stars_);
+	});
+
 	$('wordPop').addEventListener('click', closeWordPopup);
 	$('wordPop').addEventListener('keydown', (event) => {
 		if (event.key === 'Enter' || event.key === ' ') closeWordPopup();
 	});
 
+	document.addEventListener('keydown', (event) => {
+		if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
+			keys.left = true;
+			event.preventDefault();
+		}
+		if (event.code === 'ArrowRight' || event.code === 'KeyD') {
+			keys.right = true;
+			event.preventDefault();
+		}
+		if (event.code === 'Space' || event.code === 'ArrowUp') {
+			if (event.target.tagName === 'BUTTON') return;
+			event.preventDefault();
+			if (!event.repeat) {
+				sounds.click();
+				boostUntil = Math.max(boostUntil, clock + BOOST_SECONDS);
+			}
+		}
+	});
+
+	document.addEventListener('keyup', (event) => {
+		if (event.code === 'ArrowLeft' || event.code === 'KeyA') keys.left = false;
+		if (event.code === 'ArrowRight' || event.code === 'KeyD') keys.right = false;
+	});
+
 	window.addEventListener('resize', resize);
+	window.addEventListener('orientationchange', () => setTimeout(resize, 120));
 	resize();
 
 	$('level').textContent = level_;
