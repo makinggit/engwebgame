@@ -120,21 +120,26 @@ html, body {
 #flash.on {
 	opacity: 1;
 }
+#startOverlay,
 #wordPop {
 	position: fixed;
 	inset: 0;
 	z-index: 20;
 	display: none;
 	place-items: center;
-	background: rgba(3, 8, 20, .78);
+	background: rgba(3, 8, 20, .82);
 	padding: 18px;
-	cursor: pointer;
 }
+#startOverlay.show,
 #wordPop.show {
 	display: grid;
 }
+#startOverlay {
+	cursor: pointer;
+}
+.start-card,
 .word-card {
-	width: min(420px, 94vw);
+	width: min(440px, 94vw);
 	background: #fffdf5;
 	color: #202452;
 	border: 5px solid #64e0ff;
@@ -142,18 +147,24 @@ html, body {
 	padding: 22px;
 	text-align: center;
 }
+.start-card h2,
+.word-card .bigword {
+	margin: 8px 0;
+}
+.start-card p,
 .word-card .small {
 	font: 800 15px system-ui;
 	color: #5b6b8c;
 }
-.word-card .bigword {
-	margin: 10px 0;
-	font: 900 34px "Trebuchet MS", system-ui;
-	letter-spacing: 2px;
-}
-.word-card .close-note {
-	font: 700 13px system-ui;
-	color: #5b6b8c;
+.start-card button {
+	min-height: 56px;
+	min-width: 200px;
+	border: 4px solid #64e0ff;
+	border-radius: 20px;
+	background: linear-gradient(180deg, #1c6ea3, #0b2c4d);
+	color: #d9f6ff;
+	font: 900 20px "Trebuchet MS", system-ui;
+	cursor: pointer;
 }
 #celebration {
 	position: fixed;
@@ -174,10 +185,50 @@ html, body {
 	text-align: center;
 	padding: 0 20px;
 }
+.hidden-legacy {
+	display: none;
+}
+#levelModal {
+	position: fixed;
+	inset: 0;
+	z-index: 30;
+	display: none;
+	place-items: center;
+	background: rgba(3, 8, 20, .82);
+	padding: 18px;
+}
+#levelModal[style*="grid"] {
+	display: grid;
+}
+.level-card {
+	width: min(460px, 94vw);
+	background: #fffdf5;
+	color: #202452;
+	border: 6px solid #7c5cff;
+	border-radius: 28px;
+	padding: 24px;
+	text-align: center;
+}
+.level-card .controls {
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-top: 14px;
+}
+.level-card button {
+	min-height: 50px;
+	padding: 10px 18px;
+	border: 3px solid #202452;
+	border-radius: 16px;
+	background: #ffd166;
+	font: 900 16px system-ui;
+	cursor: pointer;
+}
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Move the spaceship; it fires lasers automatically"></canvas>
+<canvas id="game" aria-label="Choose a position, then shoot the correct letters"></canvas>
 
 <div id="hud">
 	<div id="topRow">
@@ -196,6 +247,14 @@ html, body {
 <button id="boostBtn" type="button">🚀 Boost</button>
 <div id="flash"></div>
 
+<div id="startOverlay" class="show">
+	<div class="start-card">
+		<h2>🚀 Choose Your Position</h2>
+		<p>Drag anywhere to move your spaceship to a safe starting position. Then press Start Mission to begin.</p>
+		<button id="startMissionBtn" type="button">Start Mission</button>
+	</div>
+</div>
+
 <div id="celebration">
 	<div>🎉 Well done!<br><span id="celebrationWord"></span></div>
 </div>
@@ -206,6 +265,28 @@ html, body {
 		<div class="bigword" id="popWord">rocket</div>
 		<div class="close-note">Tap anywhere to close • closes automatically in 5 seconds</div>
 	</div>
+</div>
+
+<div id="levelModal">
+	<div class="level-card">
+		<div class="sparkles">✨ 🏆 ✨</div>
+		<h2>Level Up!</h2>
+		<p id="levelMessage"></p>
+		<article class="level-story" id="levelStory"></article>
+		<p id="nextModeMessage"></p>
+		<div class="controls">
+			<button id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button>
+			<button id="game_mode_next" type="button">Start Next Adventure!</button>
+		</div>
+	</div>
+</div>
+
+<div class="hidden-legacy">
+	<div id="bar"></div>
+	<div id="starTrack"></div>
+	<div id="progressNumber"></div>
+	<div id="message"></div>
+	<div id="speech"></div>
 </div>
 
 <script src="./assets/common.js"></script>
@@ -226,6 +307,7 @@ html, body {
 		shuffle,
 		getLetterPositions,
 		getChapterForLevel,
+		awardWin,
 		showWordPopup,
 		closeWordPopup,
 	} = RoboCommon;
@@ -268,8 +350,19 @@ html, body {
 	let canvasWidth = 0;
 	let canvasHeight = 0;
 	let starfield = [];
-	let isBusy = false;
+	let gameState = 'positioning';
 	const keys = { left: false, right: false };
+
+	window.current = null;
+	window.starsEl = $('stars');
+	window.levelEl = $('level');
+	window.bar = $('bar');
+	window.starTrack = $('starTrack');
+	window.progressNumber = $('progressNumber');
+	window.message = $('message');
+	window.speech = $('speech');
+	window.activeMode = 'spaceship';
+	window.wordDeck = [];
 
 	function readParentSettings() {
 		try {
@@ -402,6 +495,7 @@ html, body {
 		lasers = [];
 		asteroidTimer = 0;
 		laserTimer = 0;
+		gameState = 'playing';
 
 		$('emoji').textContent = current.emoji;
 		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
@@ -429,27 +523,18 @@ html, body {
 		}
 	}
 
-	function awardWord() {
-		stars_ += 1;
-		const levelUp = stars_ % 3 === 0;
-		if (levelUp) level_ += 1;
-
-		saveProgress(level_, stars_);
-		$('stars').textContent = stars_;
-		$('level').textContent = level_;
-		sounds.star();
-
-		$('celebrationWord').textContent = current.word + (levelUp ? ' · Level ' + level_ + '!' : '');
-		$('celebration').classList.add('show');
-
-		setTimeout(() => {
-			$('celebration').classList.remove('show');
-			startWord();
-		}, 1600);
+	function completeWord() {
+		isBusy = true;
+		fallingLetters = [];
+		asteroids = [];
+		lasers = [];
+		gameState = 'enteringBase';
+		$('hint').textContent = 'Returning to the Super Space Base!';
+		say('Well done! ' + current.word + '. Returning to the Super Space Base.');
 	}
 
 	function collectLetter(item) {
-		if (isBusy) return;
+		if (isBusy || gameState !== 'playing') return;
 
 		const wanted = currentTargetLetter();
 
@@ -461,13 +546,7 @@ html, body {
 			renderWord();
 
 			if (letterIndex >= letterPositions.length) {
-				isBusy = true;
-				fallingLetters = [];
-				asteroids = [];
-				lasers = [];
-				$('hint').textContent = 'Well done! ' + current.word;
-				say('Well done! ' + current.word);
-				setTimeout(awardWord, 900);
+				completeWord();
 				return;
 			}
 
@@ -485,7 +564,7 @@ html, body {
 	}
 
 	function fireLaser() {
-		if (isBusy) return;
+		if (isBusy || gameState !== 'playing') return;
 		sounds.click();
 		lasers.push({ x: shipX, y: canvasHeight - 115 });
 	}
@@ -511,6 +590,27 @@ html, body {
 				star.x = Math.random() * canvasWidth;
 			}
 		});
+
+		if (gameState === 'enteringBase') {
+			const baseX = canvasWidth - 95;
+			const baseY = canvasHeight - 170;
+			const dx = baseX - shipX;
+			const dy = baseY - (canvasHeight - 90);
+			const distance = Math.hypot(dx, dy);
+
+			if (distance < 12) {
+				gameState = 'awarding';
+				awardWin(current.word);
+			} else {
+				shipX += (dx / distance) * 220 * dt;
+			}
+
+			return;
+		}
+
+		if (gameState !== 'playing') return;
+
+		$('boostBtn').classList.toggle('active', boosting);
 
 		if (!isBusy) {
 			laserTimer += dt;
@@ -583,6 +683,24 @@ html, body {
 			ctx.fill();
 		});
 		ctx.globalAlpha = 1;
+
+		if (gameState === 'enteringBase' || gameState === 'awarding') {
+			const baseX = canvasWidth - 95;
+			const baseY = canvasHeight - 170;
+
+			ctx.fillStyle = '#1d2c55';
+			ctx.strokeStyle = '#64e0ff';
+			ctx.lineWidth = 4;
+			ctx.beginPath();
+			ctx.arc(baseX, baseY, 62, 0, Math.PI * 2);
+			ctx.fill();
+			ctx.stroke();
+
+			ctx.fillStyle = '#7dff9d';
+			ctx.font = '900 16px system-ui';
+			ctx.textAlign = 'center';
+			ctx.fillText('SUPER SPACE BASE', baseX, baseY + 92);
+		}
 
 		asteroids.forEach((item) => {
 			ctx.save();
@@ -705,6 +823,12 @@ html, body {
 		if (event.key === 'Enter' || event.key === ' ') closeWordPopup();
 	});
 
+	$('startMissionBtn').addEventListener('click', () => {
+		sounds.hear();
+		$('startOverlay').classList.remove('show');
+		startWord();
+	});
+
 	document.addEventListener('keydown', (event) => {
 		if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
 			keys.left = true;
@@ -732,7 +856,6 @@ html, body {
 	$('stars').textContent = stars_;
 	shipX = canvasWidth / 2;
 	targetShipX = shipX;
-	startWord();
 	requestAnimationFrame(frame);
 
 	window.RoboSpaceship = {
@@ -746,6 +869,7 @@ html, body {
 			lasers: lasers.length,
 			asteroids: asteroids.length,
 			letterIndex,
+			state: gameState,
 			word: current ? current.word : ''
 		})
 	};

@@ -179,9 +179,10 @@ const modeStories = {
 	race: "The Rainbow Race Story. A speedy word sprite raced through the school playground, carrying mixed-up letters. Catch each correct letter to chase the sprite along the rainbow track and recover the colours.",
 	mole: "The mole in the hole.",
 	blank: "Fill in blank",
+	spaceship: "The Super Space Base Story. Captain Momo flew a starship through a field of letter asteroids. Shoot the correct letters, avoid the rocks and return safely to the Super Space Base.",
 };
 
-const modeLabels = { spell: "Spelling", fish: "Fish", ghost: "Ghosts", race: "Race", mole: "Mole", blank: "Blank" };
+const modeLabels = { spell: "Spelling", fish: "Fish", ghost: "Ghosts", race: "Race", mole: "Mole", blank: "Blank", spaceship: "Spaceship" };
 const gamePaths = {
 	spell: "game01_spelling.html",
 	fish: "game02_fishing.html",
@@ -189,6 +190,7 @@ const gamePaths = {
 	race: "game04_racing.html",
 	mole: "game05_whack_a_mole.html",
 	blank: "game06_fill_blank.html",
+	spaceship: "game07_spaceship.html",
 };
 let nextGamePath = "game_mode.html";
 
@@ -345,8 +347,8 @@ function awardWin(word) {
 		showStickerPopup(getSticker(level), level);
 		levelEl.textContent = level;
 		managedTimeout(showLevelUp, 1450);
-	} else if (activeMode !== 'mole') {
-		// Mole mode manages its own next-round flow through initMole().
+	} else if (activeMode !== 'mole' && activeMode !== 'spaceship') {
+		// Mole and Spaceship manage their own next-round flow.
 		managedTimeout(() => {
 			if (activeMode === 'spell') chooseWord();
 			else startBonusMode(activeMode);
@@ -356,7 +358,7 @@ function awardWin(word) {
 function showLevelUp() {
 	sounds.level();
 	const story = RoboStory.getStoryPage(level).text;
-	nextMode = ['spell', 'fish', 'ghost', 'race', 'mole', 'blank'][Math.floor(Math.random() * 6)];
+	nextMode = ['spell', 'fish', 'ghost', 'race', 'mole', 'blank', 'spaceship'][Math.floor(Math.random() * 7)];
 	nextGamePath = gamePaths[nextMode];
 	$('levelMessage').textContent = 'You collected 3 stars and reached Level ' + level + '!';
 	$('levelStory').textContent = story;
