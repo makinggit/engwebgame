@@ -63,7 +63,8 @@ test.describe('spaceship spelling game', () => {
 
     await page.evaluate(() => {
       const state = RoboSpaceship.getState();
-      RoboSpaceship.spawnAsteroid(state.shipX, 400);
+      // Place the asteroid directly in the upward laser path.
+      RoboSpaceship.spawnAsteroid(state.shipX, state.shipY - 120);
       RoboSpaceship.fireLaser();
     });
 
