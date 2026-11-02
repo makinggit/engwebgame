@@ -177,7 +177,7 @@ html, body {
 </style>
 </head>
 <body>
-<canvas id="game" aria-label="Move the spaceship, fire lasers and collect the correct letters"></canvas>
+<canvas id="game" aria-label="Move the spaceship; it fires lasers automatically"></canvas>
 
 <div id="hud">
 	<div id="topRow">
@@ -246,6 +246,7 @@ html, body {
 	const ASTEROID_RADIUS = 26;
 	const STAR_SPEED = 130;
 	const LASER_SPEED = 620;
+	const LASER_FIRE_INTERVAL = .35;
 
 	let hp = 5;
 	let current = null;
@@ -256,6 +257,7 @@ html, body {
 	let asteroids = [];
 	let lasers = [];
 	let asteroidTimer = 0;
+	let laserTimer = 0;
 	let shipX = 0;
 	let targetShipX = 0;
 	let boostUntil = 0;
@@ -399,6 +401,7 @@ html, body {
 		asteroids = [];
 		lasers = [];
 		asteroidTimer = 0;
+		laserTimer = 0;
 
 		$('emoji').textContent = current.emoji;
 		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
@@ -510,6 +513,12 @@ html, body {
 		});
 
 		if (!isBusy) {
+			laserTimer += dt;
+			if (laserTimer >= LASER_FIRE_INTERVAL) {
+				laserTimer = 0;
+				fireLaser();
+			}
+
 			asteroidTimer += dt;
 			if (asteroidTimer >= ASTEROID_SPAWN_INTERVAL) {
 				asteroidTimer = 0;
@@ -669,10 +678,7 @@ html, body {
 	}
 
 	canvas.addEventListener('pointermove', (event) => moveShip(event.clientX));
-	canvas.addEventListener('pointerdown', (event) => {
-		moveShip(event.clientX);
-		fireLaser();
-	});
+	canvas.addEventListener('pointerdown', (event) => moveShip(event.clientX));
 
 	$('boostBtn').addEventListener('click', () => {
 		sounds.click();
@@ -709,9 +715,7 @@ html, body {
 			event.preventDefault();
 		}
 		if (event.code === 'Space' || event.code === 'ArrowUp') {
-			if (event.target.tagName === 'BUTTON') return;
 			event.preventDefault();
-			if (!event.repeat) fireLaser();
 		}
 	});
 
