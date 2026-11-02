@@ -382,24 +382,35 @@ document.addEventListener('click', (event) => {
 	startNextGame();
 }, true);
 
-$('game_mode_badge').addEventListener('click', () => {
-	event.preventDefault();
-	event.stopImmediatePropagation();
-	sounds.hear();
-	goTo('./game_mode.html', level, stars);
-});
-$('level_badge').addEventListener('click', () => {
-	event.preventDefault();
-	event.stopImmediatePropagation();
-	sounds.hear();
-	goTo('./story.html', level, stars);
-});
-$('gift_badge').addEventListener('click', () => {
-	event.preventDefault();
-	event.stopImmediatePropagation();
-	sounds.hear();
-	goTo('./gift.html', level, stars);
-});
+const gameModeBadge = $('game_mode_badge');
+if (gameModeBadge) {
+	gameModeBadge.addEventListener('click', () => {
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		sounds.hear();
+		goTo('./game_mode.html', level, stars);
+	});
+}
+
+const levelBadge = $('level_badge');
+if (levelBadge) {
+	levelBadge.addEventListener('click', () => {
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		sounds.hear();
+		goTo('./story.html', level, stars);
+	});
+}
+
+const giftBadge = $('gift_badge');
+if (giftBadge) {
+	giftBadge.addEventListener('click', () => {
+		event.preventDefault();
+		event.stopImmediatePropagation();
+		sounds.hear();
+		goTo('./gift.html', level, stars);
+	});
+}
 
 global.RoboCommon = {
 	$,

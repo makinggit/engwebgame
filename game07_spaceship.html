@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#050914">
@@ -117,9 +118,18 @@ html, body {
 #flash.on {
 	opacity: 1;
 }
+.hidden-badges {
+	display: none;
+}
 </style>
 </head>
 <body>
+<div class="hidden-badges">
+	<div class="badge" id="game_mode_badge"></div>
+	<div class="badge" id="level_badge"></div>
+	<div class="badge" id="gift_badge"></div>
+</div>
+
 <canvas id="game" aria-label="Move the spaceship to collect the correct letter"></canvas>
 
 <div id="hud">
@@ -272,11 +282,11 @@ html, body {
 
 		fallingLetters = choices.map((letter, index) => ({
 			letter,
-				x: (positions[index] + .5) * (canvasWidth / 3),
-				y: -40 - positions[index] * 45,
-				vy: LETTER_FALL_SPEED,
-				spin: Math.random() * Math.PI * 2
-			}));
+			x: (positions[index] + .5) * (canvasWidth / 3),
+			y: -40 - positions[index] * 45,
+			vy: LETTER_FALL_SPEED,
+			spin: Math.random() * Math.PI * 2
+		}));
 	}
 
 	function startWord() {
