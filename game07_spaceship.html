@@ -628,8 +628,10 @@ html, body {
 		if (gameState !== 'playing') return;
 
 		const startY = shipY - 25;
-		// Laser range is half of the previous full travel distance.
-		const range = (startY - LASER_MIN_Y) / 2;
+		// Laser range is half of the previous full travel distance,
+		// and doubles while boosting.
+		const boosting = clock < boostUntil;
+		const range = ((startY - LASER_MIN_Y) / 2) * (boosting ? 2 : 1);
 
 		lasers.push({ x: shipX, y: startY, startY, range });
 	}
@@ -721,7 +723,7 @@ html, body {
 				});
 			});
 
-			// Remove lasers once they have travelled their (halved) range.
+			// Remove lasers once they have travelled their range.
 			lasers = lasers.filter((laser) => !laser.hit && (laser.startY - laser.y) < laser.range);
 			asteroids = asteroids.filter((item) => !item.hit && item.y < canvasHeight + ASTEROID_RADIUS * 2);
 			fallingLetters = fallingLetters.filter((item) => !item.collected && item.y < canvasHeight + 60);
