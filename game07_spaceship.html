@@ -559,6 +559,27 @@ html, body {
 		}
 
 		$('hint').textContent = 'Well done!';
+
+		// Award stars immediately on win; the base flight is only an animation.
+		awardWin(current.word);
+
+		// Sync local progress after common awardWin.
+		const progress = readProgress();
+		stars_ = progress.stars;
+		level_ = progress.level;
+		window.stars = stars_;
+		window.level = level_;
+		$('stars').textContent = stars_;
+		$('level').textContent = level_;
+
+		celebrationTimer = setTimeout(() => {
+			$('celebration').classList.remove('show');
+		}, 2600);
+
+		if (!willLevelUp) {
+			clearTimeout(nextWordTimer);
+			nextWordTimer = setTimeout(startWord, NEXT_WORD_DELAY);
+		}
 	}
 
 	function collectLetter(item) {
@@ -603,12 +624,15 @@ html, body {
 
 		$('boostBtn').classList.toggle('active', boosting);
 
-		if (keys.left) targetShipX -= speed * dt;
-		if (keys.right) targetShipX += speed * dt;
+		// User control is locked once the word is won.
+		if (gameState === 'playing') {
+			if (keys.left) targetShipX -= speed * dt;
+			if (keys.right) targetShipX += speed * dt;
 
-		targetShipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, targetShipX));
-		shipX += (targetShipX - shipX) * Math.min(1, dt * (boosting ? 16 : 10));
-		shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX));
+			targetShipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, targetShipX));
+			shipX += (targetShipX - shipX) * Math.min(1, dt * (boosting ? 16 : 10));
+			shipX = Math.max(SHIP_WIDTH / 2, Math.min(canvasWidth - SHIP_WIDTH / 2, shipX));
+		}
 
 		const starSpeed = STAR_SPEED * (boosting ? 3 : 1);
 		starfield.forEach((star) => {
@@ -620,6 +644,7 @@ html, body {
 		});
 
 		if (gameState === 'enteringBase') {
+			// Fly to the base as a celebration animation; stars were already awarded.
 			const dockX = canvasWidth / 2;
 			const dockY = 300;
 			const dx = dockX - shipX;
@@ -628,32 +653,9 @@ html, body {
 			const step = Math.min(distance, DOCK_SPEED * dt);
 
 			if (step >= distance) {
-				const willLevelUp = (stars_ + 1) % 3 === 0;
-				gameState = 'awarding';
+				gameState = 'docked';
 				shipX = dockX;
 				shipY = dockY;
-
-				// awardWin increments stars/level; on level-up it shows the sticker popup
-				// and then showLevelUp with the next-adventure modal.
-				awardWin(current.word);
-
-				// Sync local progress after common awardWin.
-				const progress = readProgress();
-				stars_ = progress.stars;
-				level_ = progress.level;
-				window.stars = stars_;
-				window.level = level_;
-				$('stars').textContent = stars_;
-				$('level').textContent = level_;
-
-				celebrationTimer = setTimeout(() => {
-					$('celebration').classList.remove('show');
-				}, 2600);
-
-				if (!willLevelUp) {
-					clearTimeout(nextWordTimer);
-					nextWordTimer = setTimeout(startWord, NEXT_WORD_DELAY);
-				}
 			} else {
 				shipX += (dx / distance) * step;
 				shipY += (dy / distance) * step;
@@ -835,7 +837,7 @@ html, body {
 		ctx.globalAlpha = 1;
 
 		// The space base is hidden during normal play and appears only after a win.
-		if (gameState === 'enteringBase' || gameState === 'awarding') {
+		if (gameState === 'enteringBase' || gameState === 'docked') {
 			drawSpaceBase();
 		}
 
@@ -928,6 +930,8 @@ html, body {
 	}
 
 	function moveShip(clientX) {
+		// Ignore user control after the word is won.
+		if (gameState !== 'playing') return;
 		targetShipX = clientX;
 	}
 
