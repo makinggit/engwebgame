@@ -20,7 +20,7 @@ test.describe('spaceship spelling game', () => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
 
-    await expect(page.locator('#boostBtn')).toBeVisible();
+    await expect(page.locator('#game_mode_badge')).toBeVisible();
     await waitForGameStart(page);
 
     const state = await page.evaluate(() => RoboSpaceship.getState());
@@ -43,12 +43,17 @@ test.describe('spaceship spelling game', () => {
     expect(errors).toEqual([]);
   });
 
-  test('boost button activates a three-second boost', async ({ page }) => {
+  test('tapping the spaceship activates a three-second boost', async ({ page }) => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
     await waitForGameStart(page);
 
-    await page.locator('#boostBtn').click();
+    const ship = await page.evaluate(() => {
+      const state = RoboSpaceship.getState();
+      return { x: state.shipX, y: state.shipY };
+    });
+
+    await page.mouse.click(ship.x, ship.y);
     const state = await page.evaluate(() => RoboSpaceship.getState());
 
     expect(state.boostUntil).toBeGreaterThan(state.clock);
