@@ -323,6 +323,7 @@ html, body {
 	let levelUpAwardTimer = null;
 	let wordLaneParity = 0;
 	let levelUpFlight = false;
+	let pointerBoostActive = false;
 	const keys = { left: false, right: false };
 
 	window.current = null;
@@ -835,9 +836,9 @@ html, body {
 	function draw() {
 		const boosting = clock < boostUntil;
 		const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-		gradient.addColorStop(0, '#050914');
+		gradient.addColorStop(0, boosting ? '#100000' : '#050914');
 		// Redshift effect while boosting.
-		gradient.addColorStop(1, boosting ? '#100000' : '#101a33');
+		gradient.addColorStop(1, boosting ? '#000000' : '#101a33');
 
 		ctx.fillStyle = gradient;
 		ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -997,7 +998,12 @@ html, body {
 		targetShipX = clientX;
 	}
 
-	canvas.addEventListener('pointermove', (event) => moveShip(event.clientX));
+	canvas.addEventListener('pointermove', (event) => {
+		// Ignore pointermove right after a letter/ship tap so the lane target is kept.
+		if (pointerBoostActive) return;
+		moveShip(event.clientX);
+	});
+
 	canvas.addEventListener('pointerdown', (event) => {
 		const x = event.clientX;
 		const y = event.clientY;
@@ -1005,6 +1011,7 @@ html, body {
 		// Tap the spaceship to boost.
 		if (Math.hypot(x - shipX, y - shipY) < 70) {
 			activateBoost();
+			pointerBoostActive = true;
 			return;
 		}
 
@@ -1014,11 +1021,20 @@ html, body {
 			if (Math.hypot(x - item.x, y - item.y) < LETTER_RADIUS + 12) {
 				targetShipX = item.x;
 				activateBoost();
+				pointerBoostActive = true;
 				return;
 			}
 		}
 
 		moveShip(x);
+	});
+
+	canvas.addEventListener('pointerup', () => {
+		pointerBoostActive = false;
+	});
+
+	canvas.addEventListener('pointercancel', () => {
+		pointerBoostActive = false;
 	});
 
 	$('game_mode_badge').addEventListener('click', () => {
