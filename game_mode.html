@@ -1,9 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#bdeaff">
 <title>Robo-Monster Spelling Academy</title>
@@ -86,6 +87,9 @@
 					<button class="mode-btn" data-mode="blank" type="button" id="game06_fill_blank">
 						<span class="mode-icon">🔤🧩</span>Blank Letters<br /><small>Fill in the Blank</small>
 					</button>
+					<button class="mode-btn" data-mode="spaceship" type="button" id="game07_spaceship">
+						<span class="mode-icon">🚀👾</span>Spaceship War<br /><small>Shoot the correct letters</small>
+					</button>
 				</div>
 			</div>
 		</div>
@@ -123,7 +127,8 @@ const modeTargets = {
 	game03_ghost_maze: './game03_ghost_maze.html',
 	game04_racing: './game04_racing.html',
 	game05_whack_a_mole: './game05_whack_a_mole.html',
-	game06_fill_blank: './game06_fill_blank.html'
+	game06_fill_blank: './game06_fill_blank.html',
+	game07_spaceship: './game07_spaceship.html'
 };
 
 const starsEl = $("stars"),
