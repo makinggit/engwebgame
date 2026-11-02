@@ -34,9 +34,11 @@ test.describe('spaceship spelling game', () => {
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
     await waitForGameStart(page);
 
-    await page.waitForTimeout(500);
-    const state = await page.evaluate(() => RoboSpaceship.getState());
+    await expect
+      .poll(() => page.evaluate(() => RoboSpaceship.getState().lasers), { timeout: 2000 })
+      .toBeGreaterThanOrEqual(1);
 
+    const state = await page.evaluate(() => RoboSpaceship.getState());
     expect(state.lasers).toBeGreaterThanOrEqual(1);
     expect(errors).toEqual([]);
   });
