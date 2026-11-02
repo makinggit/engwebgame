@@ -15,6 +15,11 @@ async function waitForGameStart(page) {
     .toBe('playing');
 }
 
+async function closeWordPopup(page) {
+  await page.locator('#wordPop').click();
+  await expect(page.locator('#wordPop')).not.toHaveClass(/show/);
+}
+
 test.describe('spaceship spelling game', () => {
   test('loads and starts without errors', async ({ page }) => {
     const errors = trackErrors(page);
@@ -47,6 +52,9 @@ test.describe('spaceship spelling game', () => {
     const errors = trackErrors(page);
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
     await waitForGameStart(page);
+
+    // The word popup overlays the canvas and would intercept the tap.
+    await closeWordPopup(page);
 
     const ship = await page.evaluate(() => {
       const state = RoboSpaceship.getState();
