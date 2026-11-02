@@ -837,7 +837,7 @@ html, body {
 		const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
 		gradient.addColorStop(0, '#050914');
 		// Redshift effect while boosting.
-		gradient.addColorStop(1, boosting ? '#2a0909' : '#101a33');
+		gradient.addColorStop(1, boosting ? '#100000' : '#101a33');
 
 		ctx.fillStyle = gradient;
 		ctx.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -1008,10 +1008,11 @@ html, body {
 			return;
 		}
 
-		// Tap any falling letter to boost.
+		// Tap a falling letter: move the ship to that letter's lane and boost.
 		for (let i = 0; i < fallingLetters.length; i++) {
 			const item = fallingLetters[i];
 			if (Math.hypot(x - item.x, y - item.y) < LETTER_RADIUS + 12) {
+				targetShipX = item.x;
 				activateBoost();
 				return;
 			}
