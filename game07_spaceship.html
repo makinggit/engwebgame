@@ -458,10 +458,11 @@ html, body {
 		const laneSet = wordLaneParity === 0 ? [0, 2, 4] : [1, 3, 5];
 		const lanes = shuffle(laneSet);
 
+		// Letters start above the top edge and fall into view.
 		fallingLetters = choices.map((letter, index) => ({
 			letter,
 			x: (lanes[index] + .5) * (canvasWidth / LANE_COUNT),
-			y: 260 - index * 45,
+			y: 40 - index * 50,
 			vy: LETTER_FALL_SPEED
 		}));
 	}
