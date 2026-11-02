@@ -623,7 +623,6 @@ html, body {
 
 	function fireLaser() {
 		if (gameState !== 'playing') return;
-		sounds.click();
 
 		const startY = shipY - 25;
 		// Laser range is half of the previous full travel distance.
@@ -729,8 +728,9 @@ html, body {
 				item.spin += dt;
 			});
 
+			// Letters fall twice as fast while boosting.
 			fallingLetters.forEach((item) => {
-				item.y += item.vy * dt;
+				item.y += item.vy * (boosting ? 2 : 1) * dt;
 			});
 
 			if (!fallingLetters.length && letterIndex < letterPositions.length) {
