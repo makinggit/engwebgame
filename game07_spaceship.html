@@ -731,9 +731,9 @@ html, body {
 				item.spin += dt;
 			});
 
-			// Letters fall twice as fast while boosting.
+			// Letters fall six times as fast while boosting.
 			fallingLetters.forEach((item) => {
-				item.y += item.vy * (boosting ? 2 : 1) * dt;
+				item.y += item.vy * (boosting ? 6 : 1) * dt;
 			});
 
 			if (!fallingLetters.length && letterIndex < letterPositions.length) {
@@ -909,6 +909,15 @@ html, body {
 		// Cyber-style spaceship.
 		ctx.save();
 		ctx.translate(shipX, shipY);
+
+		// Light yellow protector circle (graphical only).
+		ctx.fillStyle = 'rgba(255, 240, 150, .18)';
+		ctx.strokeStyle = 'rgba(255, 235, 120, .55)';
+		ctx.lineWidth = 2;
+		ctx.beginPath();
+		ctx.arc(0, 0, 42, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.stroke();
 
 		// Engine glow
 		const engineGlow = ctx.createRadialGradient(0, SHIP_HEIGHT / 2 + 10, 2, 0, SHIP_HEIGHT / 2 + 10, 40);
