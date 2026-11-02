@@ -255,20 +255,109 @@ html, body {
 (function () {
 	'use strict';
 
-	const {
-		$,
-		readProgress,
-		saveProgress,
-		goTo,
-		sounds,
-		say,
-		spellWord,
-		shuffle,
-		getLetterPositions,
-		getChapterForLevel,
-		awardWin,
-		closeWordPopup,
-	} = RoboCommon;
+	// Safe access to shared utilities. On some iPad Safari versions the
+	// shared script may load partially, so every helper has a local fallback.
+	const RC = window.RoboCommon || {};
+
+	const $ = RC.$ || function (id) {
+		return document.getElementById(id);
+	};
+
+	const STORAGE_KEY = 'roboMonsterProgress';
+
+	const readProgress = RC.readProgress || function () {
+		let saved = { level: 1, stars: 0 };
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (raw) {
+				const parsed = JSON.parse(raw);
+				if (Number.isFinite(parsed.level) && parsed.level >= 1) saved.level = Math.floor(parsed.level);
+				if (Number.isFinite(parsed.stars) && parsed.stars >= 0) saved.stars = Math.floor(parsed.stars);
+			}
+		} catch (error) {
+			/* Ignore unavailable storage. */
+		}
+		return saved;
+	};
+
+	const saveProgress = RC.saveProgress || function (level, stars) {
+		try {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify({
+				level: Math.max(1, Math.floor(level)),
+				stars: Math.max(0, Math.floor(stars))
+			}));
+		} catch (error) {
+			/* Storage is optional. */
+		}
+	};
+
+	const goTo = RC.goTo || function (path, level, stars) {
+		window.location.assign(path + '?level=' + level + '&stars=' + stars);
+	};
+
+	const silence = function () {};
+	const sounds = RC.sounds || {
+		click: silence,
+		undo: silence,
+		hear: silence,
+		wrong: silence,
+		win: silence,
+		level: silence,
+		pop: silence,
+		star: silence,
+		sticker: silence
+	};
+
+	const say = RC.say || function (text) {
+		try {
+			if (!('speechSynthesis' in window)) return;
+			window.speechSynthesis.cancel();
+			const utterance = new SpeechSynthesisUtterance(text);
+			utterance.lang = 'en-GB';
+			utterance.rate = 0.82;
+			window.speechSynthesis.speak(utterance);
+		} catch (error) {
+			/* Speech is optional. */
+		}
+	};
+
+	const spellWord = RC.spellWord || function (word) {
+		return word + '. ' + word.split('').join('-') + ' . ' + word + '. ';
+	};
+
+	const shuffle = RC.shuffle || function (items) {
+		const copy = items.slice();
+		for (let i = copy.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			const temp = copy[i];
+			copy[i] = copy[j];
+			copy[j] = temp;
+		}
+		return copy;
+	};
+
+	const getLetterPositions = RC.getLetterPositions || function (word) {
+		return String(word)
+			.split('')
+			.map(function (letter, index) {
+				return { letter: letter, index: index };
+			})
+			.filter(function (item) {
+				return item.letter !== ' ';
+			});
+	};
+
+	const getChapterForLevel = RC.getChapterForLevel || function (level) {
+		const currentLevel = Math.max(1, Math.floor(Number(level) || 1));
+		if (currentLevel >= 5) return 3;
+		if (currentLevel >= 2) return 2;
+		return 1;
+	};
+
+	const awardWin = RC.awardWin || function () {};
+	const closeWordPopup = RC.closeWordPopup || function () {
+		$('wordPop').classList.remove('show');
+	};
 
 	let { level, stars } = readProgress();
 	const canvas = $("game");
