@@ -858,7 +858,8 @@ html, body {
 		const boosting = clock < boostUntil;
 		const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
 		gradient.addColorStop(0, '#050914');
-		gradient.addColorStop(1, boosting ? '#123a63' : '#101a33');
+		// Redshift effect while boosting.
+		gradient.addColorStop(1, boosting ? '#4a1010' : '#101a33');
 
 		ctx.fillStyle = gradient;
 		ctx.fillRect(0, 0, canvasWidth, canvasHeight);
