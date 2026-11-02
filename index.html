@@ -177,6 +177,7 @@
                 <label for="gateAnswer"><span id="gateQuestion">3 × 4 =</span></label>
                 <input id="gateAnswer" type="number" inputmode="numeric" autocomplete="off">
                 <button class="control" id="gateCheckBtn" type="button">Check</button>
+                <button class="control" id="cancelGateBtn" type="button">✖ Cancel</button>
             </div>
             <div class="message" id="gateMessage"></div>
         </div>
@@ -197,7 +198,25 @@
                         <option value="0">Unlimited</option>
                     </select>
                 </div>
-                <button class="control" id="saveLimitBtn" type="button">💾 Save Time Limit</button>
+                <p>Changes are saved automatically.</p>
+            </div>
+
+            <div class="parent-section">
+                <h3>📚 Chapter Levels</h3>
+                <p>Set the starting level for each chapter of words.</p>
+                <div class="parent-row">
+                    <label for="chapter1Level">Chapter 1 level</label>
+                    <input id="chapter1Level" type="number" min="1" step="1" inputmode="numeric">
+                </div>
+                <div class="parent-row">
+                    <label for="chapter2Level">Chapter 2 level</label>
+                    <input id="chapter2Level" type="number" min="1" step="1" inputmode="numeric">
+                </div>
+                <div class="parent-row">
+                    <label for="chapter3Level">Chapter 3 level</label>
+                    <input id="chapter3Level" type="number" min="1" step="1" inputmode="numeric">
+                </div>
+                <p>Changes are saved automatically.</p>
             </div>
 
             <div class="parent-section">
@@ -206,9 +225,8 @@
                 <div class="parent-row">
                     <label for="manualStars">Stars</label>
                     <input id="manualStars" type="number" min="0" step="1" inputmode="numeric">
-                    <button class="control" id="saveStarsBtn" type="button">💾 Update Stars</button>
                 </div>
-                <p>Level is calculated as: <code>Level = floor(Stars ÷ 3) + 1</code>.</p>
+                <p>Level is calculated as: <code>Level = floor(Stars ÷ 3) + 1</code>. Changes are saved automatically.</p>
             </div>
 
             <div class="parent-section">
@@ -282,14 +300,27 @@
     function readParentSettings() {
         try {
             const raw = localStorage.getItem(PARENT_SETTINGS_KEY);
-            if (!raw) return { dailyLimitMinutes: 20, stats: {} };
+            if (!raw) {
+                return {
+                    dailyLimitMinutes: 20,
+                    chapterLevels: { 1: 1, 2: 1, 3: 1 },
+                    stats: {}
+                };
+            }
             const parsed = JSON.parse(raw);
             return {
                 dailyLimitMinutes: Number.isFinite(parsed.dailyLimitMinutes) ? parsed.dailyLimitMinutes : 20,
+                chapterLevels: parsed.chapterLevels && typeof parsed.chapterLevels === 'object'
+                    ? parsed.chapterLevels
+                    : { 1: 1, 2: 1, 3: 1 },
                 stats: parsed.stats && typeof parsed.stats === 'object' ? parsed.stats : {}
             };
         } catch (error) {
-            return { dailyLimitMinutes: 20, stats: {} };
+            return {
+                dailyLimitMinutes: 20,
+                chapterLevels: { 1: 1, 2: 1, 3: 1 },
+                stats: {}
+            };
         }
     }
 
@@ -330,6 +361,11 @@
         $('gateMessage').textContent = '';
     }
 
+    function closeParentModal() {
+        sounds.click();
+        $('parentModal').classList.remove('open');
+    }
+
     $('settingsBtn').addEventListener('click', () => {
         sounds.click();
         $('parentModal').classList.add('open');
@@ -348,6 +384,9 @@
             refreshStatsDisplay();
             const settings = readParentSettings();
             $('dailyLimit').value = String(settings.dailyLimitMinutes);
+            $('chapter1Level').value = settings.chapterLevels[1] ?? 1;
+            $('chapter2Level').value = settings.chapterLevels[2] ?? 1;
+            $('chapter3Level').value = settings.chapterLevels[3] ?? 1;
         } else {
             sounds.wrong();
             $('gateMessage').textContent = 'Try again.';
@@ -355,20 +394,34 @@
         }
     });
 
-    $('saveLimitBtn').addEventListener('click', () => {
+    $('cancelGateBtn').addEventListener('click', closeParentModal);
+
+    $('dailyLimit').addEventListener('change', () => {
         const settings = readParentSettings();
         settings.dailyLimitMinutes = Number($('dailyLimit').value);
         saveParentSettings(settings);
-        sounds.win();
+        sounds.click();
         $('gateMessage').textContent = 'Daily time limit saved.';
     });
 
-    $('saveStarsBtn').addEventListener('click', () => {
+    function saveChapterLevel(chapter, value) {
+        const settings = readParentSettings();
+        settings.chapterLevels[chapter] = Math.max(1, Math.floor(Number(value) || 1));
+        saveParentSettings(settings);
+        sounds.click();
+        $('gateMessage').textContent = 'Chapter ' + chapter + ' level saved.';
+    }
+
+    $('chapter1Level').addEventListener('change', () => saveChapterLevel(1, $('chapter1Level').value));
+    $('chapter2Level').addEventListener('change', () => saveChapterLevel(2, $('chapter2Level').value));
+    $('chapter3Level').addEventListener('change', () => saveChapterLevel(3, $('chapter3Level').value));
+
+    $('manualStars').addEventListener('change', () => {
         const starsValue = Math.max(0, Math.floor(Number($('manualStars').value) || 0));
         const levelValue = Math.floor(starsValue / 3) + 1;
         saveProgress(levelValue, starsValue);
         refreshProgressDisplay();
-        sounds.win();
+        sounds.click();
         $('gateMessage').textContent = 'Stars updated. Level is now ' + levelValue + '.';
     });
 
@@ -388,10 +441,7 @@
         $('gateMessage').textContent = 'Learning statistics cleared.';
     });
 
-    $('closeParentBtn').addEventListener('click', () => {
-        sounds.click();
-        $('parentModal').classList.remove('open');
-    });
+    $('closeParentBtn').addEventListener('click', closeParentModal);
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
