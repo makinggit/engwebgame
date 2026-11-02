@@ -294,6 +294,26 @@ html, body {
 	const NEXT_WORD_DELAY = 1800;
 	const LEVEL_UP_AWARD_DELAY = 3000;
 
+	// Fallback words used if the word library fails to load on a device.
+	const FALLBACK_WORDS = [
+		{ word: 'rocket', emoji: '🚀', clue: 'It flies to space.' },
+		{ word: 'star', emoji: '⭐', clue: 'It shines in the sky.' },
+		{ word: 'moon', emoji: '🌙', clue: 'It lights the night.' },
+		{ word: 'ship', emoji: '🚢', clue: 'It sails on water.' },
+		{ word: 'robot', emoji: '🤖', clue: 'It is a machine friend.' }
+	];
+
+	function getWordPool() {
+		try {
+			const chapter = getChapterForLevel(level_);
+			const words = RoboWords.getWordsByChapter(chapter);
+			if (Array.isArray(words) && words.length) return words;
+		} catch (error) {
+			/* Fall through to the fallback list. */
+		}
+		return FALLBACK_WORDS;
+	}
+
 	let hp = 5;
 	let current = null;
 	let letterPositions = [];
@@ -338,6 +358,14 @@ html, body {
 	window.wordDeck = [];
 	window.stars = stars_;
 	window.level = level_;
+
+	function showStartupError(error) {
+		try {
+			$('hint').textContent = 'Startup issue: ' + (error && error.message ? error.message : error);
+		} catch (ignored) {
+			/* Hint element may be unavailable. */
+		}
+	}
 
 	// Safari-compatible rounded rectangle path (ctx.roundRect is unavailable
 	// in older Safari versions and would throw during draw).
@@ -487,33 +515,36 @@ html, body {
 	}
 
 	function startWord() {
-		const chapter = getChapterForLevel(level_);
-		const words = RoboWords.getWordsByChapter(chapter);
-		const pool = words.filter((item) => item.word !== previousWord);
-		current = pool[Math.floor(Math.random() * pool.length)] || words[0];
-		window.current = current;
-		previousWord = current.word;
-		letterPositions = getLetterPositions(current.word);
-		letterIndex = 0;
-		hp = 5;
-		boostUntil = 0;
-		isBusy = false;
-		asteroids = [];
-		lasers = [];
-		asteroidTimer = 0;
-		laserTimer = 0;
-		gameState = 'playing';
-		shipY = canvasHeight - 90;
+		try {
+			const words = getWordPool();
+			const pool = words.filter((item) => item.word !== previousWord);
+			current = pool[Math.floor(Math.random() * pool.length)] || words[0];
+			window.current = current;
+			previousWord = current.word;
+			letterPositions = getLetterPositions(current.word);
+			letterIndex = 0;
+			hp = 5;
+			boostUntil = 0;
+			isBusy = false;
+			asteroids = [];
+			lasers = [];
+			asteroidTimer = 0;
+			laserTimer = 0;
+			gameState = 'playing';
+			shipY = canvasHeight - 90;
 
-		// Alternate lane parity for each new word.
-		wordLaneParity = 1 - wordLaneParity;
+			// Alternate lane parity for each new word.
+			wordLaneParity = 1 - wordLaneParity;
 
-		$('emoji').textContent = current.emoji;
-		$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
-		$('hp').textContent = hp;
-		renderWord();
-		spawnLetters();
-		showTargetWordPopup();
+			$('emoji').textContent = current.emoji;
+			$('hint').textContent = current.clue + ' Find ' + currentTargetLetter().toUpperCase();
+			$('hp').textContent = hp;
+			renderWord();
+			spawnLetters();
+			showTargetWordPopup();
+		} catch (error) {
+			showStartupError(error);
+		}
 	}
 
 	function damageShip() {
@@ -554,7 +585,11 @@ html, body {
 
 			// Base appears now; awardWin (Sticker Popup + showLevelUp) fires after 3 seconds.
 			levelUpAwardTimer = setTimeout(() => {
-				awardWin(current.word);
+				try {
+					awardWin(current.word);
+				} catch (error) {
+					showStartupError(error);
+				}
 
 				const progress = readProgress();
 				stars_ = progress.stars;
@@ -571,7 +606,11 @@ html, body {
 			say('Well done! ' + current.word + '.');
 
 			// Non-level-up wins award immediately; no base is shown.
-			awardWin(current.word);
+			try {
+				awardWin(current.word);
+			} catch (error) {
+				showStartupError(error);
+			}
 
 			const progress = readProgress();
 			stars_ = progress.stars;
@@ -1106,7 +1145,13 @@ html, body {
 	shipX = canvasWidth / 6;
 	targetShipX = shipX;
 	shipY = canvasHeight - 90;
-	startWord();
+
+	try {
+		startWord();
+	} catch (error) {
+		showStartupError(error);
+	}
+
 	requestAnimationFrame(frame);
 
 	window.RoboSpaceship = {
