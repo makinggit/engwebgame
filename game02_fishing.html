@@ -162,11 +162,13 @@ function renderMiniWord(matchedIndex = -1) {
 function buildBonus() {
 	// Self-heal: if the round state is empty, restart the bonus round so
 	// the fish always appear after the word popup closes.
+	// activateMode is exported by RoboCommon; startBonusMode is internal to
+	// common.js and must not be called from game files.
 	if (!bonusWord || !bonusRemaining.length) {
 		if (!rebuildingBonus) {
 			rebuildingBonus = true;
 			try {
-				startBonusMode(activeMode);
+				activateMode(activeMode);
 			} finally {
 				rebuildingBonus = false;
 			}
