@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#bdeaff">
 <title>Robo-Monster Spelling Academy</title>
 <link rel="stylesheet" href="./assets/styles.css">
@@ -160,6 +159,9 @@ function renderMiniWord(matchedIndex = -1) {
     });
 }
 function buildBonus() {
+	// Never build a round without a current word and remaining letters;
+	// otherwise the target fish would show "undefined".
+	if (!bonusWord || !bonusRemaining.length) return;
 	const area = $("playArea");
 	area.innerHTML = "";
 	area.className = "play-area " + (activeMode === "race" ? "race-area" : activeMode === "fish" ? "water" : "");
@@ -177,11 +179,12 @@ function buildBonus() {
 		area.appendChild(dock);
 	}
 	spawnTargets();
-	ensureTargetFish();														
+	ensureTargetFish();
 }
 function ensureTargetFish() {
 	if (activeMode !== "fish" || !bonusRemaining.length) return;
 	const wanted = bonusRemaining[0];
+	if (!wanted) return;
 	const exists = [...document.querySelectorAll("#playArea .target.fish")].some((el) => el.dataset.letter === wanted);
 	if (exists) return;
 	const area = $("playArea"),
@@ -217,6 +220,8 @@ function updateLetter() {
 }
 
 function spawnTargets() {
+	// Guard against an empty round; otherwise the correct target would be "undefined".
+	if (!bonusRemaining.length) return;
 	const area = $("playArea"),
 		wanted = bonusRemaining[0],
 		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted)).slice(0, 3),
@@ -243,6 +248,7 @@ function spawnTargets() {
 }
 function bonusClick(letter, el) {
 	if (Date.now() < penaltyUntil) return;
+	if (!bonusWord || !bonusRemaining.length) return;
 	const wanted = bonusRemaining[0];
 	if (letter === wanted) {
 		sounds.win();
@@ -259,8 +265,6 @@ function bonusClick(letter, el) {
 			timers.setTimeout(() => awardWin(bonusWord), 900);
 		} else {
 			$("bonusStatus").textContent = "Correct!";
-			//say("Correct! " + spellWord(bonusWord));
-			//updateLetter();
 			buildBonus();
 		}
 	} else {
@@ -273,7 +277,6 @@ function bonusClick(letter, el) {
 		}, 1000);
 		sounds.wrong();
 		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
-		//say("Good try. Find the letter " + wanted + ".");
 	}
 }
 $("hearBtn").onclick = showWordPopup;
