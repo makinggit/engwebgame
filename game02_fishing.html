@@ -259,7 +259,7 @@ function bonusClick(letter, el) {
 		sounds.win();
 		consumeBonusLetter();
 		el.remove();
-		renderMiniWord(state.bonusWord.length - state.bonusRemaining.length - 1)
+		renderMiniWord(state.bonusWord.length - getBonusState().bonusRemaining.length - 1)
 		if (activeMode === "race") {
 			const runner = $("runner");
 			runner.style.left =
