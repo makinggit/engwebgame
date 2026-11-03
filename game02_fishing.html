@@ -143,7 +143,8 @@ let current,
 	bonusWord = "",
 	bonusRemaining = [],
 	nextMode = "spell",
-	penaltyUntil = 0;
+	penaltyUntil = 0,
+	rebuildingBonus = false;
 	
 starsEl.textContent = stars;
 levelEl.textContent = level;
@@ -159,9 +160,19 @@ function renderMiniWord(matchedIndex = -1) {
     });
 }
 function buildBonus() {
-	// Never build a round without a current word and remaining letters;
-	// otherwise the target fish would show "undefined".
-	if (!bonusWord || !bonusRemaining.length) return;
+	// Self-heal: if the round state is empty, restart the bonus round so
+	// the fish always appear after the word popup closes.
+	if (!bonusWord || !bonusRemaining.length) {
+		if (!rebuildingBonus) {
+			rebuildingBonus = true;
+			try {
+				startBonusMode(activeMode);
+			} finally {
+				rebuildingBonus = false;
+			}
+		}
+		return;
+	}
 	const area = $("playArea");
 	area.innerHTML = "";
 	area.className = "play-area " + (activeMode === "race" ? "race-area" : activeMode === "fish" ? "water" : "");
