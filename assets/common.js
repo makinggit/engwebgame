@@ -387,6 +387,15 @@ function hearLevelStory() {
 	}
 }
 
+// Bonus-round state lives inside this IIFE, so game files must read and
+// consume it through these accessors instead of keeping shadowed copies.
+function getBonusState() {
+	return { bonusWord, bonusRemaining, activeMode };
+}
+function consumeBonusLetter() {
+	return bonusRemaining.shift();
+}
+
 // Level Up's Start button goes directly to the assigned next game,
 // rather than returning to game_mode.html.
 document.addEventListener('click', (event) => {
@@ -461,5 +470,7 @@ global.RoboCommon = {
 	startNextGame,
 	openLevelStory,
 	hearLevelStory,
+	getBonusState,
+	consumeBonusLetter,
 };
 })(window);

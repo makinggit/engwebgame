@@ -111,6 +111,8 @@
 	activateMode,
 	awardWin,
 	showLevelUp,
+	getBonusState,
+	consumeBonusLetter,
 } = RoboCommon;
 
 let { level, stars } = readProgress();
@@ -139,40 +141,28 @@ let current,
 	audioCtx,
 	popupTimer,
 	wordDeck = [],
-	activeMode = "spell",
-	bonusWord = "",
-	bonusRemaining = [],
+	activeMode = "fish",
 	nextMode = "spell",
-	penaltyUntil = 0,
-	rebuildingBonus = false;
+	penaltyUntil = 0;
 	
 starsEl.textContent = stars;
 levelEl.textContent = level;
 
 function renderMiniWord(matchedIndex = -1) {
-    const target = $("miniWord");
-    target.innerHTML = "";
-    [...bonusWord].forEach((letter, i) => {
-        const span = document.createElement("span");
-        span.textContent = letter;
-        span.className = i <= matchedIndex ? "matched-letter" : "";
-        target.appendChild(span);
-    });
+	const state = getBonusState();
+	const target = $("miniWord");
+	target.innerHTML = "";
+	[...state.bonusWord].forEach((letter, i) => {
+		const span = document.createElement("span");
+		span.textContent = letter;
+		span.className = i <= matchedIndex ? "matched-letter" : "";
+		target.appendChild(span);
+	});
 }
 function buildBonus() {
-	// Self-heal: if the round state is empty, restart the bonus round so
-	// the fish always appear after the word popup closes.
-	// activateMode is exported by RoboCommon; startBonusMode is internal to
-	// common.js and must not be called from game files.
-	if (!bonusWord || !bonusRemaining.length) {
-		if (!rebuildingBonus) {
-			rebuildingBonus = true;
-			try {
-				activateMode(activeMode);
-			} finally {
-				rebuildingBonus = false;
-			}
-		}
+	const state = getBonusState();
+	if (!state.bonusWord || !state.bonusRemaining.length) {
+		activateMode(activeMode);
 		return;
 	}
 	const area = $("playArea");
@@ -195,8 +185,9 @@ function buildBonus() {
 	ensureTargetFish();
 }
 function ensureTargetFish() {
-	if (activeMode !== "fish" || !bonusRemaining.length) return;
-	const wanted = bonusRemaining[0];
+	const state = getBonusState();
+	if (activeMode !== "fish" || !state.bonusRemaining.length) return;
+	const wanted = state.bonusRemaining[0];
 	if (!wanted) return;
 	const exists = [...document.querySelectorAll("#playArea .target.fish")].some((el) => el.dataset.letter === wanted);
 	if (exists) return;
@@ -233,10 +224,10 @@ function updateLetter() {
 }
 
 function spawnTargets() {
-	// Guard against an empty round; otherwise the correct target would be "undefined".
-	if (!bonusRemaining.length) return;
+	const state = getBonusState();
+	if (!state.bonusRemaining.length) return;
 	const area = $("playArea"),
-		wanted = bonusRemaining[0],
+		wanted = state.bonusRemaining[0],
 		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted)).slice(0, 3),
 		choices = shuffle([wanted, ...distractors]),
 		positions = [];
@@ -261,21 +252,22 @@ function spawnTargets() {
 }
 function bonusClick(letter, el) {
 	if (Date.now() < penaltyUntil) return;
-	if (!bonusWord || !bonusRemaining.length) return;
-	const wanted = bonusRemaining[0];
+	const state = getBonusState();
+	if (!state.bonusWord || !state.bonusRemaining.length) return;
+	const wanted = state.bonusRemaining[0];
 	if (letter === wanted) {
 		sounds.win();
-		bonusRemaining.shift();
+		consumeBonusLetter();
 		el.remove();
-		renderMiniWord(bonusWord.length - bonusRemaining.length - 1)
+		renderMiniWord(state.bonusWord.length - state.bonusRemaining.length - 1)
 		if (activeMode === "race") {
 			const runner = $("runner");
 			runner.style.left =
-				Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / bonusWord.length)) + "%";
+				Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / state.bonusWord.length)) + "%";
 		}
-		if (!bonusRemaining.length) {
+		if (!getBonusState().bonusRemaining.length) {
 			$("bonusStatus").textContent = "Amazing! You finished the word.";
-			timers.setTimeout(() => awardWin(bonusWord), 900);
+			timers.setTimeout(() => awardWin(state.bonusWord), 900);
 		} else {
 			$("bonusStatus").textContent = "Correct!";
 			buildBonus();
@@ -303,7 +295,7 @@ $("hearLevelStoryBtn").onclick = () => {
 };
 $("miniHearBtn").onclick = () => {
 	sounds.hear();
-	say(spellWord(bonusWord));
+	say(spellWord(getBonusState().bonusWord));
 };
 $("game_mode_next").onclick = () => {
 	sounds.hear();
