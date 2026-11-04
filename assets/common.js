@@ -65,8 +65,8 @@ function goTo(path, level, stars, extra) {
 let audioCtx;
 let popupTimer;
 let nextMode = 'spell';
-let bonusWord = '';
-let bonusRemaining = [];
+let questWord = '';
+let remainingQuestLetters = [];
 let currentLevelStory = '';
 
 function getLetterPositions(word) {
@@ -259,29 +259,29 @@ function nextWord() {
 	if (!wordDeck.length) wordDeck = shuffle(words);
 	return wordDeck.pop();
 }
-function renderMiniWord(matchedIndex = -1) {
+function renderQuestWord(matchedIndex = -1) {
 	const target = $("miniWord");
 	target.innerHTML = "";
-	[...bonusWord].forEach((letter, i) => {
+	[...questWord].forEach((letter, i) => {
 		const span = document.createElement("span");
 		span.textContent = letter;
 		span.className = i <= matchedIndex ? "matched-letter" : "";
 		target.appendChild(span);
 	});
 }
-function startBonusMode(mode) {
-	bonusWord = nextWord().word;
-	bonusRemaining = bonusWord.split("").filter((letter) => letter !== " ");
+function startLetterQuestMode(mode) {
+	questWord = nextWord().word;
+	remainingQuestLetters = questWord.split("").filter((letter) => letter !== " ");
 	$("bonusTitle").textContent = {
 		fish: "🐟 Fish for Letters",
 		ghost: "👻 Ghost Letter Zap",
 		race: "🏃 Rainbow Race and Chase",
 	}[mode];
 	$("bonusStory").textContent = modeStories[mode];
-	renderMiniWord(-1);
-	$("bonusStatus").textContent = "Find the first letter: " + bonusRemaining[0];
-	say(spellWord(bonusWord));
-	buildBonus();
+	renderQuestWord(-1);
+	$("bonusStatus").textContent = "Find the first letter: " + remainingQuestLetters[0];
+	say(spellWord(questWord));
+	buildLetterQuest();
 }
 function activateMode(mode) {
 	if (typeof timers !== 'undefined' && timers && typeof timers.clearAll === 'function') {
@@ -295,7 +295,7 @@ function activateMode(mode) {
 	if (mode === 'spell') {
 		chooseWord();
 	} else {
-		startBonusMode(mode);
+		startLetterQuestMode(mode);
 	}
 }
 function showStarEffect() {
@@ -354,7 +354,7 @@ function awardWin(word) {
 		// Mole and Spaceship manage their own next-round flow.
 		managedTimeout(() => {
 			if (activeMode === 'spell') chooseWord();
-			else startBonusMode(activeMode);
+			else startLetterQuestMode(activeMode);
 		}, 2150);
 	}
 }
@@ -387,13 +387,13 @@ function hearLevelStory() {
 	}
 }
 
-// Bonus-round state lives inside this IIFE, so game files must read and
+// Letter-quest state lives inside this IIFE, so game files must read and
 // consume it through these accessors instead of keeping shadowed copies.
-function getBonusState() {
-	return { bonusWord, bonusRemaining, activeMode };
+function getLetterQuestState() {
+	return { questWord, remainingQuestLetters, activeMode };
 }
-function consumeBonusLetter() {
-	return bonusRemaining.shift();
+function consumeQuestLetter() {
+	return remainingQuestLetters.shift();
 }
 
 // Level Up's Start button goes directly to the assigned next game,
@@ -470,7 +470,7 @@ global.RoboCommon = {
 	startNextGame,
 	openLevelStory,
 	hearLevelStory,
-	getBonusState,
-	consumeBonusLetter,
+	getLetterQuestState,
+	consumeQuestLetter,
 };
 })(window);
