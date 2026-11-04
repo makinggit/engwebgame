@@ -39,6 +39,13 @@ test.describe('spaceship spelling game', () => {
     await page.goto(BASE + 'game07_spaceship.html?level=1&stars=0');
     await waitForGameStart(page);
 
+    // The word popup overlays the canvas and can delay interaction on mobile Safari.
+    await closeWordPopup(page);
+
+    await page.evaluate(() => {
+      RoboSpaceship.fireLaser();
+    });
+
     await expect
       .poll(() => page.evaluate(() => RoboSpaceship.getState().lasers), { timeout: 2000 })
       .toBeGreaterThanOrEqual(1);
