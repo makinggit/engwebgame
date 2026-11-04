@@ -239,7 +239,9 @@
                 <div class="parent-actions">
                     <button class="control danger-btn" id="clearProgressBtn" type="button">Clear Game Progress</button>
                     <button class="control danger-btn" id="clearStatsBtn" type="button">Clear Statistics</button>
+                    <button class="control" id="softwareUpdateBtn" type="button">🔄 Software Update</button>
                 </div>
+                <p id="softwareUpdateStatus">Use this if the game does not show the latest JavaScript or CSS after an update.</p>
             </div>
 
             <div class="parent-actions">
@@ -468,6 +470,42 @@
         refreshStatsDisplay();
         sounds.click();
         $('gateMessage').textContent = 'Learning statistics cleared.';
+    });
+
+    async function refreshGameFiles() {
+        const status = $('softwareUpdateStatus');
+        const updateButton = $('softwareUpdateBtn');
+
+        try {
+            updateButton.disabled = true;
+            status.textContent = 'Updating game files…';
+
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(registrations.map((registration) => registration.unregister()));
+            }
+
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+            }
+
+            if ('serviceWorker' in navigator) {
+                await navigator.serviceWorker.register('./service-worker.js');
+            }
+
+            status.textContent = 'Update complete. Reloading…';
+            window.location.reload();
+        } catch (error) {
+            console.warn('Software update failed:', error);
+            status.textContent = 'Update failed. Please try again.';
+            updateButton.disabled = false;
+        }
+    }
+
+    $('softwareUpdateBtn').addEventListener('click', () => {
+        sounds.click();
+        refreshGameFiles();
     });
 
     $('closeParentBtn').addEventListener('click', closeParentModal);
