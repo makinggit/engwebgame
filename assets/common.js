@@ -164,8 +164,6 @@ function spellWord(word) {
 	return word + '. ' + word.split('').join('-') + ' . ' + word + '. ';
 }
 
-// Unbiased Fisher-Yates shuffle: every permutation is equally likely,
-// so the correct letter can appear in any lane.
 function shuffle(items) {
 	const copy = [...items];
 	for (let i = copy.length - 1; i > 0; i--) {
@@ -294,8 +292,10 @@ function activateMode(mode) {
 	randomBg();
 	if (mode === 'spell') {
 		chooseWord();
-	} else {
+	} else if (mode === 'fish' || mode === 'ghost' || mode === 'race') {
 		startLetterQuestMode(mode);
+	} else if (typeof startActiveGameMode === 'function') {
+		startActiveGameMode();
 	}
 }
 function showStarEffect() {
@@ -387,8 +387,6 @@ function hearLevelStory() {
 	}
 }
 
-// Letter-quest state lives inside this IIFE, so game files must read and
-// consume it through these accessors instead of keeping shadowed copies.
 function getLetterQuestState() {
 	return { questWord, remainingQuestLetters, activeMode };
 }
@@ -396,8 +394,6 @@ function consumeQuestLetter() {
 	return remainingQuestLetters.shift();
 }
 
-// Level Up's Start button goes directly to the assigned next game,
-// rather than returning to game_mode.html.
 document.addEventListener('click', (event) => {
 	const button = event.target.closest('#game_mode_next');
 	if (!button) return;
