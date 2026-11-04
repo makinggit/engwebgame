@@ -57,6 +57,11 @@ Then open the local URL shown in the terminal.
 - Do not save files as UTF-16, Latin-1, or mixed encodings; mixed encodings can introduce invisible characters that break JavaScript parsing.
 - After editing any `.js` or `.html` file, confirm the browser console has no `SyntaxError`, `Unexpected identifier`, or `Invalid or unexpected token` before committing.
 - Do not paste content from word processors or chat windows directly into source files without checking for smart quotes, non-breaking spaces, or zero-width characters.
+- Markdown files must contain real newline characters, not literal `\n` text. A literal `\n` is only acceptable inside a code example that intentionally demonstrates an escape sequence.
+- When creating or editing `README.md` with an editor, script, AI tool, or clipboard paste, verify that line breaks are preserved as actual newlines before committing.
+- If GitHub renders a Markdown file as one long line or displays repeated `\n` sequences, stop and rewrite the file with real newlines before merging.
+- Do not use a blanket find-and-replace for `\n` in source code: JavaScript string literals may legitimately contain `\n`. Apply the fix only to Markdown or text files where a visual line break was intended.
+- Before committing a Markdown change, inspect the GitHub diff and rendered preview. Headings, lists, tables, and fenced code blocks must appear on separate lines.
 
 ## Development workflow
 
@@ -313,6 +318,7 @@ Before opening a pull request, verify:
 - Touch interaction works reliably on iPad Safari.
 - Bonus games show their targets immediately after the word popup closes (fish/ghosts/race letters).
 - No game page declares its own `bonusWord` or `bonusRemaining`.
+- Markdown files use real newlines; the GitHub-rendered preview does not show literal `\n` sequences.
 
 ## Testing
 
