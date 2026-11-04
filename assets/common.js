@@ -1,1 +1,1 @@
-common.js: enforce daily time limit, honor parent chapter start levels, record word stats on awardWin
+FULL_RESTORE
