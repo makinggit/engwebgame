@@ -297,6 +297,36 @@ Historical iPad mini Safari issues and their original fixes are documented in [`
 9. In Playwright tests, close any full-screen popup before interacting with the canvas underneath.
 10. Run `npm test` (includes the `mobile-safari` iPad WebKit project) before merging; for final confirmation, open the page on a real iPad and check `#hint` for errors.
 
+## Service Worker caching
+
+The Service Worker provides offline support while ensuring that game code and styles receive updates.
+
+- HTML pages, JavaScript, CSS, JSON, and web manifest files use a **network-first** strategy.
+- Successful network responses replace the cached copy; offline users fall back to the cached copy.
+- Images, icons, and other stable static assets use a **cache-first** strategy.
+- Only successful (`response.ok`) same-origin responses are cached.
+- If a network request fails, navigation requests fall back to the cached page or `./index.html`.
+
+### Cache versioning
+
+`CACHE_NAME` in `service-worker.js` must be increased whenever a cached game file changes.
+
+Increase the version when changing:
+
+- Any `game*.html` file.
+- `assets/common.js`.
+- `assets/game-lifecycle.js`.
+- `assets/mode.js`.
+- `assets/words.js`.
+- `assets/story.js`.
+- Any CSS file.
+- `site.webmanifest`.
+- `service-worker.js` itself.
+
+Example: change `robo-spelling-v2` to `robo-spelling-v3` before deploying a JavaScript, CSS, HTML, word-list, story, or lifecycle update. The activate handler deletes older caches, preventing mixed old and new game files.
+
+Parents can also use **Settings → Data Controls → 🔄 Software Update** to unregister the Service Worker, clear caches, re-register it, and reload the game.
+
 ## Debugging checklist
 
 Before opening a pull request, verify:
@@ -316,6 +346,7 @@ Before opening a pull request, verify:
 - Letter-quest games show their targets immediately after the word popup closes (fish/ghosts/race letters).
 - No game page declares its own `questWord` or `remainingQuestLetters`.
 - Markdown files use real newlines; the GitHub-rendered preview does not show literal `\n` sequences.
+- `CACHE_NAME` has been increased if any cached HTML, JavaScript, CSS, word, story, lifecycle, manifest, or Service Worker file changed.
 
 ## Testing
 

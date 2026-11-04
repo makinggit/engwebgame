@@ -1,4 +1,4 @@
-const CACHE_NAME = 'robo-spelling-v1';
+const CACHE_NAME = 'robo-spelling-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -28,6 +28,26 @@ const CORE_ASSETS = [
   './android-chrome-512x512.png'
 ];
 
+const NETWORK_FIRST_EXTENSIONS = [
+  '.html',
+  '.js',
+  '.css',
+  '.json',
+  '.webmanifest'
+];
+
+function isNetworkFirst(url) {
+  return NETWORK_FIRST_EXTENSIONS.some((extension) =>
+    url.pathname.toLowerCase().endsWith(extension)
+  );
+}
+
+function cacheSuccessfulResponse(request, response) {
+  if (!response || !response.ok || response.type !== 'basic') return;
+  const copy = response.clone();
+  caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -55,15 +75,18 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  if (request.mode === 'navigate') {
+  if (request.mode === 'navigate' || isNetworkFirst(url)) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          cacheSuccessfulResponse(request, response);
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('./index.html')))
+        .catch(() =>
+          caches.match(request).then((cached) =>
+            cached || caches.match('./index.html')
+          )
+        )
     );
     return;
   }
@@ -73,10 +96,7 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
 
       return fetch(request).then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        }
+        cacheSuccessfulResponse(request, response);
         return response;
       });
     })
