@@ -1,1 +1,310 @@
-REDACTED_GAME02
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#bdeaff">
+<title>Robo-Monster Spelling Academy</title>
+<link rel="stylesheet" href="./assets/styles.css">
+<style>
+.target.fish{animation:fishFade .45s ease-out both,swim 16s ease-in-out infinite alternate;}
+.target.fish.penalty{box-shadow:0 0 0 4px #ed645e;}
+#playArea.penalty .target.fish{pointer-events:none;}
+@keyframes fishFade{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<main class="wrap">
+	<section class="panel game" id="gamePage">
+		<header>
+			<h1 id="gameHeading"></h1>
+			<div class="badges">
+				<div class="badge" id="game_mode_badge">🎮 Mode</div>
+				<div class="badge" id="level_badge">🏆 Level <span id="level">1</span></div>
+				<div class="badge" id="gift_badge">⭐ Stars <span id="stars">0</span></div>
+			</div>
+		</header>
+		<div id="spellingView">
+			<div class="top">
+				<div class="speech" id="speech">Listen first, then build the word!</div>
+				<div class="friend monster" id="monster">
+					<i class="antenna"></i><i class="eye left"><b class="pupil"></b></i
+					><i class="eye right"><b class="pupil"></b></i><i class="mouth"></i>
+				</div>
+				<div class="friend robot" id="robot"><div class="screen">^_^</div></div>
+			</div>
+			<div class="word-box">
+				<div class="emoji" id="emoji">📓</div>
+				<div class="hint" id="hint"></div>
+				<div class="slots" id="slots"></div>
+			</div>
+			<div class="letters" id="letters"></div>
+			<div class="controls">
+				<button class="control yellow" id="hearBtn" type="button">🔊 Hear the Word</button>
+			</div>
+			<div class="message" id="message"></div>
+			<div class="progress">
+				<div class="bar" id="bar"></div>
+				<div class="progress-content">
+					<span class="star-track" id="starTrack">☆☆☆</span
+					><span id="progressNumber">0 / 3 stars to Level 2</span>
+				</div>
+			</div>
+		</div>
+		<section class="bonus-screen" id="bonusView">
+			<div class="bonus-header">
+				<div class="bonus-title" id="bonusTitle"></div>
+				<div class="bonus-story" id="bonusStory"></div>
+			</div>
+			<div class="mini-word" id="miniWord"></div>
+			<div class="bonus-status" id="bonusStatus"></div>
+			<div class="play-area" id="playArea"></div>
+			<div class="controls">
+				<button class="control purple" id="miniHearBtn" type="button">🔊 Hear the Word</button>
+			</div>
+		</section>
+	</section>
+</main>
+<div class="word-pop" id="wordPop" role="button" tabindex="0" aria-label="Close word card">
+	<div class="word-card">
+		<div class="small">Listen to the word:</div>
+		<div class="bigword" id="popWord">notebook</div>
+		<div class="close-note">Tap anywhere to close • closes automatically in 8 seconds</div>
+	</div>
+</div>
+<div class="levelup" id="levelModal">
+	<div class="level-card">
+		<div class="sparkles">✨ 🏆 ✨</div>
+		<h2>Level Up!</h2>
+		<p id="levelMessage"></p>
+		<article class="level-story" id="levelStory"></article>
+		<p id="nextModeMessage"></p>
+		<div class="controls">
+			<button class="control yellow" id="hearLevelStoryBtn" type="button">🔊 Hear This Story</button
+			><button class="control" id="game_mode_next" type="button">Start Next Adventure!</button>
+		</div>
+	</div>
+</div>
+
+<script src="./assets/common.js"></script>
+<script src="./assets/words.js"></script>
+<script src="./assets/story.js"></script>
+<script src="./assets/game-lifecycle.js"></script>
+<script>const {
+	$,
+	getParams,
+	readProgress,
+	buildProgressQuery,
+	goTo,
+	tone,
+	sounds,
+	say,
+	spellWord,
+	shuffle,
+	randomBg,
+	updateProgress,
+	setPrompt,
+	closeWordPopup,
+	showWordPopup,
+	nextWord,
+	activateMode,
+	awardWin,
+	showLevelUp,
+	getLetterQuestState,
+	consumeQuestLetter,
+} = RoboCommon;
+
+let { level, stars } = readProgress();
+const timers = RoboGame.createTimerManager();
+const words = RoboWords.getWordsByChapter((level<5) ? 1 : 2);
+
+const speech = $("speech"),
+	emoji = $("emoji"),
+	hint = $("hint"),
+	slots = $("slots"),
+	letters = $("letters"),
+	message = $("message"),
+	starsEl = $("stars"),
+	levelEl = $("level"),
+	bar = $("bar"),
+	progressNumber = $("progressNumber"),
+	starTrack = $("starTrack"),
+	monster = $("monster"),
+	robot = $("robot");
+let current,
+	answer = [],
+	selected = [],
+	robotMode = false,
+	letterOrder = [],
+	checking = false,
+	audioCtx,
+	popupTimer,
+	wordDeck = [],
+	activeMode = "fish",
+	nextMode = "spell",
+	penaltyUntil = 0;
+	
+starsEl.textContent = stars;
+levelEl.textContent = level;
+
+function renderQuestWord(matchedIndex = -1) {
+	const quest = getLetterQuestState();
+	const target = $("miniWord");
+	target.innerHTML = "";
+	[...quest.questWord].forEach((letter, i) => {
+		const span = document.createElement("span");
+		span.textContent = letter;
+		span.className = i <= matchedIndex ? "matched-letter" : "";
+		target.appendChild(span);
+	});
+}
+function buildLetterQuest() {
+	const quest = getLetterQuestState();
+	if (!quest.questWord || !quest.remainingQuestLetters.length) {
+		activateMode(activeMode);
+		return;
+	}
+	const area = $("playArea");
+	area.innerHTML = "";
+	area.className = "play-area " + (activeMode === "race" ? "race-area" : activeMode === "fish" ? "water" : "");
+	if (activeMode === "race") {
+		const runner = document.createElement("div");
+		runner.className = "runner";
+		runner.id = "runner";
+		runner.style.left = "4%";
+		runner.textContent = "👾";
+		area.appendChild(runner);
+	}
+	if (activeMode === "fish") {
+		const dock = document.createElement("div");
+		dock.className = "dock";
+		area.appendChild(dock);
+	}
+	spawnTargets();
+	ensureTargetFish();
+}
+function ensureTargetFish() {
+	const quest = getLetterQuestState();
+	if (activeMode !== "fish" || !quest.remainingQuestLetters.length) return;
+	const wanted = quest.remainingQuestLetters[0];
+	if (!wanted) return;
+	const exists = [...document.querySelectorAll("#playArea .target.fish")].some((el) => el.dataset.letter === wanted);
+	if (exists) return;
+	const area = $("playArea"),
+		fish = [...area.querySelectorAll(".target.fish")],
+		existing = fish.map((el) => ({
+			x: parseFloat(el.style.left),
+			y: parseFloat(el.style.top)
+		}));
+	let spot;
+	for (let attempt = 0; attempt < 100; attempt += 1) {
+		const x = 8 + Math.random() * 74;
+		const y = 10 + Math.random() * 68;
+		if (existing.every((pos) => Math.hypot(pos.x - x, pos.y - y) >= 18)) {
+			spot = [x, y];
+			break;
+		}
+	}
+	if (!spot) {
+		spot = [8 + Math.random() * 74, 10 + Math.random() * 68];
+	}
+	const x = document.createElement("button");
+	x.className = "target fish";
+	x.type = "button";
+	x.dataset.letter = wanted;
+	x.textContent = "🐟 " + wanted;
+	x.style.left = spot[0] + "%";
+	x.style.top = spot[1] + "%";
+	x.onclick = () => handleLetterQuestChoice(wanted, x);
+	area.appendChild(x);
+}
+function updateLetter() {
+	ensureTargetFish();
+}
+
+function spawnTargets() {
+	const quest = getLetterQuestState();
+	if (!quest.remainingQuestLetters.length) return;
+	const area = $("playArea"),
+		wanted = quest.remainingQuestLetters[0],
+		distractors = shuffle("abcdefghijklmnopqrstuvwxyz".split("").filter((x) => x !== wanted)).slice(0, 3),
+		choices = shuffle([wanted, ...distractors]),
+		positions = [];
+	while (positions.length < 4) {
+		const x = 8 + Math.random() * 74;
+		const y = 10 + Math.random() * 68;
+		if (positions.every(([px, py]) => Math.hypot(px - x, py - y) >= 18)) {
+			positions.push([x, y]);
+		}
+	}
+	choices.forEach((letter, i) => {
+		const x = document.createElement("button");
+		x.className = "target " + (activeMode === "fish" ? "fish" : activeMode === "ghost" ? "ghost" : "");
+		x.dataset.letter = letter;
+		x.type = "button";
+		x.textContent = activeMode === "fish" ? "🐟 " + letter : activeMode === "ghost" ? "👻 " + letter : letter;
+		x.style.left = positions[i][0] + "%";
+		x.style.top = positions[i][1] + "%";
+		x.onclick = () => handleLetterQuestChoice(letter, x);
+		area.appendChild(x);
+	});
+}
+function handleLetterQuestChoice(letter, el) {
+	if (Date.now() < penaltyUntil) return;
+	const quest = getLetterQuestState();
+	if (!quest.questWord || !quest.remainingQuestLetters.length) return;
+	const wanted = quest.remainingQuestLetters[0];
+	if (letter === wanted) {
+		sounds.win();
+		consumeQuestLetter();
+		el.remove();
+		renderQuestWord(quest.questWord.length - getLetterQuestState().remainingQuestLetters.length - 1)
+		if (activeMode === "race") {
+			const runner = $("runner");
+			runner.style.left =
+				Math.min(76, parseInt(runner.style.left, 10) + Math.max(8, 70 / quest.questWord.length)) + "%";
+		}
+		if (!getLetterQuestState().remainingQuestLetters.length) {
+			$("bonusStatus").textContent = "Amazing! You finished the word.";
+			timers.setTimeout(() => awardWin(quest.questWord), 900);
+		} else {
+			$("bonusStatus").textContent = "Correct!";
+			buildLetterQuest();
+		}
+	} else {
+		penaltyUntil = Date.now() + 1000;
+		el.classList.add("penalty");
+		$("playArea").classList.add("penalty");
+		timers.setTimeout(() => {
+			el.classList.remove("penalty");
+			$("playArea").classList.remove("penalty");
+		}, 1000);
+		sounds.wrong();
+		$("bonusStatus").textContent = "Good try. Find the letter " + wanted + ".";
+	}
+}
+$("hearBtn").onclick = showWordPopup;
+$("wordPop").onclick = closeWordPopup;
+$("wordPop").onkeydown = (e) => {
+	if (e.key === "Enter" || e.key === " ") closeWordPopup();
+};
+$("hearLevelStoryBtn").onclick = () => {
+	sounds.hear();
+	say($("levelStory").textContent);
+};
+$("miniHearBtn").onclick = () => {
+	sounds.hear();
+	say(spellWord(getLetterQuestState().questWord));
+};
+$("game_mode_next").onclick = () => {
+	sounds.hear();
+	window.location.assign('./game_mode.html?level=' + level + '&stars=' + stars);
+};
+
+$("gamePage").style.display = "block";
+activateMode("fish");
+updateProgress();
+</script>
+</body>
+</html>
