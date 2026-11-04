@@ -18,10 +18,10 @@ This project uses a modular static-site structure:
 | `index.html` | Entry page |
 | `game_mode.html` | Game-mode menu; receives and forwards `level` and `stars` |
 | `game01_spelling.html` | Spelling game |
-| `game02_fishing.html` | Whack-a-Word game; filename retained for compatibility |
-| `game03_ghost_maze.html` | Ghost Maze game |
+| `game02_fishing.html` | Fishing bonus game: catch the fish carrying the next correct letter |
+| `game03_ghost_maze.html` | Ghost Maze bonus game: collect the correct letter from moving ghosts |
 | `game04_racing.html` | Bolt’s Letter Adventure platform game |
-| `game05_whack_a_mole.html` | Whack-a-Word game |
+| `game05_whack_a_mole.html` | Whack-a-Word game: select the complete target word from moles |
 | `game06_fill_blank.html` | Fill-in-the-blank game |
 | `game07_spaceship.html` | Spaceship letter-shooting game |
 
@@ -105,7 +105,7 @@ game05_whack_a_mole.html?level=3&stars=7&word=notebook
 
 ## Shared bonus-round state
 
-`bonusWord`, `bonusRemaining`, and `activeMode` for bonus rounds (fish, ghost, race) are owned by `assets/common.js`. Game pages must **never** declare their own `bonusWord` or `bonusRemaining` variables, because that creates a second, empty copy and the game will show no targets (fish or ghosts) or `undefined` letters.
+`bonusWord`, `bonusRemaining`, and `activeMode` for bonus rounds (fishing, ghost maze, racing) are owned by `assets/common.js`. Game pages must **never** declare their own `bonusWord` or `bonusRemaining` variables, because that creates a second, empty copy and the game will show no targets (fish or ghosts) or `undefined` letters.
 
 Read the current round state through the shared accessor:
 
@@ -132,7 +132,7 @@ Commit `6595632` added `let bonusWord` and `let bonusRemaining` inside `common.j
 2. Always read bonus state with `RoboCommon.getBonusState()`.
 3. Always advance the round with `RoboCommon.consumeBonusLetter()`; never call `.shift()` on a local copy.
 4. If a game needs its own `startBonusMode`, it must either call `RoboCommon.activateMode(mode)` or fully manage its own state; never mix both.
-5. After changing `common.js`, test **every** bonus-mode game (fish, ghost, race), not only the game you edited.
+5. After changing `common.js`, test **every** bonus-mode game (fishing, ghost maze, racing), not only the game you edited.
 
 ## Shared lifecycle and timers
 
@@ -221,9 +221,20 @@ Story content belongs in `assets/story.js`; do not duplicate story pages inside 
 
 ## Game-specific rules
 
+### Fishing
+
+Applies to `game02_fishing.html`.
+
+- Show fish carrying letters from the current bonus word.
+- The player catches the fish carrying the next correct letter in word order.
+- Read the current bonus state through `RoboCommon.getBonusState()`.
+- Advance the round only through `RoboCommon.consumeBonusLetter()`.
+- Show fish immediately after the word popup closes.
+- Clear timers and clean up game state when changing mode or completing a word.
+
 ### Whack-a-Word
 
-Applies to `game02_fishing.html` and `game05_whack_a_mole.html`.
+Applies to `game05_whack_a_mole.html`.
 
 - Use a 3 × 3 board with nine holes.
 - Show three moles per round: one correct target word and two different distractor words.
@@ -258,25 +269,11 @@ Applies to `game04_racing.html`.
 - Use a fixed physics step, such as `1/120` seconds, with rendering tied to the display refresh rate.
 - Reset physics, timing, letter, platform, and player state when starting a new word.
 
-## Spaceship game fixes and iPad compatibility
+## Spaceship game
 
-Applies to `game07_spaceship.html`. These rules exist because of real bugs found on iPad mini Safari; follow them to prevent regressions.
+Applies to `game07_spaceship.html`.
 
-### Fixed issues
-
-| Issue | Fix in place |
-|---|---|
-| `ctx.roundRect` unavailable on older Safari | Use the local `roundRectPath()` helper instead of `ctx.roundRect`. |
-| Boost button caused layout and test coupling | The 🚀 Boost button was removed; tapping the spaceship or any falling letter activates the 3-second boost. |
-| Tapping a letter did not change the ship’s lane | On a letter tap, set `targetShipX` to the letter’s X and suppress `pointermove` until `pointerup`/`pointercancel` (`pointerBoostActive` flag), otherwise the move handler overwrites the lane target. |
-| Boost visual feedback was unclear | During boost: background gradient becomes `#100000` → `#000000`, engine flame turns red, and starfield speeds up. |
-| Laser sound was unwanted | `fireLaser()` no longer plays a sound. |
-| Boost difficulty | While boosting, falling letters drop at 6× normal speed; the laser range is 2× normal. |
-| Boost should not persist after a hit | Hitting any letter (correct or wrong) sets `boostUntil = 0` and ends the boost immediately. |
-| Letters appeared mid-screen | Letters spawn above the top edge (`y = 40 - index * 50`) and fall into view. |
-| Game failed to start on iPad mini | Do not destructure `RoboCommon`; use safe property access with local fallbacks for every shared helper, keep a fallback word list, and wrap `startWord()`/boot in `try/catch` showing errors in `#hint`. |
-| Word popup could not be closed on iPad mini | Use a local `closeWordPopupNow()` (clears the game’s own timer and removes `show`), listen for `click`, `pointerdown`, and `touchend` on `#wordPop`, and provide a visible ✕ button. |
-| Spaceship tap test failed because the word popup intercepted the tap | In `tests/spaceship.spec.js`, close `#wordPop` and wait for it to lose `show` before tapping the canvas. |
+Historical iPad mini Safari issues and their original fixes are documented in [`docs/spaceship-history.md`](docs/spaceship-history.md).
 
 ### Current spaceship behaviour
 
@@ -327,10 +324,10 @@ The repository includes Playwright configuration and tests.
 ```bash
 npm install
 npx playwright install
-npx playwright test
+npm test
 ```
 
-The `mobile-safari` project emulates an iPad (gen 7) with WebKit and must pass before merging spaceship changes.
+`npm test` runs the Playwright test suite. The `mobile-safari` project emulates an iPad (gen 7) with WebKit and must pass before merging spaceship changes.
 
 ## Deployment
 
